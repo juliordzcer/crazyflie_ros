@@ -83,7 +83,7 @@ This package contains a 3D model of the Crazyflie (1.0). This is for visualizati
 ### Crazyflie_controller
 
 This package contains a simple PID controller for hovering or waypoint navigation.
-It can be used with external motion capture systems, such as VICON.
+It can be used with external motion capture systems.
 
 ### Crazyflie_demo
 
@@ -107,6 +107,15 @@ Crazyflies which share a dongle should use the same channel and datarate for bes
 The performance degrades with the number of Crazyflies per dongle due to bandwidth limitations, however it was tested successfully to use 3 CFs per Crazyradio.
 
 Please check the launch files in the crazyflie_demo package for other examples, including simple waypoint navigation.
+
+### Vrpn_client_ros
+This package contains the code for the external motion capture system, which has been modified to change the frames sent by the Optitrack system.
+To know the position of a rigid body execute the following command
+
+```
+roslaunch vrpn_client_ros sample.launch server:=<ip>
+rostopic echo /vrpn client node/<rigid body name>/pose
+```
 
 ## ROS Features
 
