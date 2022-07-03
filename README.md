@@ -95,18 +95,16 @@ roslaunch crazyflie_demo teleop_xbox360.launch uri:=radio://0/100/2M
 ```
 where the uri specifies the uri of your Crazyflie. You can find valid uris using the scan command in the crazyflie_tools package.
 
-For hovering at (0,0,1) using VICON, use:
+For hovering at (0,0,1) using VRPN, use:
 ```
-roslaunch crazyflie_demo hover_vicon.launch uri:=radio://0/100/2M frame:=/vicon/crazyflie/crazyflie x:=0 y:=0 z:=1
+roslaunch crazyflie_demo hover_vrpn.launch
 ```
-where the uri specifies the uri of your Crazyflie and frame the tf-frame. The launch file runs vicon_bridge automatically.
+You can modify the crazyflie uri parameters as well as the VRPN parameters in the launch hover_vrpn.launch file.
+located in the folder crazyflie_demo/launch
 
 For multiple Crazyflies make sure that all Crazyflies have a different address.
 Crazyflies which share a dongle should use the same channel and datarate for best performance.
 The performance degrades with the number of Crazyflies per dongle due to bandwidth limitations, however it was tested successfully to use 3 CFs per Crazyradio.
-```
-roslaunch crazyflie_demo multi_teleop_xbox360.launch uri1:=radio://0/100/2M/E7E7E7E7E7 uri2:=radio://0/100/2M/E7E7E7E705
-```
 
 Please check the launch files in the crazyflie_demo package for other examples, including simple waypoint navigation.
 
