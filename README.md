@@ -13,7 +13,8 @@ vrpn
 https://github.com/ros-drivers/vrpn_client_ros
 
 
-
+crazyflie_ros
+=============
 
 ROS stack for Bitcraze Crazyflie (http://www.bitcraze.se/), with the following features:
 
