@@ -43,7 +43,7 @@ public:
             get(n, "PIDs/Y/maxOutput"),
             get(n, "PIDs/Y/integratorMin"),
             get(n, "PIDs/Y/integratorMax"),
-            "z")
+            "y")
         , m_pidZ(
             get(n, "PIDs/Z/kp"),
             get(n, "PIDs/Z/kd"),
@@ -52,7 +52,7 @@ public:
             get(n, "PIDs/Z/maxOutput"),
             get(n, "PIDs/Z/integratorMin"),
             get(n, "PIDs/Z/integratorMax"),
-            "y")
+            "z")
         , m_pidYaw(
             get(n, "PIDs/Yaw/kp"),
             get(n, "PIDs/Yaw/kd"),
@@ -134,9 +134,8 @@ private:
 
     void iteration(const ros::TimerEvent& e)
     {
-        //Diferencial del tiempo = tiempo actual- tiempo pasado 
         float dt = e.current_real.toSec() - e.last_real.toSec();
-
+        // ROS_INFO("T %f start z %f, s %i",m_thrust,m_startZ,m_state);
         switch(m_state)
         {
         case TakingOff:
@@ -182,6 +181,15 @@ private:
                 targetWorld.header.frame_id = m_worldFrame;
                 targetWorld.pose = m_goal.pose;
 
+                tfScalar roll1, pitch1, yaw1;
+                tf::Matrix3x3(
+                    tf::Quaternion(
+                        targetWorld.pose.orientation.x,
+                        targetWorld.pose.orientation.y,
+                        targetWorld.pose.orientation.z,
+                        targetWorld.pose.orientation.w
+                    )).getRPY(roll1, pitch1, yaw1);
+
                 geometry_msgs::PoseStamped targetDrone;
                 m_listener.transformPose(m_frame, targetWorld, targetDrone);
 
@@ -193,13 +201,20 @@ private:
                         targetDrone.pose.orientation.z,
                         targetDrone.pose.orientation.w
                     )).getRPY(roll, pitch, yaw);
-
+                // ROS_INFO("\n Target Drone:\n x: %f \n y: %f \n z: %f \n roll: %f \n pitch: %f \n yaw: %f",targetDrone.pose.position.x,targetDrone.pose.position.y,targetDrone.pose.position.z,roll, pitch, yaw);
+                // ROS_INFO("------------");
+                // ROS_INFO("\n Target World:\n x: %f \n y: %f \n z: %f \n roll: %f \n pitch: %f \n yaw: %f",targetWorld.pose.position.x,targetWorld.pose.position.y,targetWorld.pose.position.z,roll1,pitch1,yaw1);
+                // ROS_INFO("------------");
+                // ROS_INFO("Target Frame");
+                // ROS_INFO(targetFrame);
+                // ROS_INFO("------------");
                 geometry_msgs::Twist msg;
                 msg.linear.x = m_pidX.update(0, targetDrone.pose.position.x);
                 msg.linear.y = m_pidY.update(0.0, targetDrone.pose.position.y);
                 msg.linear.z = m_pidZ.update(0.0, targetDrone.pose.position.z);
                 msg.angular.z = m_pidYaw.update(0.0, yaw);
                 m_pubNav.publish(msg);
+                // ROS_INFO("yaw: %f ",msg.angular.z);
 
 
             }
@@ -248,7 +263,7 @@ int main(int argc, char **argv)
   // Read parameters
   ros::NodeHandle n("~");
   std::string worldFrame;
-  n.param<std::string>("worldFrame", worldFrame, "world");
+  n.param<std::string>("worldFrame", worldFrame, "/world");
   std::string frame;
   n.getParam("frame", frame);
   double frequency;

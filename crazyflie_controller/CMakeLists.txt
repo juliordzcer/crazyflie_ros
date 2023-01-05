@@ -88,9 +88,7 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-include_directories(
-  ${catkin_INCLUDE_DIRS}
-)
+include_directories(${catkin_INCLUDE_DIRS})
 
 ## Declare a cpp library
 # add_library(crazyflie_controller
@@ -98,17 +96,16 @@ include_directories(
 # )
 
 # Declare a cpp executable
-add_executable(crazyflie_controller
-  src/controller.cpp)
+add_executable(crazyflie_controller src/controller.cpp)
+add_executable(crazyflie_controllerTC src/TC.cpp)
 
 # Add cmake target dependencies of the executable/library
 # as an example, message headers may need to be generated before nodes
 # add_dependencies(crazyflie_controller crazyflie_controller_generate_messages_cpp)
 
 # Specify libraries to link a library or executable target against
-target_link_libraries(crazyflie_controller
-  ${catkin_LIBRARIES}
-)
+target_link_libraries(crazyflie_controller ${catkin_LIBRARIES})
+target_link_libraries(crazyflie_controllerTC ${catkin_LIBRARIES})
 
 #############
 ## Install ##

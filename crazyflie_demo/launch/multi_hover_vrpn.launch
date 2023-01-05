@@ -6,15 +6,17 @@
 
   <arg name="uri1" default="radio://0/80/2M/E7E7E7E701" />
   <arg name="frame1" default="crazyflie1" />
-  <arg name="x1" default="0" />
+  <arg name="x1" default="-.5" />
   <arg name="y1" default="0" />
-  <arg name="z1" default="0.5" />
+  <arg name="z1" default="0.6" />
+  <arg name="yaw1" default="0" />
 
   <arg name="uri2" default="radio://0/90/2M/E7E7E7E702" />
   <arg name="frame2" default="crazyflie2" />
-  <arg name="x2" default="0" />
+  <arg name="x2" default=".5" />
   <arg name="y2" default="0" />
   <arg name="z2" default="0.5" />
+  <arg name="yaw2" default="0" />
 
   <include file="$(find crazyflie_driver)/launch/crazyflie_server.launch">
   </include>
@@ -22,6 +24,7 @@
   <node name="joy" pkg="joy" type="joy_node" output="screen">
     <param name="dev" value="$(arg joy_dev)" />
   </node>
+
 
   <group ns="crazyflie1">
     <include file="$(find crazyflie_driver)/launch/crazyflie_add.launch">
@@ -35,7 +38,7 @@
       <param name="joy_topic" value="/joy" />
     </node>
 
-    <include file="$(find crazyflie_controller)/launch/crazyflie2.launch">
+    <include file="$(find crazyflie_controller)/launch/PID.launch">
       <arg name="frame" value="$(arg frame1)" />
     </include>
 
@@ -45,22 +48,11 @@
       <param name="x" value="$(arg x1)" />
       <param name="y" value="$(arg y1)" />
       <param name="z" value="$(arg z1)" />
+      <param name="yaw" value="$(arg yaw1)" />
+      <param name="prefix" value="crazyflie1" />
     </node>
 
-      <!--Run vrpn client-->
-    <!--For OptiTrack users: make sure you edit vrpn_client_ros.cpp file to adjust axes transformation-->
-    <node pkg="vrpn_client_ros" type="vrpn_client_node" name="vrpn_client_node" output="screen">
-    <rosparam subst_value="true">
-      server: $(arg ip)
-      port: $(arg port)
-      update_frequency: 100.0
-      frame_id: world
-      child_frame_id: $(arg frame1)
-      use_server_time: false
-      broadcast_tf: false
-      refresh_tracker_frequency: 1.0
-    </rosparam>
-    </node>
+    <node pkg="tf" type="static_transform_publisher" name="baselink_broadcaster" args="0 0 0 0 0 0 1 $(arg frame1) /crazyflie1/base_link 100" />
   </group>
 
   <group ns="crazyflie2">
@@ -75,7 +67,7 @@
       <param name="joy_topic" value="/joy" />
     </node>
 
-    <include file="$(find crazyflie_controller)/launch/crazyflie2.launch">
+     <include file="$(find crazyflie_controller)/launch/PID.launch">
       <arg name="frame" value="$(arg frame2)" />
     </include>
 
@@ -85,22 +77,12 @@
       <param name="x" value="$(arg x2)" />
       <param name="y" value="$(arg y2)" />
       <param name="z" value="$(arg z2)" />
+      <param name="yaw" value="$(arg yaw2)" />
+      <param name="prefix" value="crazyflie2" />
     </node>
 
-      <!--Run vrpn client-->
-    <!--For OptiTrack users: make sure you edit vrpn_client_ros.cpp file to adjust axes transformation-->
-    <node pkg="vrpn_client_ros" type="vrpn_client_node" name="vrpn_client_node" output="screen">
-    <rosparam subst_value="true">
-      server: $(arg ip)
-      port: $(arg port)
-      update_frequency: 100.0
-      frame_id: world
-      child_frame_id: $(arg frame2)
-      use_server_time: false
-      broadcast_tf: false
-      refresh_tracker_frequency: 1.0
-    </rosparam>
-    </node>
+    <node pkg="tf" type="static_transform_publisher" name="baselink_broadcaster" args="0 0 0 0 0 0 1 $(arg frame2) /crazyflie2/base_link 100" />
   </group>
+
 
 </launch>

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import rospy
 import numpy as np
@@ -62,7 +62,7 @@ class Crazyflie:
         self.startTrajectoryService(groupMask, trajectoryId, timescale, reverse, relative)
 
     def position(self):
-        self.tf.waitForTransform("/world", "/cf" + str(self.id), rospy.Time(0), rospy.Duration(10))
+        self.tf.waitForTransform("world", "/cf" + str(self.id), rospy.Time(0), rospy.Duration(10))
         position, quaternion = self.tf.lookupTransform("/world", "/cf" + str(self.id), rospy.Time(0))
         return np.array(position)
 

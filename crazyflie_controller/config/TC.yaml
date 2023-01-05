@@ -1,0 +1,19 @@
+TCs:
+  Roll:
+    zeta: 0.000000005
+    minOutput: -30.0
+    maxOutput: 30.0
+    integratorMin: 0.0
+    integratorMax: 0.0
+  Pitch:
+    zeta: 0.000000005
+    minOutput: -30
+    maxOutput: 30
+    integratorMin: 0
+    integratorMax: 0
+  Yaw:
+    zeta: 0.000000005
+    minOutput: -200.0
+    maxOutput: 200.0
+    integratorMin: 0.0
+    integratorMax: 0.0       
