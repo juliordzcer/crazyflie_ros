@@ -199,8 +199,9 @@ private:
                     m_pubNav.publish(msg);
                 }
             }
+            break;
             // intentional fall-thru
-case Automatic: {
+            case Automatic: {
             tf::StampedTransform transform;
             try {
                 m_listener.lookupTransform(m_worldFrame, m_frame, ros::Time(0), transform);

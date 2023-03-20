@@ -199,8 +199,9 @@ private:
                     m_pubNav.publish(msg);
                 }
             }
+            break;
             // intentional fall-thru
-case Automatic: {
+            case Automatic: {
             tf::StampedTransform transform;
             try {
                 m_listener.lookupTransform(m_worldFrame, m_frame, ros::Time(0), transform);
@@ -240,8 +241,8 @@ case Automatic: {
             double roll, pitch, yaw;
             tf::Matrix3x3(q_target_drone).getRPY(roll, pitch, yaw);
 
-            float NUXS = (m_pidNUX.update(0.0, targetDrone.pose.position.x)) + m_goalacc.linear.x;//applyLowPassFilter(m_pidNUX.update(0.0, targetDrone.pose.position.x)) + m_goalacc.linear.x;
-            float NUYS = (m_pidNUY.update(0.0, targetDrone.pose.position.y)) + m_goalacc.linear.y;//applyLowPassFilter(m_pidNUY.update(0.0, targetDrone.pose.position.y)) + m_goalacc.linear.y;
+            float NUXS = (m_pidNUX.update(0.0, targetDrone.pose.position.x)) + m_goalacc.linear.x;
+            float NUYS = (m_pidNUY.update(0.0, targetDrone.pose.position.y)) + m_goalacc.linear.y;
             float NUZS = (m_pidNUZ.update(0.0, targetDrone.pose.position.z)) + m_goalacc.linear.z;
             
             float a = 0.109*powf(10,-6);

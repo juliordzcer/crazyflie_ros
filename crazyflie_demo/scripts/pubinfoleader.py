@@ -18,6 +18,6 @@ class ImuLinearAccelPublisher(object):
         self.linear_accel_pub.publish(twist_msg)
 
 if __name__ == '__main__':
-    rospy.init_node('imu_linear_accel_publisher')
+    rospy.init_node('PubLeaderInfo')
     imu_linear_accel_publisher = ImuLinearAccelPublisher()
     rospy.spin()

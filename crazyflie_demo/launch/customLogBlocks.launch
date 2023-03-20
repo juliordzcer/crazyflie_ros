@@ -9,7 +9,6 @@
 
   <node name="PubAccL" pkg="crazyflie_demo" type="PubAccL.py" output="screen" />
 
-  <remap from="/crazyflie1/imu" to="/crazyflie2/AccLeader"/>
   
   <group ns="crazyflie1">
     <node pkg="crazyflie_driver" type="crazyflie_add" name="crazyflie_add" output="screen">
