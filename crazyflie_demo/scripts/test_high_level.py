@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import rospy
 import crazyflie
@@ -8,7 +8,7 @@ import uav_trajectory
 if __name__ == '__main__':
     rospy.init_node('test_high_level')
 
-    cf = crazyflie.Crazyflie("crazyflie", "/vicon/crazyflie/crazyflie")
+    cf = crazyflie.Crazyflie("crazyflie", "/crazyflie/crazyflie")
 
     cf.setParam("commander/enHighLevel", 1)
     cf.setParam("stabilizer/estimator", 2) # Use EKF

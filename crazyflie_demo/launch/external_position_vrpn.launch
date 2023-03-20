@@ -1,17 +1,17 @@
 <?xml version="1.0"?>
 <launch>
-  <arg name="uri" default="radio://0/80/2M/E7E7E7E701" /> <!--Adjust this parameter-->
-  <arg name="frame" default="crazyflie1" /> <!--For OptiTrack users: frame name should match the Rigid-body name on Motive-->
-  <arg name="ip" default="172.16.1.1" /> <!--Adjust this parameter-->
+  <arg name="uri" default="radio://0/90/2M/E7E7E7E702" /> <!--Adjust this parameter-->
+  <arg name="frame" default="crazyflie" /> <!--For OptiTrack users: frame name should match the Rigid-body name on Motive-->
+  <arg name="ip" default="192.168.2.10" /> <!--Adjust this parameter-->
   <arg name="port" default="3883" />
 
   <include file="$(find crazyflie_driver)/launch/crazyflie_server.launch">
   </include>
 
-  <group ns="crazyflie1">
+  <group ns="crazyflie">
     <node pkg="crazyflie_driver" type="crazyflie_add" name="crazyflie_add" output="screen">
       <param name="uri" value="$(arg uri)" />
-      <param name="tf_prefix" value="crazyflie1" />
+      <param name="tf_prefix" value="crazyflie" />
       <param name="enable_logging" value="False" /> <!--Logging is disabled to reduce unnecessary bandwith consumption-->
       <param name="enable_logging_imu" value="False" />
       <param name="enable_logging_temperature" value="False" />
@@ -27,7 +27,7 @@
     </node>
 
     <node name="pose" pkg="crazyflie_demo" type="publish_external_position_vrpn.py" output="screen"> 
-      <param name="topic" value="/crazyflie1/vrpn_client_node/crazyflie1/pose" />
+      <param name="topic" value="/crazyflie/vrpn_client_node/crazyflie/pose" />
     </node>
 
     <!--Run vrpn client-->
@@ -37,12 +37,13 @@
       server: $(arg ip)
       port: $(arg port)
       update_frequency: 100.0
-      frame_id: /world
+      frame_id: world
       child_frame_id: $(arg frame)
       use_server_time: false
-      broadcast_tf: false
+      broadcast_tf: true
       refresh_tracker_frequency: 1.0
     </rosparam>
     </node>
+
   </group>
 </launch>

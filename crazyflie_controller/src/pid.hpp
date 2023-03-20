@@ -61,13 +61,10 @@ public:
         float output = p + d + i;
         m_previousError = error;
         m_previousTime = time;
-        // self.pubOutput.publish(output)
-        // self.pubError.publish(error)
-        // self.pubP.publish(p)
-        // self.pubD.publish(d)
-        // self.pubI.publish(i)
         return std::max(std::min(output, m_maxOutput), m_minOutput);
     }
+
+
 
 private:
     float m_kp;
