@@ -83,7 +83,7 @@ public:
         m_pubNav = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1);
         m_subscribeGoal = nh.subscribe("goal", 1, &Controller::goalChanged, this);
         m_subscribeGoalVel = nh.subscribe("goalvel", 1, &Controller::goalvelChanged, this);
-        m_subscribeGoalAcc = nh.subscribe("goalacc", 1, &Controller::goalaccChanged, this);
+        m_subscribeGoalAcc = nh.subscribe("AccLeader", 1, &Controller::goalaccChanged, this);
         m_serviceTakeoff = nh.advertiseService("takeoff", &Controller::takeoff, this);
         m_serviceLand = nh.advertiseService("land", &Controller::land, this);
     }
@@ -240,8 +240,8 @@ case Automatic: {
             double roll, pitch, yaw;
             tf::Matrix3x3(q_target_drone).getRPY(roll, pitch, yaw);
 
-            float NUXS = (m_pidNUX.update(0.0, targetDrone.pose.position.x)) + m_goalacc.linear.x;//applyLowPassFilter(m_pidNUX.update(0.0, targetDrone.pose.position.x)) + m_goalacc.linear.x;
-            float NUYS = (m_pidNUY.update(0.0, targetDrone.pose.position.y)) + m_goalacc.linear.y;//applyLowPassFilter(m_pidNUY.update(0.0, targetDrone.pose.position.y)) + m_goalacc.linear.y;
+            float NUXS = (m_pidNUX.update(0.0, targetDrone.pose.position.x)) + m_goalacc.linear.x;
+            float NUYS = (m_pidNUY.update(0.0, targetDrone.pose.position.y)) + m_goalacc.linear.y;
             float NUZS = (m_pidNUZ.update(0.0, targetDrone.pose.position.z)) + m_goalacc.linear.z;
             
             float a = 0.109*powf(10,-6);
@@ -255,7 +255,7 @@ case Automatic: {
             float u_rpm = (sqrt(4 * a * (u_gramos - c) + pow(b, 2)) - b) / (2 * a);
             u_rpm = std::max(std::min(u_rpm, 60000.0f), 10000.0f);
             float phi = asin((NUXS * sin(yaw_d) - NUYS * cos(yaw_d))*( m / u )) ;
-            float theta = atan((NUXS * cos(yaw_d) + NUYS * sin(yaw_d)) / (NUZS + 9.81));
+            float theta = atan((NUXS * cos(yaw_d) + NUYS * sin(yaw_d)) / (NUZS));
 
             geometry_msgs::Twist msg;
             msg.linear.x = std::max(std::min(rad2deg(theta), 10.0f), -10.0f);
