@@ -101,9 +101,6 @@ include_directories(
 add_executable(crazyflie_controller
   src/controller.cpp)
 
-add_executable(filter src/filter.cpp)
-target_link_libraries(filter ${catkin_LIBRARIES})
-
 
 # Add cmake target dependencies of the executable/library
 # as an example, message headers may need to be generated before nodes
