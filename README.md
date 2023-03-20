@@ -30,8 +30,8 @@ A tutorial (for a slightly older version) is available in W. Hönig and N. Ayani
 ## Requirements
 To be able to execute the programs it is necessary to install the following dependencies, executing the following commands in the console
 ```
-sudo apt-get install ros-<your distro>-vrpn-client-ros
-sudo apt-get install ros-<your distro>-joy
+sudo apt-get install ros-noetic-vrpn-client-ros
+sudo apt-get install ros-noetic-joy
 ```
 ## Create a catkin workspace
 ```
