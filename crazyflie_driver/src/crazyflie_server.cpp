@@ -685,9 +685,9 @@ void cmdPositionSetpoint(
       msg.orientation_covariance[0] = -1;
 
       // measured in deg/s; need to convert to rad/s
-      msg.angular_velocity.x = degToRad(data->gyro_x);
-      msg.angular_velocity.y = degToRad(data->gyro_y);
-      msg.angular_velocity.z = degToRad(data->gyro_z);
+      msg.angular_velocity.x = (data->gyro_x);
+      msg.angular_velocity.y = (data->gyro_y);
+      msg.angular_velocity.z = (data->gyro_z);
 
       // measured in mG; need to convert to m/s^2
       msg.linear_acceleration.x = data->acc_x * 9.81;

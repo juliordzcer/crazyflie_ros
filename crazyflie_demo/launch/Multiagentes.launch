@@ -13,7 +13,7 @@
 
   <include file="$(find crazyflie_driver)/launch/crazyflie_server.launch" />
   
-  <node name="leaderinfo" pkg="crazyflie_demo" type="publish_info_leader.py" output="screen" />
+  <node name="info" pkg="crazyflie_demo" type="publish_info_leader.py" output="screen" />
 
 
   <group ns="crazyflie1">
