@@ -52,6 +52,15 @@ git submodule update
 ```
 
 Use `catkin_make` on your workspace to compile.
+```
+catkin_make
+```
+
+Finally run the following command in terminal
+```
+echo "source ~crazyflie/build/setup.bash" >> ~/.bashrc
+source ~/.bashrc
+```
 
 ## Usage
 
