@@ -5,22 +5,22 @@
   <arg name="uri1" default="radio://1/70/2M/E7E7E7E703" /> 
   <arg name="uri2" default="radio://0/90/2M/E7E7E7E702" />
 
-  <arg name="frame1" default="crazyflieleader" /> 
-  <arg name="frame2" default="crazyfliefollower" /> 
+  <arg name="frame1" default="crazyflie1" /> 
+  <arg name="frame2" default="crazyflie2" /> 
 
   <arg name="ip" default="192.168.2.10" /> 
   <arg name="port" default="3883" />
 
   <include file="$(find crazyflie_driver)/launch/crazyflie_server.launch" />
   
-  <node name="PubAccL" pkg="crazyflie_demo" type="PubAccL.py" output="screen" />
+  <node name="leaderinfo" pkg="crazyflie_demo" type="publish_info_leader.py" output="screen" />
 
 
-  <group ns="crazyflieleader">
+  <group ns="crazyflie1">
 
     <node pkg="crazyflie_driver" type="crazyflie_add" name="crazyflie_add" output="screen">
       <param name="uri" value="$(arg uri1)" />
-      <param name="tf_prefix" value="crazyflieleader" />
+      <param name="tf_prefix" value="crazyflie1" />
       <param name="enable_logging_imu" value="True" />
     </node>
 
@@ -56,11 +56,11 @@
   </group>
 
 
-    <group ns="crazyfliefollower">
+    <group ns="crazyflie2">
 
     <node pkg="crazyflie_driver" type="crazyflie_add" name="crazyflie_add" output="screen">
         <param name="uri" value="$(arg uri2)" />
-        <param name="tf_prefix" value="crazyfliefollower" />
+        <param name="tf_prefix" value="crazyflie2" />
         <param name="enable_logging_imu" value="True" />
     </node>
 
@@ -76,7 +76,7 @@
         <arg name="frame" value="$(arg frame2)" />
     </include>
 
-    <node name="pose" pkg="crazyflie_demo" type="trajectory_follower_node.py" output="screen">
+    <node name="pose" pkg="crazyflie_demo" type="trayectory_follower_node.py" output="screen">
     </node>
 
     <node pkg="vrpn_client_ros" type="vrpn_client_node" name="vrpn_client_node" output="screen">
@@ -94,8 +94,6 @@
 
     <node pkg="tf" type="static_transform_publisher" name="baselink_broadcaster" args="0 0 0 0 0 0 1 $(arg frame2) /crazyflie/base_link 100" />
     </group>
-
-
 
   <param name="robot_description" command="$(find xacro)/xacro $(find crazyflie_description)/urdf/crazyflie2.urdf.xacro" />
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find crazyflie_demo)/launch/crazyflie_pos_multi.rviz" required="true" />

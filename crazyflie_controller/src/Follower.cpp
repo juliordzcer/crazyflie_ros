@@ -250,7 +250,7 @@ private:
             float c = 0.1517;
 
             float m = 0.032;
-            float u = sqrt(pow(NUXS, 2) + pow(NUYS, 2) + pow((NUZS + 9.81), 2)) * m;
+            float u = sqrt(pow(NUXS, 2) + pow(NUYS, 2) + pow((NUZS), 2)) * m;
             u = std::max(std::min(u, 4.0f), 0.0f);
             float u_gramos = u * (1 / (9.80665 / 1000));
             float u_rpm = (sqrt(4 * a * (u_gramos - c) + pow(b, 2)) - b) / (2 * a);

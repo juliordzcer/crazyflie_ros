@@ -20,7 +20,7 @@ def joy_callback(joy_msg):
     if joy_msg.buttons[5] == 1 and not button_pressed:
         rospy.loginfo('Trayectoria iniciada')
         button_pressed = True
-        r = 0.2
+        r = 0.12
         h = 0.6
         t = 0.0
     elif joy_msg.buttons[5] == 1 and button_pressed:
@@ -39,7 +39,7 @@ def trajectory_circle():
     
     while not rospy.is_shutdown():
         pose = PoseStamped()
-        vel = Twist()
+        # vel = Twist()
         acc = Twist()
         pose.header.seq = 0
         pose.header.frame_id = "world"
@@ -48,7 +48,7 @@ def trajectory_circle():
         w = np.pi/9.
         p = 15
 
-        x = r * (np.arctan(p) + np.arctan(t - p)) * np.cos(w * t)
+        x = r * (np.arctan(p) + np.arctan(t - p)) * np.cos(w * t) - 0.5
         y = r * (np.arctan(p) + np.arctan(t - p)) * np.sin(w * t)
         z = (h/2) * (1 + np.tanh(t-7.5))
         yaw = 0
@@ -65,18 +65,18 @@ def trajectory_circle():
         pose.pose.orientation.w = quaternion[3]
         pub_pose.publish(pose)
 
-            # Calcular velocidad
-        dx = -r * (np.arctan(p) + np.arctan(t - p)) * w * np.sin(w * t)
-        dy = r * (np.arctan(p) + np.arctan(t - p)) * w * np.cos(w * t)
-        dz = (h/2) * np.tanh(t-7.5) * (1 - np.tanh(t-7.5))
-        d_yaw = 0
+        #     # Calcular velocidad
+        # dx = -r * (np.arctan(p) + np.arctan(t - p)) * w * np.sin(w * t)
+        # dy = r * (np.arctan(p) + np.arctan(t - p)) * w * np.cos(w * t)
+        # dz = (h/2) * np.tanh(t-7.5) * (1 - np.tanh(t-7.5))
+        # d_yaw = 0
 
-            # Publicar velocidad
-        vel.linear.x = dx
-        vel.linear.y = dy
-        vel.linear.z = dz
-        vel.angular.z = d_yaw
-        pub_vel.publish(vel)
+        #     # Publicar velocidad
+        # vel.linear.x = dx
+        # vel.linear.y = dy
+        # vel.linear.z = dz
+        # vel.angular.z = d_yaw
+        # pub_vel.publish(vel)
 
             # Publicar aceleracion
         ax = -r * (np.arctan(p) + np.arctan(t - p)) * w**2 * np.cos(w * t)
@@ -101,7 +101,7 @@ if __name__ == '__main__':
     rospy.init_node('trajectory_circle', anonymous=True)
     
     pub_pose = rospy.Publisher('goal', PoseStamped, queue_size=1)
-    pub_vel = rospy.Publisher('goalvel', Twist, queue_size=1)
+    # pub_vel = rospy.Publisher('goalvel', Twist, queue_size=1)
     pub_acc = rospy.Publisher('goalacc', Twist, queue_size=1)   
 
     joy_sub = rospy.Subscriber('joy', Joy, joy_callback)

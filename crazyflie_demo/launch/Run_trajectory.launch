@@ -8,16 +8,25 @@
   <arg name="ip" default="192.168.2.10" /> <!--Adjust this parameter-->
   <arg name="port" default="3883" />
 
-
   <include file="$(find crazyflie_driver)/launch/crazyflie_server.launch">
   </include>
-
    <group ns="crazyflie">
 
     <node pkg="crazyflie_driver" type="crazyflie_add" name="crazyflie_add" output="screen">
       <param name="uri" value="$(arg uri)" />
       <param name="tf_prefix" value="crazyflie" />
-      <param name="enable_logging_imu" value="True" />
+      <param name="enable_logging" value="False" /> <!--Logging is disabled to reduce unnecessary bandwith consumption-->
+      <param name="enable_logging_imu" value="False" />
+      <param name="enable_logging_temperature" value="False" />
+      <param name="enable_logging_magnetic_field" value="False" />
+      <param name="enable_logging_pressure" value="False" />
+      <param name="enable_logging_battery" value="False" />
+      <param name="enable_logging_packets" value="False" />
+      <rosparam>
+        genericLogTopics: ["log1"]
+        genericLogTopicFrequencies: [100]
+        genericLogTopic_log1_Variables: ["stateEstimate.x", "stateEstimate.y", "stateEstimate.z"]
+      </rosparam>
     </node>
 
     <node name="joy" pkg="joy" type="joy_node" output="screen">
@@ -31,6 +40,15 @@
     <include file="$(find crazyflie_controller)/launch/Leader.launch">
       <arg name="frame" value="$(arg frame)" />
     </include>
+
+    <!-- <node name="filter" pkg="crazyflie_demo" type="filter.py" output="screen">
+      <param name="filter_coeff" value="0.6" />
+    </node> -->
+
+
+    <!-- <node name="pose" pkg="crazyflie_demo" type="trajectory.py" output="screen">
+      <param name="frame" value="$(arg frame)" />
+    </node> -->
 
     <node name="pose" pkg="crazyflie_demo" type="trajectory_node.py" output="screen">
     </node>
@@ -54,7 +72,7 @@
     <node pkg="tf" type="static_transform_publisher" name="baselink_broadcaster" args="0 0 0 0 0 0 1 $(arg frame) /crazyflie/base_link 100" />
   </group>
 
-  
+
   <param name="robot_description" command="$(find xacro)/xacro $(find crazyflie_description)/urdf/crazyflie2.urdf.xacro" />
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find crazyflie_demo)/launch/crazyflie_pos.rviz" required="true" />
 

@@ -6,7 +6,7 @@ from geometry_msgs.msg import Twist
 
 class ImuLinearAccelPublisher(object):
     def __init__(self):
-        self.linear_accel_pub = rospy.Publisher('/crazyflie2/AccLeader', Twist, queue_size=10)
+        self.linear_accel_pub = rospy.Publisher('/crazyflie2/goalacc', Twist, queue_size=10)
         self.imu_sub = rospy.Subscriber('/crazyflie1/imu', Imu, self.imu_callback)
 
     def imu_callback(self, msg):

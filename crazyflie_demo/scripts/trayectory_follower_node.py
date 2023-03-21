@@ -1,68 +1,53 @@
 #!/usr/bin/env python3
-
 import rospy
-import numpy as np
-from geometry_msgs.msg import Twist, PoseStamped, Vector3
-from sensor_msgs.msg import Joy
-import tf
+from geometry_msgs.msg import PoseStamped, Quaternion
+from tf.transformations import quaternion_from_euler, quaternion_multiply
 
 
-class Follower:
+class FollowerNode():
     def __init__(self):
-        rospy.init_node('formation_follower', anonymous=True)
+        rospy.init_node('follower_node', anonymous=True)
 
-        self.rate = rospy.get_param('~rate', 100) # Obtener la frecuencia desde ROS parameter server
-        self.form_vec = rospy.get_param('~form_vec', [0.1, 0.1, 0.0]) # Obtener el vector de formación desde ROS parameter server
+        # Obtiene los parámetros de formación
+        self.formation_x = rospy.get_param('~formation_x', 1)
+        self.formation_y = rospy.get_param('~formation_y', 0.1)
+        self.formation_z = rospy.get_param('~formation_z', 0.0)
+        self.formation_yaw = rospy.get_param('~formation_yaw', 0.0)
 
-        self.r = 0.0
-        self.h = 0.0
-        self.t = 0.0
+        # Crea el publisher para el objetivo de pose
+        self.goal_pub = rospy.Publisher('goal', PoseStamped, queue_size=10)
 
-        self.pub_pose = rospy.Publisher('goal', PoseStamped, queue_size=1)
-        self.pose_leader_sub = rospy.Subscriber('PoseLeader', PoseStamped, self.pose_leader_callback)
+        # Crea el subscriber para la pose del líder
+        rospy.Subscriber('vrpn_client_node/crazyflie1/pose', PoseStamped, self.leader_pose_callback)
 
-    def pose_leader_callback(self, pose_leader_msg):
-        pose = PoseStamped()
-        pose.header.seq = 0
-        pose.header.frame_id = "world"
+    def leader_pose_callback(self, leader_pose):
+        # Obtiene la pose del líder
+        leader_pos = leader_pose.pose.position
+        leader_orient = leader_pose.pose.orientation
 
-        # Obtener posición actual del seguidor
-        x_f = pose_leader_msg.pose.position.x
-        y_f = pose_leader_msg.pose.position.y
-        z_f = pose_leader_msg.pose.position.z
-        yaw = 0
+        # Crea la pose objetivo para el seguidor
+        follower_goal = PoseStamped()
+        follower_goal.header.stamp = rospy.Time.now()
+        follower_goal.header.frame_id = 'world'
 
-        # Obtener vector de formación
-        form_vec = np.array(self.form_vec)
+        # Agrega la posición objetivo, relativa a la posición del líder
+        follower_goal.pose.position.x = leader_pos.x + self.formation_x
+        follower_goal.pose.position.y = leader_pos.y + self.formation_y
+        follower_goal.pose.position.z = leader_pos.z + self.formation_z
 
-        # Calcular vector director del líder al seguidor
-        pos_leader = np.array([pose_leader_msg.pose.position.x, pose_leader_msg.pose.position.y, pose_leader_msg.pose.position.z])
-        pos_follower = np.array([x_f, y_f, z_f])
-        v_dir = pos_leader - pos_follower
+        # Agrega la orientación objetivo, rotada respecto al líder
+        leader_quat = (leader_orient.x, leader_orient.y, leader_orient.z, leader_orient.w)
+        follower_quat = quaternion_from_euler(0, 0, 0)
+        # follower_quat = quaternion_from_euler(0, 0, self.formation_yaw)
+        final_quat = quaternion_multiply(leader_quat, follower_quat)
+        follower_goal.pose.orientation = Quaternion(*final_quat)
 
-        # Calcular vector de posición deseada del seguidor
-        pos_deseada = pos_follower + v_dir + form_vec
-
-        # Publicar posición deseada
-        pose.pose.position.x = pos_deseada[0]
-        pose.pose.position.y = pos_deseada[1]
-        pose.pose.position.z = pos_deseada[2]
-        quaternion = tf.transformations.quaternion_from_euler(0, 0, yaw)
-        pose.pose.orientation.x = quaternion[0]
-        pose.pose.orientation.y = quaternion[1]
-        pose.pose.orientation.z = quaternion[2]
-        pose.pose.orientation.w = quaternion[3]
-        self.pub_pose.publish(pose)
-
-    def run(self):
-        rate = rospy.Rate(self.rate) # Hz
-        while not rospy.is_shutdown():
-            rate.sleep()
-
+        # Publica la pose objetivo
+        self.goal_pub.publish(follower_goal)
 
 if __name__ == '__main__':
     try:
-        follower = Follower()
-        follower.run()
+        FollowerNode()
+        rospy.spin()
     except rospy.ROSInterruptException:
         pass
