@@ -68,10 +68,10 @@ public:
             "yaw")
         , m_state(Idle)
         , m_goal()
-        , m_goalvel()
+        , m_attleader()
         , m_goalacc()
         , m_subscribeGoal()
-        , m_subscribeGoalVel()
+        , m_subscribeAttL()
         , m_subscribeGoalAcc()
         , m_serviceTakeoff()
         , m_serviceLand()
@@ -82,8 +82,8 @@ public:
         m_listener.waitForTransform(m_worldFrame, m_frame, ros::Time(0), ros::Duration(10.0)); 
         m_pubNav = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1);
         m_subscribeGoal = nh.subscribe("goal", 1, &Controller::goalChanged, this);
-        m_subscribeGoalVel = nh.subscribe("goalvel", 1, &Controller::goalvelChanged, this);
-        m_subscribeGoalAcc = nh.subscribe("AccLeader", 1, &Controller::goalaccChanged, this);
+        m_subscribeAttL = nh.subscribe("info_leader", 1, &Controller::attleaderChanged, this);
+        m_subscribeGoalAcc = nh.subscribe("goalacc", 1, &Controller::goalaccChanged, this);
         m_serviceTakeoff = nh.advertiseService("takeoff", &Controller::takeoff, this);
         m_serviceLand = nh.advertiseService("land", &Controller::land, this);
     }
@@ -101,10 +101,10 @@ private:
     {
         m_goal = *msg;
     }
-    void goalvelChanged(
+    void attleaderChanged(
         const geometry_msgs::Twist::ConstPtr& msg)
     {
-        m_goalvel = *msg;
+        m_attleader = *msg;
     }
     void goalaccChanged(
         const geometry_msgs::Twist::ConstPtr& msg)
@@ -241,15 +241,27 @@ private:
             double roll, pitch, yaw;
             tf::Matrix3x3(q_target_drone).getRPY(roll, pitch, yaw);
 
-            float NUXS = (m_pidNUX.update(0.0, targetDrone.pose.position.x)) + m_goalacc.linear.x;
-            float NUYS = (m_pidNUY.update(0.0, targetDrone.pose.position.y)) + m_goalacc.linear.y;
-            float NUZS = (m_pidNUZ.update(0.0, targetDrone.pose.position.z)) + m_goalacc.linear.z;
-            
+            float m = 0.032;
             float a = 0.109*powf(10,-6);
             float b = -210.59*powf(10,-6);
             float c = 0.1517;
+            
+            float u2_rpm = m_attleader.linear.z;
+            float u2_gramos = a*u2_rpm*u2_rpm + b*u2_rpm + c;
+            float u2 = u2_gramos * (9.80665 / 1000);
 
-            float m = 0.032;
+            float phi2   = m_attleader.angular.x;
+            float theta2 = m_attleader.angular.y;
+            float psi2   = m_attleader.angular.z;
+
+            float gammax = (u2/m)*(cos(phi2)*sin(theta2)*cos(psi2) + sin(phi2)*sin(psi2)); 
+            float gammay = (u2/m)*(cos(phi2)*sin(theta2)*sin(psi2) - sin(phi2)*cos(psi2));
+            float gammaz = (u2/m)*(cos(phi2)*cos(theta2));
+
+            float NUXS = (m_pidNUX.update(0.0, targetDrone.pose.position.x)) + gammax;
+            float NUYS = (m_pidNUY.update(0.0, targetDrone.pose.position.y)) + gammay;
+            float NUZS = (m_pidNUZ.update(0.0, targetDrone.pose.position.z)) + gammaz;
+
             float u = sqrt(pow(NUXS, 2) + pow(NUYS, 2) + pow((NUZS), 2)) * m;
             u = std::max(std::min(u, 4.0f), 0.0f);
             float u_gramos = u * (1 / (9.80665 / 1000));
@@ -263,6 +275,9 @@ private:
             msg.linear.y = std::max(std::min(rad2deg(phi), 10.0f), -10.0f);
             msg.linear.z = u_rpm;
             msg.angular.z = m_pidYaw.update(0.0, yaw);
+            msg.angular.x = gammax;
+            msg.angular.y = gammay;
+
             m_pubNav.publish(msg);
         }
             break;
@@ -296,10 +311,10 @@ private:
     PID m_pidYaw;
     State m_state;
     geometry_msgs::PoseStamped m_goal;
-    geometry_msgs::Twist m_goalvel;
+    geometry_msgs::Twist m_attleader;
     geometry_msgs::Twist m_goalacc;
     ros::Subscriber m_subscribeGoal;
-    ros::Subscriber m_subscribeGoalVel;
+    ros::Subscriber m_subscribeAttL;
     ros::Subscriber m_subscribeGoalAcc;
     ros::ServiceServer m_serviceTakeoff;
     ros::ServiceServer m_serviceLand;

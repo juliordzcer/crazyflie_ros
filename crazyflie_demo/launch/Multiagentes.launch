@@ -15,7 +15,6 @@
   
   <node name="info" pkg="crazyflie_demo" type="publish_info_leader.py" output="screen" />
 
-
   <group ns="crazyflie1">
 
     <node pkg="crazyflie_driver" type="crazyflie_add" name="crazyflie_add" output="screen">

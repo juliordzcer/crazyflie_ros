@@ -23,26 +23,36 @@ class AttitudePublisher:
         self.roll = 0
         self.pitch = 0
         self.yaw = 0
+        self.thrust = 0
         self.pose_sub = rospy.Subscriber('/crazyflie1/pose', PoseStamped, self.pose_callback)
+        self.thrust_sub = rospy.Subscriber('/crazyflie1/cmd_vel', Twist, self.thrust_callback)
         self.yaw_sub = rospy.Subscriber('/crazyflie1/vrpn_client_node/crazyflie1/pose', PoseStamped, self.yaw_callback)
-        self.attitude_pub = rospy.Publisher('/crazyflie2/attitude_leader', Twist, queue_size=100)
+        self.attitude_pub = rospy.Publisher('/crazyflie2/info_leader', Twist, queue_size=100)
 
     def pose_callback(self, msg):
         # Extraer los ángulos de rotación rpy a partir del mensaje "pose"
         q = msg.pose.orientation
         rpy = t.euler_from_quaternion([q.x, q.y, q.z, q.w])
         # Extraer pitch y roll de los ángulos rpy
-        self.pitch = m.degrees(rpy[0])
-        self.roll = m.degrees(rpy[1])
+        self.pitch = rpy[0]
+        # self.pitch = m.degrees(rpy[0])
+        self.roll = rpy[1]
+        # self.roll = m.degrees(rpy[1])
+
+    def thrust_callback(self, msg):
+        # Extraer los ángulos de rotación rpy a partir del mensaje "pose"
+        self.thrust = msg.linear.z
 
     def yaw_callback(self, msg):
         # Extraer el ángulo yaw a partir del mensaje "pose"
         q = msg.pose.orientation
         rpy = t.euler_from_quaternion([q.x, q.y, q.z, q.w])
-        self.yaw = m.degrees(rpy[2])
+        self.yaw = rpy[2]
+        # self.yaw = m.degrees(rpy[2])
 
     def publish_attitude(self):
         attitude = Twist()
+        attitude.linear.z = self.thrust
         attitude.angular.x = self.roll
         attitude.angular.y = self.pitch 
         attitude.angular.z = self.yaw
@@ -58,3 +68,6 @@ if __name__ == '__main__':
     while not rospy.is_shutdown():
         attitude_publisher.publish_attitude()
         rate.sleep()
+
+
+
