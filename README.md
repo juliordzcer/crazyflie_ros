@@ -53,6 +53,7 @@ git submodule update
 
 Use `catkin_make` on your workspace to compile.
 ```
+cd ..
 catkin_make
 ```
 
