@@ -62,7 +62,7 @@ catkin_make
 
 Finally run the following command in terminal
 ```
-echo "source ~crazyflie_ws/build/setup.bash" >> ~/.bashrc
+echo "source ~crazyflie_ws/devel/setup.bash" >> ~/.bashrc
 source ~/.bashrc
 ```
 
