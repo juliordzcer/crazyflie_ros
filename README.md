@@ -45,7 +45,7 @@ With these commands a new workspace called Crazyflie_ws has been created
 
 Clone the package into your catkin workspace (in src folder): 
 ```
-git clone --recursive https://github.com/yosoyjulio/crazyflie_ros.git
+git clone --recursive https://github.com/juliordzcer/crazyflie_ros.git
 cd crazyflie_ros
 git submodule init
 git submodule update
