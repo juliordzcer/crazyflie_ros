@@ -20,8 +20,8 @@ def joy_callback(joy_msg):
     if joy_msg.buttons[5] == 1 and not button_pressed:
         rospy.loginfo('Trayectoria iniciada')
         button_pressed = True
-        r = 0.12
-        h = 0.6
+        r = 0.18
+        h = 0.8
         t = 0.0
     elif joy_msg.buttons[5] == 1 and button_pressed:
         rospy.loginfo('Trayectoria reiniciada')

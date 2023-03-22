@@ -24,7 +24,7 @@ class VelFilterNode:
         rospy.init_node('filter', anonymous=True)
 
         # Obtener el coeficiente de filtro de los parámetros del nodo
-        self.filter_coeff = rospy.get_param('~filter_coeff', 0.6)
+        self.filter_coeff = rospy.get_param('~filter_coeff', 0.7)
 
         # Crear los filtros de velocidad lineal y angular para x, y, z
         self.linear_vel_filter_x = LowPassFilter(self.filter_coeff)
@@ -47,10 +47,10 @@ class VelFilterNode:
 
         # Crear un nuevo mensaje de Twist con las velocidades filtradas
         filtered_cmd_vel = Twist()
-        filtered_cmd_vel.linear.x = msg.linear.x #filtered_linear_vel_x
-        filtered_cmd_vel.linear.y = msg.linear.y #filtered_linear_vel_y
+        filtered_cmd_vel.linear.x = filtered_linear_vel_x
+        filtered_cmd_vel.linear.y = filtered_linear_vel_y
         filtered_cmd_vel.linear.z = filtered_linear_vel_z
-        filtered_cmd_vel.angular.z = msg.angular.z #filtered_angular_vel_z
+        filtered_cmd_vel.angular.z = filtered_angular_vel_z
 
         # Publicar la senal de \cmd_vel filtrada
         self.filtered_cmd_vel_pub.publish(filtered_cmd_vel)

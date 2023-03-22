@@ -7,7 +7,7 @@
   <arg name="pitch_trim" default="0" />
   <arg name="enable_logging" default="True" />
   <arg name="use_ros_time" default="True" />
-  <arg name="enable_logging_imu" default="True" />
+  <arg name="enable_logging_imu" default="False" />
   <arg name="enable_logging_temperature" default="False" />
   <arg name="enable_logging_magnetic_field" default="False" />
   <arg name="enable_logging_pressure" default="False" />

@@ -27,7 +27,7 @@ class AttitudePublisher:
         self.pose_sub = rospy.Subscriber('/crazyflie1/pose', PoseStamped, self.pose_callback)
         self.thrust_sub = rospy.Subscriber('/crazyflie1/cmd_vel', Twist, self.thrust_callback)
         self.yaw_sub = rospy.Subscriber('/crazyflie1/vrpn_client_node/crazyflie1/pose', PoseStamped, self.yaw_callback)
-        self.attitude_pub = rospy.Publisher('/crazyflie2/info_leader', Twist, queue_size=100)
+        self.attitude_pub = rospy.Publisher('/crazyflie2/info_leader', Twist, queue_size=50)
 
     def pose_callback(self, msg):
         # Extraer los ángulos de rotación rpy a partir del mensaje "pose"
