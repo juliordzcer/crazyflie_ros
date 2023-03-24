@@ -2,14 +2,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-h = 0.6
-r = 0
+h = 1
+r = .2
 w = np.pi/9.
-p = 15
+p = 8
 
 t = np.linspace(0, 100, 1000)
 
-x = r * (np.arctan(p) + np.arctan(t - p)) * np.cos(w * t) - 0.5
+x = r * (np.arctan(p) + np.arctan(t - p)) * np.cos(w * t) #- 0.5
 y =  r * (np.arctan(p) + np.arctan(t - p)) * np.sin(w * t)
 z = (h/2) * (1 + np.tanh(t-7.5))
 yaw = 0
