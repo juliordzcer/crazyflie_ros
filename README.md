@@ -36,7 +36,7 @@ sudo apt-get install ros-noetic-joy
 ## Create a catkin workspace
 ```
 mkdir -p ~/crazyflie_ws/src
-cd crazyflie_ws
+cd crazyflie_ws/src
 catkin_init_workspace
 ```
 With these commands a new workspace called Crazyflie_ws has been created
