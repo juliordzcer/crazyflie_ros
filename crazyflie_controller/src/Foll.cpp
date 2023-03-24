@@ -191,60 +191,63 @@ private:
                 }
 
             }
-            break;
-            case Automatic: {
-                static constexpr float a = 0.109e-6;
-                static constexpr float b = -210.59e-6;
-                static constexpr float c = 0.1517;
-                static constexpr float m = 0.032;
-                static constexpr float g = 9.80665;
+        break;
+        case Automatic: {
+            constexpr float a = 0.109e-6;
+            constexpr float b = -210.59e-6;
+            constexpr float c = 0.1517;
+            constexpr float m = 0.032;
+            constexpr float g = 9.80665;
 
-                tf::StampedTransform transform;
-                try {
-                    m_listener.lookupTransform(m_worldFrame, m_frame, ros::Time(0), transform);
-                } catch (tf::TransformException &ex) {
-                    ROS_ERROR_STREAM("Error looking up transform: " << ex.what());
-                    return;
-                }
-
-                geometry_msgs::PoseStamped targetWorld;
-                targetWorld.header.stamp = transform.stamp_;
-                targetWorld.header.frame_id = m_worldFrame;
-                targetWorld.pose = m_goal.pose;
-
-                geometry_msgs::PoseStamped targetDrone;
-                try {
-                    m_listener.transformPose(m_frame, targetWorld, targetDrone);
-                } catch (tf::TransformException &ex) {
-                    ROS_ERROR_STREAM("Error transforming pose: " << ex.what());
-                    return;
-                }
-
-                tfScalar roll, pitch, yaw;
-                tf::Matrix3x3(tf::Quaternion(
-                                targetDrone.pose.orientation.x,
-                                targetDrone.pose.orientation.y,
-                                targetDrone.pose.orientation.z,
-                                targetDrone.pose.orientation.w)).getRPY(roll, pitch, yaw);
-
-                const float NUZS = (m_pidNUZ.update(0.0, targetDrone.pose.position.z)) + m_goalacc.linear.z;
-                const float NUXS = (m_pidNUX.update(0.0, targetDrone.pose.position.x)) + m_goalacc.linear.x;
-                const float NUYS = (m_pidNUY.update(0.0, targetDrone.pose.position.y)) + m_goalacc.linear.y;
-                const float u = std::sqrt(std::pow(NUXS, 2) + std::pow(NUYS, 2) + std::pow(NUZS + g, 2)) * m;
-                const float u_gramos = u / (g / 1000);
-                const float u_rpm = (std::sqrt(4 * a * (u_gramos - c) + std::pow(b, 2)) - b) / (2 * a);
-                const float phi = std::asin((NUXS / u) * std::sin(yaw) - (NUYS / u) * std::cos(yaw));
-                const float theta = std::atan2((NUXS * std::cos(yaw) + NUYS * std::sin(yaw)), (NUZS + g));
-
-                geometry_msgs::Twist msg;
-                msg.linear.x = CLAMP(rad2deg(theta), -10.0f, 10.0f);
-                msg.linear.y = CLAMP(rad2deg(phi), -10.0f, 10.0f);
-                msg.linear.z = CLAMP(u_rpm, 10000.0f, 60000.0f);
-                msg.angular.z = m_pidYaw.update(0.0, yaw);
-                m_pubNav.publish(msg);
+            tf::StampedTransform transform;
+            try {
+                m_listener.lookupTransform(m_worldFrame, m_frame, ros::Time(0), transform);
+            } catch (const tf::TransformException& ex) {
+                ROS_WARN_STREAM("Failed to lookup transform: " << ex.what());
+                return;
             }
-            break;
 
+            geometry_msgs::PoseStamped targetWorld;
+            targetWorld.header.stamp = transform.stamp_;
+            targetWorld.header.frame_id = m_worldFrame;
+            targetWorld.pose = m_goal.pose;
+
+            geometry_msgs::PoseStamped targetDrone;
+            try {
+                m_listener.transformPose(m_frame, targetWorld, targetDrone);
+            } catch (const tf::TransformException& ex) {
+                ROS_WARN_STREAM("Failed to transform pose: " << ex.what());
+                return;
+            }
+
+            tfScalar roll, pitch, yaw;
+            tf::Matrix3x3(tf::Quaternion(
+                            targetDrone.pose.orientation.x,
+                            targetDrone.pose.orientation.y,
+                            targetDrone.pose.orientation.z,
+                            targetDrone.pose.orientation.w)).getRPY(roll, pitch, yaw);
+
+            const float NUZS = (m_pidNUZ.update(0.0, targetDrone.pose.position.z)) + m_goalacc.linear.z;
+            const float NUXS = (m_pidNUX.update(0.0, targetDrone.pose.position.x)) + m_goalacc.linear.x;
+            const float NUYS = (m_pidNUY.update(0.0, targetDrone.pose.position.y)) + m_goalacc.linear.y;
+            const float u = std::sqrt(std::pow(NUXS, 2) + std::pow(NUYS, 2) + std::pow(NUZS + g, 2)) * m;
+            const float u_gramos = u / (g / 1000);
+            const float u_rpm = (std::sqrt(4 * a * (u_gramos - c) + std::pow(b, 2)) - b) / (2 * a);
+            const float phi = std::asin((NUXS / u) * std::sin(yaw) - (NUYS / u) * std::cos(yaw));
+            const float theta = std::atan2((NUXS * std::cos(yaw) + NUYS * std::sin(yaw)), (NUZS + g));
+
+            const float clamped_theta = CLAMP(rad2deg(theta), -10.0f, 10.0f);
+            const float clamped_phi = CLAMP(rad2deg(phi), -10.0f, 10.0f);
+            const float clamped_u_rpm = CLAMP(u_rpm, 10000.0f, 60000.0f);
+
+            geometry_msgs::Twist msg;
+            msg.linear.x = clamped_theta;
+            msg.linear.y = clamped_phi;
+            msg.linear.z = clamped_u_rpm;
+            msg.angular.z = m_pidYaw.update(0.0, yaw);
+            m_pubNav.publish(msg);
+        }
+        break;
 
         case Idle:
             {
