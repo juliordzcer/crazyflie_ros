@@ -41,9 +41,9 @@
       <arg name="frame" value="$(arg frame)" />
     </include>
 
-    <!-- <node name="filter" pkg="crazyflie_demo" type="filter.py" output="screen">
-      <param name="filter_coeff" value="0.6" />
-    </node> -->
+    <node name="filter" pkg="crazyflie_demo" type="filter.py" output="screen">
+      <param name="filter_coeff" value="0.1" />
+    </node>
 
 
     <!-- <node name="pose" pkg="crazyflie_demo" type="trajectory.py" output="screen">
