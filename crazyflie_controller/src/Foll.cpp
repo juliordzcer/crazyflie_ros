@@ -82,10 +82,10 @@ public:
     {
         ros::NodeHandle nh;
         m_listener.waitForTransform(m_worldFrame, m_frame, ros::Time(0), ros::Duration(10.0)); 
-        m_pubNav = nh.advertise<geometry_msgs::Twist>("cmd_vel", 100);
-        m_subscribeGoal = nh.subscribe("goal", 100, &Controller::goalChanged, this);
-        m_subscribeGoalVel = nh.subscribe("goalvel", 100, &Controller::goalvelChanged, this);
-        m_subscribeGoalAcc = nh.subscribe("goalacc", 100, &Controller::goalaccChanged, this);
+        m_pubNav = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1);
+        m_subscribeGoal = nh.subscribe("goal", 1, &Controller::goalChanged, this);
+        m_subscribeGoalVel = nh.subscribe("goalvel", 1, &Controller::goalvelChanged, this);
+        m_subscribeGoalAcc = nh.subscribe("goalacc", 1, &Controller::goalaccChanged, this);
         m_serviceTakeoff = nh.advertiseService("takeoff", &Controller::takeoff, this);
         m_serviceLand = nh.advertiseService("land", &Controller::land, this);
     }
@@ -176,11 +176,7 @@ private:
             {
                 tf::StampedTransform transform;
                 m_listener.lookupTransform(m_worldFrame, m_frame, ros::Time(0), transform);
-<<<<<<< HEAD
-                if (transform.getOrigin().z() > m_startZ + 0.05 || m_thrust > 10000)
-=======
                 if (transform.getOrigin().z() > m_startZ + 0.01 || m_thrust > 20000)
->>>>>>> a8ae27483d882a0a562f5d48140bec19c61fe8d9
                 {
                     pidReset();
                     m_state = Automatic;
@@ -195,21 +191,7 @@ private:
                 }
 
             }
-            break;
-        case Landing:
-            {
-                m_goal.pose.position.z = m_startZ + 0.05;
-                tf::StampedTransform transform;
-                m_listener.lookupTransform(m_worldFrame, m_frame, ros::Time(0), transform);
-                if (transform.getOrigin().z() <= m_startZ + 0.01) 
-                {
-                    m_state = Idle;
-                    geometry_msgs::Twist msg;
-                    m_pubNav.publish(msg);
-                }
-            }
-            break;
-            // intentional fall-thru
+        break;
         case Automatic: {
             constexpr float a = 0.109e-6;
             constexpr float b = -210.59e-6;
@@ -218,7 +200,12 @@ private:
             constexpr float g = 9.80665;
 
             tf::StampedTransform transform;
-            m_listener.lookupTransform(m_worldFrame, m_frame, ros::Time(0), transform);
+            try {
+                m_listener.lookupTransform(m_worldFrame, m_frame, ros::Time(0), transform);
+            } catch (const tf::TransformException& ex) {
+                ROS_WARN_STREAM("Failed to lookup transform: " << ex.what());
+                return;
+            }
 
             geometry_msgs::PoseStamped targetWorld;
             targetWorld.header.stamp = transform.stamp_;
@@ -226,7 +213,12 @@ private:
             targetWorld.pose = m_goal.pose;
 
             geometry_msgs::PoseStamped targetDrone;
-            m_listener.transformPose(m_frame, targetWorld, targetDrone);
+            try {
+                m_listener.transformPose(m_frame, targetWorld, targetDrone);
+            } catch (const tf::TransformException& ex) {
+                ROS_WARN_STREAM("Failed to transform pose: " << ex.what());
+                return;
+            }
 
             tfScalar roll, pitch, yaw;
             tf::Matrix3x3(tf::Quaternion(
@@ -244,14 +236,18 @@ private:
             const float phi = std::asin((NUXS / u) * std::sin(yaw) - (NUYS / u) * std::cos(yaw));
             const float theta = std::atan2((NUXS * std::cos(yaw) + NUYS * std::sin(yaw)), (NUZS + g));
 
+            const float clamped_theta = CLAMP(rad2deg(theta), -10.0f, 10.0f);
+            const float clamped_phi = CLAMP(rad2deg(phi), -10.0f, 10.0f);
+            const float clamped_u_rpm = CLAMP(u_rpm, 10000.0f, 60000.0f);
+
             geometry_msgs::Twist msg;
-            msg.linear.x =CLAMP(rad2deg(theta), -10.0f, 10.0f);
-            msg.linear.y = CLAMP(rad2deg(phi), -10.0f, 10.0f);
-            msg.linear.z = CLAMP(u_rpm, 10000.0f, 60000.0f);
+            msg.linear.x = clamped_theta;
+            msg.linear.y = clamped_phi;
+            msg.linear.z = clamped_u_rpm;
             msg.angular.z = m_pidYaw.update(0.0, yaw);
             m_pubNav.publish(msg);
-            }
-            break;
+        }
+        break;
 
         case Idle:
             {
@@ -305,7 +301,7 @@ int main(int argc, char **argv)
   std::string frame;
   n.getParam("frame", frame);
   double frequency;
-  n.param("frequency", frequency, 100.0);
+  n.param("frequency", frequency, 50.0);
 
   Controller controller(worldFrame, frame, n);
   controller.run(frequency);
