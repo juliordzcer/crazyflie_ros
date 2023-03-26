@@ -81,11 +81,11 @@ public:
         , m_startZ(0)
     {
         ros::NodeHandle nh;
-        m_listener.waitForTransform(m_worldFrame, m_frame, ros::Time(0), ros::Duration(10.0)); 
-        m_pubNav = nh.advertise<geometry_msgs::Twist>("cmd_vel", 100);
-        m_subscribeGoal = nh.subscribe("goal", 100, &Controller::goalChanged, this);
-        m_subscribeGoalVel = nh.subscribe("goalvel", 100, &Controller::goalvelChanged, this);
-        m_subscribeGoalAcc = nh.subscribe("goalacc", 100, &Controller::goalaccChanged, this);
+        m_listener.waitForTransform(m_worldFrame, m_frame, ros::Time(0), ros::Duration(5.0)); 
+        m_pubNav = nh.advertise<geometry_msgs::Twist>("cmd_vel", 50);
+        m_subscribeGoal = nh.subscribe("goal", 50, &Controller::goalChanged, this);
+        m_subscribeGoalVel = nh.subscribe("goalvel", 50, &Controller::goalvelChanged, this);
+        m_subscribeGoalAcc = nh.subscribe("goalacc", 50, &Controller::goalaccChanged, this);
         m_serviceTakeoff = nh.advertiseService("takeoff", &Controller::takeoff, this);
         m_serviceLand = nh.advertiseService("land", &Controller::land, this);
     }
@@ -113,7 +113,6 @@ private:
     {
         m_goalacc = *msg;
     }
-
 
     bool takeoff(
         std_srvs::Empty::Request& req,
@@ -176,11 +175,7 @@ private:
             {
                 tf::StampedTransform transform;
                 m_listener.lookupTransform(m_worldFrame, m_frame, ros::Time(0), transform);
-<<<<<<< HEAD
-                if (transform.getOrigin().z() > m_startZ + 0.05 || m_thrust > 10000)
-=======
                 if (transform.getOrigin().z() > m_startZ + 0.01 || m_thrust > 20000)
->>>>>>> a8ae27483d882a0a562f5d48140bec19c61fe8d9
                 {
                     pidReset();
                     m_state = Automatic;
@@ -196,63 +191,87 @@ private:
 
             }
             break;
-        case Landing:
+    case Landing:
+        {
+            m_thrust -= 1000 * dt;
+            if (m_thrust < 40000)
             {
-                m_goal.pose.position.z = m_startZ + 0.05;
-                tf::StampedTransform transform;
-                m_listener.lookupTransform(m_worldFrame, m_frame, ros::Time(0), transform);
-                if (transform.getOrigin().z() <= m_startZ + 0.01) 
-                {
-                    m_state = Idle;
-                    geometry_msgs::Twist msg;
-                    m_pubNav.publish(msg);
-                }
+                m_thrust = 0;
             }
-            break;
+            geometry_msgs::Twist msg;
+            msg.linear.z = m_thrust;
+            m_pubNav.publish(msg);
+        }
+        break;
             // intentional fall-thru
         case Automatic: {
-            constexpr float a = 0.109e-6;
-            constexpr float b = -210.59e-6;
-            constexpr float c = 0.1517;
-            constexpr float m = 0.032;
-            constexpr float g = 9.80665;
-
             tf::StampedTransform transform;
-            m_listener.lookupTransform(m_worldFrame, m_frame, ros::Time(0), transform);
+            try {
+                m_listener.lookupTransform(m_worldFrame, m_frame, ros::Time(0), transform);
+            } catch (tf::TransformException& ex) {
+                ROS_ERROR("%s", ex.what());
+                return;
+            }
 
             geometry_msgs::PoseStamped targetWorld;
             targetWorld.header.stamp = transform.stamp_;
             targetWorld.header.frame_id = m_worldFrame;
             targetWorld.pose = m_goal.pose;
 
+            tf::Quaternion q_target(
+                targetWorld.pose.orientation.x,
+                targetWorld.pose.orientation.y,
+                targetWorld.pose.orientation.z,
+                targetWorld.pose.orientation.w
+            );
+            double roll_d, pitch_d, yaw_d;
+            tf::Matrix3x3(q_target).getRPY(roll_d, pitch_d, yaw_d);
+
             geometry_msgs::PoseStamped targetDrone;
-            m_listener.transformPose(m_frame, targetWorld, targetDrone);
+            try {
+                m_listener.transformPose(m_frame, targetWorld, targetDrone);
+            } catch (tf::TransformException& ex) {
+                ROS_ERROR("%s", ex.what());
+                return;
+            }
 
-            tfScalar roll, pitch, yaw;
-            tf::Matrix3x3(tf::Quaternion(
-                            targetDrone.pose.orientation.x,
-                            targetDrone.pose.orientation.y,
-                            targetDrone.pose.orientation.z,
-                            targetDrone.pose.orientation.w)).getRPY(roll, pitch, yaw);
+            tf::Quaternion q_target_drone(
+                targetDrone.pose.orientation.x,
+                targetDrone.pose.orientation.y,
+                targetDrone.pose.orientation.z,
+                targetDrone.pose.orientation.w
+            );
+            double roll, pitch, yaw;
+            tf::Matrix3x3(q_target_drone).getRPY(roll, pitch, yaw);
 
-            const float NUZS = (m_pidNUZ.update(0.0, targetDrone.pose.position.z)) + m_goalacc.linear.z;
-            const float NUXS = (m_pidNUX.update(0.0, targetDrone.pose.position.x)) + m_goalacc.linear.x;
-            const float NUYS = (m_pidNUY.update(0.0, targetDrone.pose.position.y)) + m_goalacc.linear.y;
-            const float u = std::sqrt(std::pow(NUXS, 2) + std::pow(NUYS, 2) + std::pow(NUZS + g, 2)) * m;
-            const float u_gramos = u / (g / 1000);
-            const float u_rpm = (std::sqrt(4 * a * (u_gramos - c) + std::pow(b, 2)) - b) / (2 * a);
-            const float phi = std::asin((NUXS / u) * std::sin(yaw) - (NUYS / u) * std::cos(yaw));
-            const float theta = std::atan2((NUXS * std::cos(yaw) + NUYS * std::sin(yaw)), (NUZS + g));
+            float NUXS = (m_pidNUX.update(0.0, targetDrone.pose.position.x)) + m_goalacc.linear.x;
+            float NUYS = (m_pidNUY.update(0.0, targetDrone.pose.position.y)) + m_goalacc.linear.y;
+            float NUZS = (m_pidNUZ.update(0.0, targetDrone.pose.position.z)) + m_goalacc.linear.z;
+
+            float a = 0.109*powf(10,-6);
+            float b = -210.59*powf(10,-6);
+            float c = 0.1517;
+
+            float m = 0.032;
+            float u = sqrt(pow(NUXS, 2) + pow(NUYS, 2) + pow((NUZS + 9.81), 2)) * m;
+            u = std::max(std::min(u, 4.0f), 0.0f);
+            float u_gramos = u * (1 / (9.80665 / 1000));
+            float u_rpm = (sqrt(4 * a * (u_gramos - c) + pow(b, 2)) - b) / (2 * a);
+            u_rpm = std::max(std::min(u_rpm, 60000.0f), 10000.0f);
+            float phi = asin((NUXS * sin(yaw_d) - NUYS * cos(yaw_d))*( m / u )) ;
+            float theta = atan((NUXS * cos(yaw_d) + NUYS * sin(yaw_d)) / (NUZS + 9.81));
+
+            m_thrust = u_rpm;
 
             geometry_msgs::Twist msg;
-            msg.linear.x =CLAMP(rad2deg(theta), -10.0f, 10.0f);
-            msg.linear.y = CLAMP(rad2deg(phi), -10.0f, 10.0f);
-            msg.linear.z = CLAMP(u_rpm, 10000.0f, 60000.0f);
+            msg.linear.x = 0;//std::max(std::min(rad2deg(theta), 10.0f), -10.0f);
+            msg.linear.y = 0;//std::max(std::min(rad2deg(phi), 10.0f), -10.0f);
+            msg.linear.z = u_rpm;
             msg.angular.z = m_pidYaw.update(0.0, yaw);
+            msg.angular.x = m_startZ;
             m_pubNav.publish(msg);
-            }
+        }
             break;
-
         case Idle:
             {
                 geometry_msgs::Twist msg;
@@ -305,7 +324,7 @@ int main(int argc, char **argv)
   std::string frame;
   n.getParam("frame", frame);
   double frequency;
-  n.param("frequency", frequency, 100.0);
+  n.param("frequency", frequency, 50.0);
 
   Controller controller(worldFrame, frame, n);
   controller.run(frequency);

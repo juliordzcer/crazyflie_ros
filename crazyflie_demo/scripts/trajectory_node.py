@@ -49,15 +49,7 @@ def trajectory_circle():
         w = np.pi/9.
         p = 15
 
-<<<<<<< HEAD
-        x = r * (np.arctan(p) + np.arctan(t - p)) * np.cos(w * t) 
-=======
-<<<<<<< HEAD
-        x = r * (np.arctan(p) + np.arctan(t - p)) * np.cos(w * t) #- 0.5
-=======
         x = r * (np.arctan(p) + np.arctan(t - p)) * np.cos(w * t) #- 0.3
->>>>>>> a8ae27483d882a0a562f5d48140bec19c61fe8d9
->>>>>>> 7a1633a148510744a010a77495ab90f88ae338df
         y = r * (np.arctan(p) + np.arctan(t - p)) * np.sin(w * t)
         z = (h/2) * (1 + np.tanh(t-7.5))
         yaw = 0
