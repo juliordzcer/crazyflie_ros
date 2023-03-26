@@ -76,6 +76,7 @@ public:
         , m_serviceTakeoff()
         , m_serviceLand()
         , m_thrust(0)
+        , m_height(0)
         , m_startZ(0)
     {
         ros::NodeHandle nh;
@@ -176,7 +177,9 @@ private:
                 m_listener.lookupTransform(m_worldFrame, m_frame, ros::Time(0), transform);
                 if (transform.getOrigin().z() > m_startZ + 0.05 || m_thrust > 20000)
                 {
+                    pidReset();
                     m_state = Automatic;
+                    m_thrust = 0;
                 }
                 else
                 {
@@ -188,23 +191,25 @@ private:
 
             }
             break;
-        case Landing:
+
+            case Landing:
             {
-                m_goal.pose.position.z = m_startZ + 0.05;
-                tf::StampedTransform transform;
-                m_listener.lookupTransform(m_worldFrame, m_frame, ros::Time(0), transform);
-                if (transform.getOrigin().z() <= m_startZ + 0.05) {
+                m_thrust -= 1000 * dt;
+                if (m_thrust < 45000) {
+                    pidReset();
                     m_state = Idle;
-                    geometry_msgs::Twist msg;
-                    m_pubNav.publish(msg);
+                    m_thrust = 0;
                 }
             }
             break;
+
             // intentional fall-thru
+
             case Automatic: {
             tf::StampedTransform transform;
             try {
                 m_listener.lookupTransform(m_worldFrame, m_frame, ros::Time(0), transform);
+                m_height = transform.getOrigin().z(); // Actualizar la altura
             } catch (tf::TransformException& ex) {
                 ROS_ERROR("%s", ex.what());
                 return;
@@ -258,12 +263,28 @@ private:
             float phi = asin((NUXS * sin(yaw_d) - NUYS * cos(yaw_d))*( m / u )) ;
             float theta = atan((NUXS * cos(yaw_d) + NUYS * sin(yaw_d)) / (NUZS + 9.81));
 
-            geometry_msgs::Twist msg;
-            msg.linear.x = std::max(std::min(rad2deg(theta), 10.0f), -10.0f);
-            msg.linear.y = std::max(std::min(rad2deg(phi), 10.0f), -10.0f);
-            msg.linear.z = u_rpm;
-            msg.angular.z = m_pidYaw.update(0.0, yaw);
-            m_pubNav.publish(msg);
+            if (m_height < 0.15)
+            {
+                geometry_msgs::Twist msg;
+                msg.linear.x = 0;
+                msg.linear.y = 0;
+                msg.linear.z = u_rpm;
+                msg.angular.z = m_pidYaw.update(0.0, yaw);
+                m_pubNav.publish(msg);
+            }
+            else
+            { 
+                geometry_msgs::Twist msg;
+                msg.linear.x = std::max(std::min(rad2deg(theta), 10.0f), -10.0f);
+                msg.linear.y = std::max(std::min(rad2deg(phi), 10.0f), -10.0f);
+                msg.linear.z = u_rpm;
+                msg.angular.z = m_pidYaw.update(0.0, yaw);
+                m_pubNav.publish(msg);
+            }
+
+            m_thrust = u_rpm;
+
+
         }
             break;
         case Idle:
@@ -304,6 +325,7 @@ private:
     ros::ServiceServer m_serviceTakeoff;
     ros::ServiceServer m_serviceLand;
     float m_thrust;
+    float m_height;
     float m_startZ;
 };
 
