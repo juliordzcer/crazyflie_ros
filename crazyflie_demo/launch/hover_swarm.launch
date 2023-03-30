@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="joy_dev" default="/dev/input/js0" />
+
+  <rosparam command="load" file="$(find crazyflie_demo)/launch/crazyflieTypes.yaml" />
+  <rosparam command="load" file="$(find crazyflie_demo)/launch/crazyflies.yaml" />
+
+
+
+  <node pkg="crazyflie_driver" type="crazyflie_server_mod" name="crazyflie_server_mod" output="screen" >
+    <rosparam>
+      # Logging configuration (Use enable_logging to actually enable logging)
+      genericLogTopics: ["log1"]
+      genericLogTopicFrequencies: [10]
+      genericLogTopic_log1_Variables: ["stateEstimate.x", "ctrltarget.x"]
+      # firmware parameters for all drones (use crazyflieTypes.yaml to set per type, or
+      # allCrazyflies.yaml to set per drone)
+      firmwareParams:
+        commander:
+          enHighLevel: 1
+        stabilizer:
+          estimator: 2 # 1: complementary, 2: kalman
+          controller: 2 # 1: PID, 2: mellinger
+        locSrv:
+          extPosStdDev: 1e-3
+          extQuatStdDev: 0.5e-1
+        kalman:
+          resetEstimation: 1
+      # tracking
+      motion_capture_type: "vrpn" # one of none,vicon,optitrack,optitrack_closed_source,qualisys,vrpn
+      object_tracking_type: "motionCapture" # one of motionCapture,libobjecttracker 
+      motion_capture_host_name: "192.168.2.10"
+      send_position_only: False # set to False to send position+orientation; set to True to send position only 
+      # motion_capture_interface_ip: "192.168.2.10" # optional for optitrack with multiple interfaces
+      save_point_clouds: "/dev/null" # set to a valid path to log mocap point cloud binary file.
+      print_latency: False
+      write_csvs: False
+      force_no_cache: False
+      enable_parameters: True
+      enable_logging: False
+      enable_logging_pose: True
+    </rosparam>
+  </node>
+
+  <node name="joy" pkg="joy" type="joy_node" output="screen">
+    <param name="dev" value="$(arg joy_dev)" />
+  </node>
+
+  <node pkg="crazyflie_driver" type="crazyflie_server_teleop" name="crazyflie_server_teleop" output="screen">
+  </node>
+
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find crazyflie_demo)/launch/test.rviz"/>
+
+</launch>

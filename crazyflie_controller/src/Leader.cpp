@@ -195,9 +195,8 @@ private:
             case Landing:
             {
                 m_thrust -= 1000 * dt;
-                if (m_thrust < 45000) {
-                    pidReset();
-                    m_state = Idle;
+                if (m_thrust < 0 || m_thrust < 30000 ) 
+                {
                     m_thrust = 0;
                 }
             }
@@ -263,13 +262,13 @@ private:
             float phi = asin((NUXS * sin(yaw_d) - NUYS * cos(yaw_d))*( m / u )) ;
             float theta = atan((NUXS * cos(yaw_d) + NUYS * sin(yaw_d)) / (NUZS + 9.81));
 
-            if (m_height < 0.15)
+            if (m_height < 0.05)
             {
                 geometry_msgs::Twist msg;
                 msg.linear.x = 0;
                 msg.linear.y = 0;
                 msg.linear.z = u_rpm;
-                msg.angular.z = m_pidYaw.update(0.0, yaw);
+                msg.angular.z = 0;
                 m_pubNav.publish(msg);
             }
             else
