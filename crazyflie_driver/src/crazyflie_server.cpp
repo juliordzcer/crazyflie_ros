@@ -267,8 +267,7 @@ void cmdPositionSetpoint(
     crazyflie_driver::UpdateParams::Response& res)
   {
     ROS_INFO_NAMED(m_tf_prefix, "Update parameters");
-    for (auto&& p : req.params) 
-    {
+    for (auto&& p : req.params) {
       std::string ros_param = "/" + m_tf_prefix + "/" + p;
       size_t pos = p.find("/");
       std::string group(p.begin(), p.begin() + pos);
@@ -277,8 +276,7 @@ void cmdPositionSetpoint(
       auto entry = m_cf.getParamTocEntry(group, name);
       if (entry)
       {
-        switch (entry->type) 
-        {
+        switch (entry->type) {
           case Crazyflie::ParamTypeUint8:
             updateParam<uint8_t, int>(entry->id, ros_param);
             break;
@@ -302,77 +300,11 @@ void cmdPositionSetpoint(
             break;
         }
       }
-      else 
-      {
+      else {
         ROS_ERROR_NAMED(m_tf_prefix, "Could not find param %s/%s", group.c_str(), name.c_str());
       }
     }
     return true;
-  }
-
-    void updateParams(
-    CrazyflieROS* cf)
-  {
-    ros::NodeHandle n("~");
-    ros::NodeHandle nGlobal;
-
-    // update CF-specific parameters
-
-    std::vector<XmlRpc::XmlRpcValue> firmwareParamsVec(2);
-    n.getParam("firmwareParams", firmwareParamsVec[0]);
-    nGlobal.getParam("ControllerParams/firmwareParams", firmwareParamsVec[1]);
-
-    crazyflie_driver::UpdateParams::Request request;
-    crazyflie_driver::UpdateParams::Response response;
-
-    for (auto& firmwareParams : firmwareParamsVec) 
-    {
-      auto iter = firmwareParams.begin();
-      for (; iter != firmwareParams.end(); ++iter) 
-      {
-        std::string group = iter->first;
-        XmlRpc::XmlRpcValue v = iter->second;
-        auto iter2 = v.begin();
-        for (; iter2 != v.end(); ++iter2) 
-        {
-          std::string param = iter2->first;
-          XmlRpc::XmlRpcValue value = iter2->second;
-          if (value.getType() == XmlRpc::XmlRpcValue::TypeBoolean) 
-          {
-            bool b = value;
-            nGlobal.setParam(m_tf_prefix + "/" + group + "/" + param, b);
-            std::cout << "update " << group + "/" + param << " to " << b << std::endl;
-          } 
-          else if (value.getType() == XmlRpc::XmlRpcValue::TypeInt) 
-          {
-            int b = value;
-            nGlobal.setParam(m_tf_prefix + "/" + group + "/" + param, b);
-            std::cout << "update " << group + "/" + param << " to " << b << std::endl;
-          } 
-          else if (value.getType() == XmlRpc::XmlRpcValue::TypeDouble) 
-          {
-            double b = value;
-            nGlobal.setParam(m_tf_prefix + "/" + group + "/" + param, b);
-            std::cout << "update " << group + "/" + param << " to " << b << std::endl;
-          } 
-          else if (value.getType() == XmlRpc::XmlRpcValue::TypeString) 
-          {
-            // "1e-5" is not recognize as double; convert manually here
-            std::string value_str = value;
-            double value = std::stod(value_str);
-            nGlobal.setParam(m_tf_prefix + "/" + group + "/" + param, value);
-            std::cout << "update " << group + "/" + param << " to " << value << std::endl;
-          } 
-          else 
-          {
-            ROS_ERROR("No known type for %s.%s! (type: %d)", group.c_str(), param.c_str(), value.getType());
-          }
-          request.params.push_back(group + "/" + param);
-
-        }
-      }
-    }
-    cf->updateParams(request, response);
   }
 
   void cmdVelChanged(
@@ -685,9 +617,9 @@ void cmdPositionSetpoint(
       msg.orientation_covariance[0] = -1;
 
       // measured in deg/s; need to convert to rad/s
-      msg.angular_velocity.x = (data->gyro_x);
-      msg.angular_velocity.y = (data->gyro_y);
-      msg.angular_velocity.z = (data->gyro_z);
+      msg.angular_velocity.x = degToRad(data->gyro_x);
+      msg.angular_velocity.y = degToRad(data->gyro_y);
+      msg.angular_velocity.z = degToRad(data->gyro_z);
 
       // measured in mG; need to convert to m/s^2
       msg.linear_acceleration.x = data->acc_x * 9.81;
@@ -997,7 +929,7 @@ public:
   }
 
 private:
-  std::string m_tf_prefix;
+
   bool add_crazyflie(
     crazyflie_driver::AddCrazyflie::Request  &req,
     crazyflie_driver::AddCrazyflie::Response &res)
@@ -1012,8 +944,7 @@ private:
       req.use_ros_time);
 
     // Ignore if the uri is already in use
-    if (m_crazyflies.find(req.uri) != m_crazyflies.end()) 
-    {
+    if (m_crazyflies.find(req.uri) != m_crazyflies.end()) {
       ROS_ERROR("Cannot add %s, already added.", req.uri.c_str());
       return false;
     }
@@ -1061,6 +992,53 @@ private:
     return true;
   }
 
+  // bool takeoff(
+  //   crazyflie_driver::Takeoff::Request& req,
+  //   crazyflie_driver::Takeoff::Response& res)
+  // {
+  //   ROS_INFO("Takeoff requested");
+  //   m_cfbc.takeoff(req.height, req.duration.toSec(), req.groupMask);
+  //   return true;
+  // }
+
+  // bool land(
+  //   crazyflie_driver::Land::Request& req,
+  //   crazyflie_driver::Land::Response& res)
+  // {
+  //   ROS_INFO("Land requested");
+  //   m_cfbc.land(req.height, req.duration.toSec(), req.groupMask);
+  //   return true;
+  // }
+
+  // bool stop(
+  //   crazyflie_driver::Stop::Request& req,
+  //   crazyflie_driver::Stop::Response& res)
+  // {
+  //   ROS_INFO("Stop requested");
+  //   m_cfbc.stop(req.groupMask);
+  //   return true;
+  // }
+
+  // bool goTo(
+  //   crazyflie_driver::GoTo::Request& req,
+  //   crazyflie_driver::GoTo::Response& res)
+  // {
+  //   ROS_INFO("GoTo requested");
+  //   // this is always relative
+  //   m_cfbc.goTo(req.goal.x, req.goal.y, req.goal.z, req.yaw, req.duration.toSec(), req.groupMask);
+  //   return true;
+  // }
+
+  // bool startTrajectory(
+  //   crazyflie_driver::StartTrajectory::Request& req,
+  //   crazyflie_driver::StartTrajectory::Response& res)
+  // {
+  //   ROS_INFO("StartTrajectory requested");
+  //   // this is always relative
+  //   m_cfbc.startTrajectory(req.index, req.numPieces, req.timescale, req.reversed, req.groupMask);
+  //   return true;
+  // }
+
 private:
   std::map<std::string, CrazyflieROS*> m_crazyflies;
 };
@@ -1073,12 +1051,7 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "crazyflie_server");
 
   CrazyflieServer cfserver;
-
-  ros::NodeHandle nGlobal;
-
   cfserver.run();
 
   return 0;
 }
-
-

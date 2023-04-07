@@ -1,5 +1,3 @@
-
-
 #include <ros/ros.h>
 #include <tf/transform_listener.h>
 #include <std_srvs/Empty.h>
@@ -155,13 +153,10 @@ private:
     }
 
 
-    // Definir la función que convierte radianes a grados
     float rad2deg(float radianes) {
-        // Aplicar la fórmula y retornar el resultado
         return radianes * 180 / M_PI;
     }
     float deg2rad(float deg) {
-        // Aplicar la fórmula y retornar el resultado
         return deg *  M_PI / 180 ;
     }
 
@@ -175,7 +170,7 @@ private:
             {
                 tf::StampedTransform transform;
                 m_listener.lookupTransform(m_worldFrame, m_frame, ros::Time(0), transform);
-                if (transform.getOrigin().z() > m_startZ + 0.05 || m_thrust > 20000)
+                if (m_thrust > 15000)
                 {
                     pidReset();
                     m_state = Automatic;
@@ -194,8 +189,16 @@ private:
 
             case Landing:
             {
+            tf::StampedTransform transform;
+            try {
+                m_listener.lookupTransform(m_worldFrame, m_frame, ros::Time(0), transform);
+                m_height = transform.getOrigin().z(); // Actualizar la altura
+            } catch (tf::TransformException& ex) {
+                ROS_ERROR("%s", ex.what());
+                return;
+            }
                 m_thrust -= 1000 * dt;
-                if (m_thrust < 0 || m_thrust < 30000 ) 
+                if (m_thrust < 0 || m_height < 0.06 ) 
                 {
                     m_thrust = 0;
                 }
@@ -262,7 +265,7 @@ private:
             float phi = asin((NUXS * sin(yaw_d) - NUYS * cos(yaw_d))*( m / u )) ;
             float theta = atan((NUXS * cos(yaw_d) + NUYS * sin(yaw_d)) / (NUZS + 9.81));
 
-            if (m_height < 0.05)
+            if (m_height < 0.06)
             {
                 geometry_msgs::Twist msg;
                 msg.linear.x = 0;
@@ -273,9 +276,10 @@ private:
             }
             else
             { 
+                float tol = 9.0f; 
                 geometry_msgs::Twist msg;
-                msg.linear.x = std::max(std::min(rad2deg(theta), 10.0f), -10.0f);
-                msg.linear.y = std::max(std::min(rad2deg(phi), 10.0f), -10.0f);
+                msg.linear.x = std::max(std::min(rad2deg(theta), tol), -tol);
+                msg.linear.y = std::max(std::min(rad2deg(phi), tol), -tol);
                 msg.linear.z = u_rpm;
                 msg.angular.z = m_pidYaw.update(0.0, yaw);
                 m_pubNav.publish(msg);

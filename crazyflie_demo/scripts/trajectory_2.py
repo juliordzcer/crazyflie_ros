@@ -21,7 +21,7 @@ def joy_callback(joy_msg):
         rospy.loginfo('Trayectoria iniciada')
         button_pressed = True
         r = 0.15
-        h = 0.5
+        h = 0.8
         t = 0.0
     elif joy_msg.buttons[5] == 1 and button_pressed:
         rospy.loginfo('Trayectoria reiniciada')
@@ -48,9 +48,9 @@ def trajectory_circle():
         w = np.pi/9.
         p = 15
 
-        x = r * (np.arctan(p) + np.arctan(t - p)) * np.cos(w * t) - 0.5
+        x = r * (np.arctan(p) + np.arctan(t - p)) * np.cos(w * t) + 0.25
         y = r * (np.arctan(p) + np.arctan(t - p)) * np.sin(w * t)
-        z = (h/2) * (1 + np.tanh(t-7.5)) + 0.1
+        z = (h/2) * (1 + np.tanh(t-7.5))
         yaw = 0
 
             # Publicar posicion actual
@@ -100,9 +100,9 @@ if __name__ == '__main__':
 
     rospy.init_node('trajectory_circle', anonymous=True)
     
-    pub_pose = rospy.Publisher('goal', PoseStamped, queue_size=100)
+    pub_pose = rospy.Publisher('goal', PoseStamped, queue_size=1)
     # pub_vel = rospy.Publisher('goalvel', Twist, queue_size=1)
-    pub_acc = rospy.Publisher('goalacc', Twist, queue_size=100)   
+    pub_acc = rospy.Publisher('goalacc', Twist, queue_size=1)   
 
     joy_sub = rospy.Subscriber('joy', Joy, joy_callback)
     
