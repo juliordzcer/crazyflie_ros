@@ -20,18 +20,24 @@ def joy_callback(joy_msg):
     if joy_msg.buttons[5] == 1 and not button_pressed:
         rospy.loginfo('Trayectoria iniciada')
         button_pressed = True
+<<<<<<< HEAD
         r = 0.15
         h = 0.5
+=======
+        r = 0.2
+        h = .7
+>>>>>>> main
         t = 0.0
+
     elif joy_msg.buttons[5] == 1 and button_pressed:
         rospy.loginfo('Trayectoria reiniciada')
         r = 0.0
         h = 0.0
         t = 0.0
         button_pressed = False
+
     elif not joy_msg.buttons[5] == 1:
         button_pressed = False
-
 
 
 def trajectory_circle():
@@ -48,7 +54,7 @@ def trajectory_circle():
         w = np.pi/9.
         p = 15
 
-        x = r * (np.arctan(p) + np.arctan(t - p)) * np.cos(w * t) - 0.5
+        x = r * (np.arctan(p) + np.arctan(t - p)) * np.cos(w * t) #- 0.3
         y = r * (np.arctan(p) + np.arctan(t - p)) * np.sin(w * t)
         z = (h/2) * (1 + np.tanh(t-7.5)) + 0.1
         yaw = 0
@@ -82,13 +88,12 @@ def trajectory_circle():
         ax = -r * (np.arctan(p) + np.arctan(t - p)) * w**2 * np.cos(w * t)
         ay = -r * (np.arctan(p) + np.arctan(t - p)) * w**2 * np.sin(w * t)
         az = (h/2) * np.tanh(t-7.5) * (1 - np.tanh(t-7.5)) * (1 - 2*np.tanh(t-7.5))
-        a_yaw = 0
-
+ 
             # Publicar aceleracion
         acc.linear.x = ax
         acc.linear.y = ay
         acc.linear.z = az
-        acc.angular.z = a_yaw
+        acc.angular.z = yaw
         pub_acc.publish(acc)
 
             

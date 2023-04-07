@@ -28,9 +28,15 @@ class AttitudePublisher:
         q = msg.pose.orientation
         rpy1 = t.euler_from_quaternion([q.x, q.y, q.z, q.w])
         # Extraer pitch y roll de los ángulos rpy
+<<<<<<< HEAD
         self.roll = rpy1[0]
         self.pitch = rpy1[1]
         
+=======
+        self.roll = rpy[0]
+        self.pitch = rpy[1]
+
+>>>>>>> main
     def thrust_callback(self, msg):
         # Extraer los ángulos de rotación rpy a partir del mensaje "pose"
         self.thrust = msg.linear.z

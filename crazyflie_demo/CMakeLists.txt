@@ -100,7 +100,11 @@ include_directories(
 # )
 
 # Declare a cpp executable
+<<<<<<< HEAD
 # add_executable(quadrotor_teleop src/quadrotor_teleop.cpp)
+=======
+#add_executable(quadrotor_teleop src/quadrotor_teleop.cpp)
+>>>>>>> main
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
