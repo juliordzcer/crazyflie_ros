@@ -24,7 +24,7 @@ class VelFilterNode:
         rospy.init_node('filter', anonymous=True)
 
         # Obtener el coeficiente de filtro de los parámetros del nodo
-        self.filter_coeff = rospy.get_param('~filter_coeff', 0.6)
+        self.filter_coeff = rospy.get_param('~filter_coeff', 0.7)
 
         # Crear los filtros de velocidad lineal y angular para x, y, z
         self.linear_vel_filter_x = LowPassFilter(self.filter_coeff)

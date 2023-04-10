@@ -30,13 +30,14 @@ int main(int argc, char **argv)
   n.param("enable_logging", enable_logging, true);
   n.param("enable_parameters", enable_parameters, true);
   n.param("use_ros_time", use_ros_time, true);
-  n.param("enable_logging_imu", enable_logging_imu, true); //true
-  n.param("enable_logging_temperature", enable_logging_temperature, false); //true
-  n.param("enable_logging_magnetic_field", enable_logging_magnetic_field, false);//true
-  n.param("enable_logging_pressure", enable_logging_pressure, false);//true
-  n.param("enable_logging_battery", enable_logging_battery, false); //true
-  n.param("enable_logging_pose", enable_logging_pose, true);
+  n.param("enable_logging_imu", enable_logging_imu, true);
+  n.param("enable_logging_temperature", enable_logging_temperature, true);
+  n.param("enable_logging_magnetic_field", enable_logging_magnetic_field, true);
+  n.param("enable_logging_pressure", enable_logging_pressure, true);
+  n.param("enable_logging_battery", enable_logging_battery, true);
+  n.param("enable_logging_pose", enable_logging_pose, false);
   n.param("enable_logging_packets", enable_logging_packets, true);
+
 
   ROS_INFO("wait_for_service /add_crazyflie");
   ros::ServiceClient addCrazyflieService = n.serviceClient<crazyflie_driver::AddCrazyflie>("/add_crazyflie");

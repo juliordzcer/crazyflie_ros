@@ -1,5 +1,3 @@
-
-
 #include <ros/ros.h>
 #include <tf/transform_listener.h>
 #include <std_srvs/Empty.h>
@@ -78,6 +76,7 @@ public:
         , m_serviceTakeoff()
         , m_serviceLand()
         , m_thrust(0)
+        , m_height(0)
         , m_startZ(0)
     {
         ros::NodeHandle nh;
@@ -155,13 +154,10 @@ private:
     }
 
 
-    // Definir la función que convierte radianes a grados
     float rad2deg(float radianes) {
-        // Aplicar la fórmula y retornar el resultado
         return radianes * 180 / M_PI;
     }
     float deg2rad(float deg) {
-        // Aplicar la fórmula y retornar el resultado
         return deg *  M_PI / 180 ;
     }
 
@@ -175,7 +171,11 @@ private:
             {
                 tf::StampedTransform transform;
                 m_listener.lookupTransform(m_worldFrame, m_frame, ros::Time(0), transform);
+<<<<<<< HEAD
+                if (m_thrust > 15000)
+=======
                 if (transform.getOrigin().z() > m_startZ + 0.01 || m_thrust > 20000)
+>>>>>>> main
                 {
                     pidReset();
                     m_state = Automatic;
@@ -191,6 +191,30 @@ private:
 
             }
             break;
+<<<<<<< HEAD
+
+            case Landing:
+            {
+            tf::StampedTransform transform;
+            try {
+                m_listener.lookupTransform(m_worldFrame, m_frame, ros::Time(0), transform);
+                m_height = transform.getOrigin().z(); // Actualizar la altura
+            } catch (tf::TransformException& ex) {
+                ROS_ERROR("%s", ex.what());
+                return;
+            }
+                m_thrust -= 1000 * dt;
+                if (m_thrust < 0 || m_height < 0.06 ) 
+                {
+                    m_thrust = 0;
+                }
+            }
+            break;
+
+            // intentional fall-thru
+
+            case Automatic: {
+=======
     case Landing:
         {
             m_thrust -= 1000 * dt;
@@ -205,9 +229,11 @@ private:
         break;
             // intentional fall-thru
         case Automatic: {
+>>>>>>> main
             tf::StampedTransform transform;
             try {
                 m_listener.lookupTransform(m_worldFrame, m_frame, ros::Time(0), transform);
+                m_height = transform.getOrigin().z(); // Actualizar la altura
             } catch (tf::TransformException& ex) {
                 ROS_ERROR("%s", ex.what());
                 return;
@@ -261,6 +287,31 @@ private:
             float phi = asin((NUXS * sin(yaw_d) - NUYS * cos(yaw_d))*( m / u )) ;
             float theta = atan((NUXS * cos(yaw_d) + NUYS * sin(yaw_d)) / (NUZS + 9.81));
 
+<<<<<<< HEAD
+            if (m_height < 0.06)
+            {
+                geometry_msgs::Twist msg;
+                msg.linear.x = 0;
+                msg.linear.y = 0;
+                msg.linear.z = u_rpm;
+                msg.angular.z = 0;
+                m_pubNav.publish(msg);
+            }
+            else
+            { 
+                float tol = 9.0f; 
+                geometry_msgs::Twist msg;
+                msg.linear.x = std::max(std::min(rad2deg(theta), tol), -tol);
+                msg.linear.y = std::max(std::min(rad2deg(phi), tol), -tol);
+                msg.linear.z = u_rpm;
+                msg.angular.z = m_pidYaw.update(0.0, yaw);
+                m_pubNav.publish(msg);
+            }
+
+            m_thrust = u_rpm;
+
+
+=======
             m_thrust = u_rpm;
 
             geometry_msgs::Twist msg;
@@ -270,6 +321,7 @@ private:
             msg.angular.z = m_pidYaw.update(0.0, yaw);
             msg.angular.x = m_startZ;
             m_pubNav.publish(msg);
+>>>>>>> main
         }
             break;
         case Idle:
@@ -310,6 +362,7 @@ private:
     ros::ServiceServer m_serviceTakeoff;
     ros::ServiceServer m_serviceLand;
     float m_thrust;
+    float m_height;
     float m_startZ;
 };
 

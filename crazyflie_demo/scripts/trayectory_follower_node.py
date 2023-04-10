@@ -9,13 +9,17 @@ class FollowerNode():
         rospy.init_node('follower_node', anonymous=True)
 
         # Obtiene los parámetros de formación
+<<<<<<< HEAD
+        self.formation_x = rospy.get_param('~formation_x', 1)
+=======
         self.formation_x = rospy.get_param('~formation_x', .6)
+>>>>>>> main
         self.formation_y = rospy.get_param('~formation_y', 0.0)
         self.formation_z = rospy.get_param('~formation_z', 0.0)
         self.formation_yaw = rospy.get_param('~formation_yaw', 0.0)
 
         # Crea el publisher para el objetivo de pose
-        self.goal_pub = rospy.Publisher('goal', PoseStamped, queue_size=10)
+        self.goal_pub = rospy.Publisher('goal', PoseStamped, queue_size=50)
 
         # Crea el subscriber para la pose del líder
         rospy.Subscriber('vrpn_client_node/crazyflie1/pose', PoseStamped, self.leader_pose_callback)
@@ -37,8 +41,8 @@ class FollowerNode():
 
         # Agrega la orientación objetivo, rotada respecto al líder
         leader_quat = (leader_orient.x, leader_orient.y, leader_orient.z, leader_orient.w)
-        follower_quat = quaternion_from_euler(0, 0, 0)
-        # follower_quat = quaternion_from_euler(0, 0, self.formation_yaw)
+        # follower_quat = quaternion_from_euler(0, 0, 0)
+        follower_quat = quaternion_from_euler(0, 0, self.formation_yaw)
         final_quat = quaternion_multiply(leader_quat, follower_quat)
         follower_goal.pose.orientation = Quaternion(*final_quat)
 

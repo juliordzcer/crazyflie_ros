@@ -1,6 +1,9 @@
 <?xml version="1.0"?>
 
 <launch>
+<<<<<<< HEAD
+  <arg name="uri" default="radio://1/70/2M/E7E7E7E703" />
+=======
   <arg name="joy_dev" default="/dev/input/js0" />
   <arg name="uri" default="radio://1/70/2M/E7E7E7E703" /> 
 
@@ -8,10 +11,28 @@
 
   <arg name="ip" default="192.168.2.10" /> 
   <arg name="port" default="3883" />
+>>>>>>> main
 
   <include file="$(find crazyflie_driver)/launch/crazyflie_server.launch">
   </include>
 
+<<<<<<< HEAD
+  <group ns="crazyflie">
+
+    <node pkg="crazyflie_driver" type="crazyflie_add" name="crazyflie_add" output="screen">
+      <param name="uri" value="$(arg uri)" />
+      <param name="tf_prefix" value="crazyflie" />
+      <rosparam>
+        genericLogTopics: ["log1", "log2"]
+        genericLogTopicFrequencies: [10, 100]
+        genericLogTopic_log1_Variables: ["pm.vbat"]
+        genericLogTopic_log2_Variables: ["acc.x", "acc.y", "acc.z"]
+      </rosparam>
+    </node>
+
+
+  </group>
+=======
 
   <group ns="crazyflie">
 
@@ -27,5 +48,5 @@
 
   </group>
 
+>>>>>>> main
 </launch>
-

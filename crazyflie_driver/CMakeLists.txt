@@ -9,6 +9,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   tf
   crazyflie_cpp
+  tf_conversions
 )
 
 set (CMAKE_CXX_STANDARD 11)
@@ -16,6 +17,7 @@ set (CMAKE_CXX_STANDARD_REQUIRED ON)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
+find_package(PCL REQUIRED)
 
 
 ## Uncomment this if the package has a setup.py. This macro ensures
@@ -91,10 +93,12 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
+
 ## Declare a cpp executable
 add_executable(crazyflie_server
   src/crazyflie_server.cpp
 )
+
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
@@ -102,10 +106,13 @@ add_dependencies(crazyflie_server
   crazyflie_driver_generate_messages_cpp
 )
 
+
 ## Specify libraries to link a library or executable target against
 target_link_libraries(crazyflie_server
   ${catkin_LIBRARIES}
 )
+
+
 
 ## Declare a cpp executable
 add_executable(crazyflie_add
@@ -119,6 +126,8 @@ add_dependencies(crazyflie_add
 target_link_libraries(crazyflie_add
   ${catkin_LIBRARIES}
 )
+
+
 
 #############
 ## Install ##

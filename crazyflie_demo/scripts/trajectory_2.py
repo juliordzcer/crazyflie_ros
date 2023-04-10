@@ -20,24 +20,18 @@ def joy_callback(joy_msg):
     if joy_msg.buttons[5] == 1 and not button_pressed:
         rospy.loginfo('Trayectoria iniciada')
         button_pressed = True
-<<<<<<< HEAD
         r = 0.15
-        h = 0.5
-=======
-        r = 0.2
-        h = .7
->>>>>>> main
+        h = 0.8
         t = 0.0
-
     elif joy_msg.buttons[5] == 1 and button_pressed:
         rospy.loginfo('Trayectoria reiniciada')
         r = 0.0
         h = 0.0
         t = 0.0
         button_pressed = False
-
     elif not joy_msg.buttons[5] == 1:
         button_pressed = False
+
 
 
 def trajectory_circle():
@@ -54,9 +48,9 @@ def trajectory_circle():
         w = np.pi/9.
         p = 15
 
-        x = r * (np.arctan(p) + np.arctan(t - p)) * np.cos(w * t) #- 0.3
+        x = r * (np.arctan(p) + np.arctan(t - p)) * np.cos(w * t) + 0.25
         y = r * (np.arctan(p) + np.arctan(t - p)) * np.sin(w * t)
-        z = (h/2) * (1 + np.tanh(t-7.5)) + 0.1
+        z = (h/2) * (1 + np.tanh(t-7.5))
         yaw = 0
 
             # Publicar posicion actual
@@ -88,12 +82,13 @@ def trajectory_circle():
         ax = -r * (np.arctan(p) + np.arctan(t - p)) * w**2 * np.cos(w * t)
         ay = -r * (np.arctan(p) + np.arctan(t - p)) * w**2 * np.sin(w * t)
         az = (h/2) * np.tanh(t-7.5) * (1 - np.tanh(t-7.5)) * (1 - 2*np.tanh(t-7.5))
- 
+        a_yaw = 0
+
             # Publicar aceleracion
         acc.linear.x = ax
         acc.linear.y = ay
         acc.linear.z = az
-        acc.angular.z = yaw
+        acc.angular.z = a_yaw
         pub_acc.publish(acc)
 
             
@@ -105,9 +100,9 @@ if __name__ == '__main__':
 
     rospy.init_node('trajectory_circle', anonymous=True)
     
-    pub_pose = rospy.Publisher('goal', PoseStamped, queue_size=100)
+    pub_pose = rospy.Publisher('goal', PoseStamped, queue_size=1)
     # pub_vel = rospy.Publisher('goalvel', Twist, queue_size=1)
-    pub_acc = rospy.Publisher('goalacc', Twist, queue_size=100)   
+    pub_acc = rospy.Publisher('goalacc', Twist, queue_size=1)   
 
     joy_sub = rospy.Subscriber('joy', Joy, joy_callback)
     
