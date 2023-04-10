@@ -1,3 +1,7 @@
+clc
+clear all
+close all 
+
 %% Parametros de tiempo
 dt = 0.001; % Intervalo de tiempo (s)
 t_max = 100; % Tiempo máximo de simulación (s)
@@ -11,15 +15,10 @@ p = 15;
 cx = -0.1;
 cy = 0.15;
 cz = 0.1;
-%% Corre los controladores
-%% Parametros de tiempo
+
 % Tiempo de simulación
 ti = -0.05;
 t = ti:dt:t_max; % Vector de tiempo
-a = 0.109*10^(-6);
-b = -210.6*10^(-6);
-c = 0.154;
-
 
 %% Constantes, Inercias, coeficientes aerodinamicos.
 % Constantes
@@ -37,25 +36,27 @@ w3=0.8;
 
 %% Agente 1 
 % Parametros de los controladores
-kp_x2 = 28.50;
-kd_x2 = 15.50;
-ki_x2 = 15;
+kpx2 = 6;
+kdx2 = 15;
+kix2 = 3;
 
-kp_y2 = 28.50;
-kd_y2 = 15.50;
-ki_y2 = 15;
+kpy2 = 6;
+kdy2 = 15;
+kiy2 = 3;
 
-kp_z2 = 8.50;
-kd_z2 = 5.50;
-ki_z2 = 0.00;
+zeta_z2 = 15.2;
+k0_z2 = 1.1;
+k1_z2 = 1.5*zeta_z2^(1/2);
+k2_z2 = 1.1*zeta_z2;
 
-zeta_phi2 = 5.5;
-k0_phi2 = 2.6;
+
+zeta_phi2 = 12.5;
+k0_phi2 = 10;
 k1_phi2 = 1.5*zeta_phi2^(1/2);
 k2_phi2 = 1.1*zeta_phi2;
 
-zeta_theta2 =  5.5;
-k0_theta2 = 2.6;
+zeta_theta2 =  12.5;
+k0_theta2 = 10;
 k1_theta2 = 1.5*zeta_theta2^(1/2);
 k2_theta2 = 1.1*zeta_theta2;
 
@@ -64,20 +65,22 @@ k0_psi2 = 2.1;
 k1_psi2 = 1.5*zeta_psi2^(1/2);
 k2_psi2 = 1.1*zeta_psi2;
 
-kp_x1 = 28.50;
-kd_x1 = 5.50;
-ki_x1 = 15;
 
-kp_y1 = 18.50;
-kd_y1 = 5.50;
-ki_y1 = 5;
+kpx1 = 6;
+kdx1 = 15;
+kix1 = 3;
 
-kp_z1 = 25.50;
-kd_z1 = 5.50;
-ki_z1 = 2.00;
+kpy1 = 6;
+kdy1 = 15;
+kiy1 = 3;
+
+zeta_z1 = 8.2;
+k0_z1 = 1.1;
+k1_z1 = 1.5*zeta_z1^(1/2);
+k2_z1 = 1.1*zeta_z1;
 
 zeta_phi1 = 5.5;
-k0_phi1 = 2.6;
+k0_phi1 = 1;
 k1_phi1 = 1.5*zeta_phi1^(1/2);
 k2_phi1 = 1.1*zeta_phi1;
 
@@ -90,8 +93,7 @@ zeta_psi1 = 8.5;
 k0_psi1 = 2.1;
 k1_psi1 = 1.5*zeta_psi1^(1/2);
 k2_psi1 = 1.1*zeta_psi1;
-
-
+% Estado inicial
 x1   =-0.1;   % Posición en x (m)
 y1   = 0.15;   % Posición en y (m)
 z1   = 0 ; % Posición en z (m)
@@ -281,8 +283,7 @@ ETHETA2 = zeros(length(t), 1);
 EPSI2 = zeros(length(t), 1);
 
 % Senales de control
-UZ2_RPM   = zeros(length(t), 1);
-
+UZ2       = zeros(length(t), 1);
 TAUPHI2   = zeros(length(t), 1);
 TAUTHETA2 = zeros(length(t), 1);
 TAUPSI2   = zeros(length(t), 1);
@@ -342,31 +343,6 @@ for i = 1:length(t)
     
     % Cálculo de la integral del error de posicion del lider
     iex2 = iex2 + ex2 * dt;
-    iey2 = iey2 + ey2 * dt;
-    iez2 = iez2 + ez2 * dt; 
-    
-    % Cálculo de la derivada del error de posicion
-    exp2 = (ex2 - ex_prev2) / dt;
-    eyp2 = (ey2 - ey_prev2) / dt;
-    ezp2 = (ez2 - ez_prev2) / dt;
-    nu_x2 = (-ki_x2 * iex2 - kp_x2 * ex2 - kd_x2 * exp2);
-    nu_y2 = (-ki_y2 * iey2 - kp_y2 * ey2 - kd_y2 * eyp2);
-    nu_z2 = (-ki_z2 * iez2 - kp_z2 * ez2 - kd_z2 * ezp2);
-    
-    
-    u2 = (sqrt((nu_x2+ xdpp2)^2 + (nu_y2+ ydpp2)^2 +(nu_z2 + g + zdpp2)^2))*m;
-    
-    phid2     = asin ((m/u2)*((nu_x2+ xdpp2)*sin(psid2) - (nu_y2+ ydpp2)*cos(psid2))); 
-    phidp2    = (phid2  - phid2_prev ) / dt;
-    phidpp2   = (phidp2 - phidp2_prev) / dt;
-    
-    thetad2     = atan (((nu_x2+ xdpp2)*cos(psid2) + (nu_y2+ ydpp2)*sin(psid2))/(nu_z2+g+ zdpp2));
-    thetad2     = clamp (thetad2, deg2rad(-1),deg2rad(1));
-    thetadp2    = (thetad2  - thetad2_prev ) / dt;
-    thetadpp2   = (thetadp2 - thetadp2_prev) / dt;
-
-    % Cálculo de la integral del error de posicion del lider
-    iex2 = iex2 + ex2 * dt;
     iex2 = clamp(iex2,-.1,.1); 
     iey2 = iey2 + ey2 * dt;
     iey2 = clamp(iey2,-.1,.1); 
@@ -379,26 +355,20 @@ for i = 1:length(t)
     ezp2 = (ez2 - ez_prev2) / dt;
 
     
-    nu_x2 = (-ki_x2 * iex2 - kp_x2 * ex2 - kd_x2 * exp2)+ xdpp2;
-    nu_y2 = (-ki_y2 * iey2 - kp_y2 * ey2 - kd_y2 * eyp2)+ ydpp2;
-    nu_z2 = (-ki_z2 * iez2 - kp_z2 * ez2 - kd_z2 * ezp2)+ zdpp2;
+     % Control z  
+    z_mphi2 = ezp2 + k0_z2*((abs(ez2)^(2/3))*sign(ez2));
+    z32 = z32 +(-k2_z2*sign(z_mphi2))*dt;
+    z_bar2= (-k1_z2*((abs(z_mphi2)^(1/2))*sign(z_mphi2)) + z32);
     
+    u2 =((z_bar2+g+ zdpp2)/(cos(theta2)*cos(phi2)))*m; 
     
-    u2 = (sqrt((nu_x2)^2 + (nu_y2)^2 +(nu_z2 + g )^2))*m;
-    
-    thrust_gramo = u2*( 1 / 0.00981 );
-    rpm = (sqrt(4*a*(thrust_gramo-c)+b^2) - b)/(2*a);
-    u2_rpm = rpm;
-    
-    phid2     = asin ((m/u2)*((nu_x2)*sin(psid2) - (nu_y2)*cos(psid2))); 
+    phid2     = (xpp2-(kpy2*ey2 + kiy2*iey2 + kdy2*eyp2))/((z_bar2 + g +zdpp2)*cos(psi2)) - (tan(phi2)*tan(psi2))/(cos(theta2));
     phidp2    = (phid2  - phid2_prev ) / dt;
     phidpp2   = (phidp2 - phidp2_prev) / dt;
     
-    thetad2     = atan (((nu_x2)*cos(psid2) + (nu_y2)*sin(psid2))/(nu_z2+g));
-    thetad2     = clamp (thetad2, deg2rad(-1),deg2rad(1));
+    thetad2     = sin(theta2)*tan(psi2)-(ypp2  - ((kpx2*ex2 + kix2*iex2 + kdx2*exp2)*cos(theta2)))/((z_bar2 + g +zdpp2)*cos(psi2)); 
     thetadp2    = (thetad2  - thetad2_prev ) / dt;
     thetadpp2   = (thetadp2 - thetadp2_prev) / dt;
-    
     
     % Cálculo del error de orientacion del lider
     ephi2   = phi2 - phid2;
@@ -473,7 +443,7 @@ for i = 1:length(t)
     XPP2(i) = xpp2;
     YPP2(i) = ypp2;
     ZPP2(i) = zpp2;
-
+    
     PHI2(i) = rad2deg(phi2);
     THETA2(i) = rad2deg(theta2);
     PSI2(i) = rad2deg(psi2);
@@ -483,7 +453,7 @@ for i = 1:length(t)
     PHIPP2(i) = phipp2;
     THETAPP2(i) = thetapp2;
     PSIPP2(i) = psipp2;
-    
+
     XD2(i) = xd2;
     YD2(i) = yd2;
     ZD2(i) = zd2;
@@ -498,8 +468,14 @@ for i = 1:length(t)
     ETHETA2(i) = rad2deg(etheta2);
     EPSI2(i) = rad2deg(epsi2);
     
+    EX2(i) = ex2;
+    EY2(i) = ey2;
+    EZ2(i) = ez2;
+    EPHI2(i) = ephi2;
+    ETHETA2(i) = etheta2;
+    EPSI2(i) = epsi2;
+    
     UZ2(i)       = u2;
-    UZ2_RPM(i)   = u2_rpm;
     TAUPHI2(i)   = tau_phi2;
     TAUTHETA2(i) = tau_theta2;
     TAUPSI2(i)   = tau_psi2;
@@ -562,24 +538,19 @@ for i = 1:length(t)
     eyp1 = (ey1 - ey_prev1) / dt;
     ezp1 = (ez1 - ez_prev1) / dt;
     
- 
+    
     % Control de posicion para el seguidor
-  
-    c1 = (u2/m)*(cos(phi2)*sin(theta2)*cos(psi2) + sin(phi2)*sin(psi2));
-    c2 = (u2/m)*(cos(phi2)*sin(theta2)*sin(psi2) - sin(phi2)*cos(psi2));
-    c3 = (u2/m)*(cos(phi2)*cos(theta2)) ;
+    z_mphi1 = ezp1 + k0_z1*((abs(ez1)^(2/3))*sign(ez1));
+    z31 = z31 +(-k2_z1*sign(z_mphi1))*dt;
+    z_bar1= (-k1_z1*((abs(z_mphi1)^(1/2))*sign(z_mphi1)) + z31);
     
-    nu_x1 = (-ki_x1 * iex1 - kp_x1 * ex1 - kd_x1 * exp1);
-    nu_y1 = (-ki_y1 * iey1 - kp_y1 * ey1 - kd_y1 * eyp1);
-    nu_z1 = (-ki_z1 * iez1 - kp_z1 * ez1 - kd_z1 * ezp1);
-   
-    u1 = (sqrt((nu_x1+ c1)^2 + (nu_y1+ c2)^2 +(nu_z1+ c3)^2))*m;
-    
-    phid1     = asin((m/u1)*((nu_x1 + c1) * sin(psid1) - (nu_y1 + c2) * cos(psid1)));
+    u1 =((z_bar1*m+ u2*cos(theta2)*cos(phi2))/(cos(theta1)*cos(phi1))); 
+
+    phid1     = ((kpy1*ey1 + kiy1*iey1 + kdy1*eyp1) )/g;
     phidp1    = (phid1  - phid1_prev ) / dt;
     phidpp1   = (phidp1 - phidp1_prev) / dt;
     
-    thetad1     = atan(((nu_x1+ c1) * cos(psid1) + (nu_y1+ c2) * sin(psid1))/(nu_z1+ c3));
+    thetad1     = -((kpx1*ex1 + kix1*iex1 + kdx1*exp1) )/g; 
     thetadp1    = (thetad1  - thetad1_prev ) / dt;
     thetadpp1   = (thetadp1 - thetadp1_prev) / dt;
     
@@ -656,7 +627,7 @@ for i = 1:length(t)
     YPP1(i) = ypp1;
     ZPP1(i) = zpp1;
 
-    PHI1(i) = rad2deg(phi1);
+      PHI1(i) = rad2deg(phi1);
     THETA1(i) = rad2deg(theta1);
     PSI1(i) = rad2deg(psi1);
     
@@ -711,85 +682,490 @@ for i = 1:length(t)
     thetadp1_prev = thetadp1;
     
     
-   NUX2(i) = nu_x2;
-   NUY2(i) = nu_y2;
-   NUZ2(i) = nu_z2;
    
     
 end
-
-figure
-hold on
-plot(t,NUX2)
-plot(t,NUY2)
-plot(t,NUZ2)
-hold off
-box on
 %% Extraccion de datos
 pm = -ti^(-1)+1; 
 t=t(pm:end);
 
-EX1_STSMC_R     = EX1(pm:end);
-EY1_STSMC_R     = EY1(pm:end); 
-EZ1_STSMC_R     = EZ1(pm:end);
-EPHI1_STSMC_R   = EPHI1(pm:end);
-ETHETA1_STSMC_R = ETHETA1(pm:end);
-EPSI1_STSMC_R   = EPSI1(pm:end);
+EX1_STSMC_J     = EX1(pm:end);
+EY1_STSMC_J     = EY1(pm:end);
+EZ1_STSMC_J     = EZ1(pm:end);
+EPHI1_STSMC_J   = EPHI1(pm:end);
+ETHETA1_STSMC_J = ETHETA1(pm:end);
+EPSI1_STSMC_J   = EPSI1(pm:end);
 
-EX2_STSMC_R     = EX2(pm:end);
-EY2_STSMC_R     = EY2(pm:end);
-EZ2_STSMC_R     = EZ2(pm:end);
-EPHI2_STSMC_R   = EPHI2(pm:end);
-ETHETA2_STSMC_R = ETHETA2(pm:end);
-EPSI2_STSMC_R   = EPSI2(pm:end);
-
-
-X1_STSMC_R     = X1(pm:end);
-Y1_STSMC_R     = Y1(pm:end); 
-Z1_STSMC_R     = Z1(pm:end);
-PHI1_STSMC_R   = PHI1(pm:end);
-THETA1_STSMC_R = THETA1(pm:end);
-PSI1_STSMC_R   = PSI1(pm:end);
-
-X2_STSMC_R     = X2(pm:end);
-Y2_STSMC_R     = Y2(pm:end);
-Z2_STSMC_R     = Z2(pm:end);
-PHI2_STSMC_R   = PHI2(pm:end);
-THETA2_STSMC_R = THETA2(pm:end);
-PSI2_STSMC_R   = PSI2(pm:end);
-
-XD1_STSMC_R     = XD1(pm:end);
-YD1_STSMC_R     = YD1(pm:end); 
-ZD1_STSMC_R     = ZD1(pm:end);
-PHID1_STSMC_R   = PHID1(pm:end);
-THETAD1_STSMC_R = THETAD1(pm:end);
-PSID1_STSMC_R   = PSID1(pm:end);
-
-XD2_STSMC_R     = XD2(pm:end);
-YD2_STSMC_R     = YD2(pm:end);
-ZD2_STSMC_R     = ZD2(pm:end);
-PHID2_STSMC_R   = PHID2(pm:end);
-THETAD2_STSMC_R = THETAD2(pm:end);
-PSID2_STSMC_R   = PSID2(pm:end);
-
-UZ1_STSMC_R       = UZ1(pm:end);
-TAUPHI1_STSMC_R   = TAUPHI1(pm:end); 
-TAUTHETA1_STSMC_R = TAUTHETA1(pm:end);
-TAUPSI1_STSMC_R   = TAUPSI1(pm:end);
-
-UZ2_STSMC_R       = UZ2(pm:end);
-TAUPHI2_STSMC_R   = TAUPHI2(pm:end); 
-TAUTHETA2_STSMC_R = TAUTHETA2(pm:end);
-TAUPSI2_STSMC_R   = TAUPSI2(pm:end);
+EX2_STSMC_J = EX2(pm:end);
+EY2_STSMC_J = EY2(pm:end);
+EZ2_STSMC_J = EZ2(pm:end);
+EPHI2_STSMC_J = EPHI2(pm:end);
+ETHETA2_STSMC_J = ETHETA2(pm:end);
+EPSI2_STSMC_J = EPSI2(pm:end);
 
 
+X1_STSMC_J     = X1(pm:end);
+Y1_STSMC_J     = Y1(pm:end); 
+Z1_STSMC_J     = Z1(pm:end);
+PHI1_STSMC_J   = PHI1(pm:end);
+THETA1_STSMC_J = THETA1(pm:end);
+PSI1_STSMC_J   = PSI1(pm:end);
+
+X2_STSMC_J     = X2(pm:end);
+Y2_STSMC_J     = Y2(pm:end);
+Z2_STSMC_J     = Z2(pm:end);
+PHI2_STSMC_J   = PHI2(pm:end);
+THETA2_STSMC_J = THETA2(pm:end);
+PSI2_STSMC_J   = PSI2(pm:end);
+
+XD1_STSMC_J     = XD1(pm:end);
+YD1_STSMC_J     = YD1(pm:end); 
+ZD1_STSMC_J     = ZD1(pm:end);
+PHID1_STSMC_J   = PHID1(pm:end);
+THETAD1_STSMC_J = THETAD1(pm:end);
+PSID1_STSMC_J   = PSID1(pm:end);
+
+XD2_STSMC_J     = XD2(pm:end);
+YD2_STSMC_J     = YD2(pm:end);
+ZD2_STSMC_J     = ZD2(pm:end);
+PHID2_STSMC_J   = PHID2(pm:end);
+THETAD2_STSMC_J = THETAD2(pm:end);
+PSID2_STSMC_J   = PSID2(pm:end);
+
+UZ1_STSMC_J       = UZ1(pm:end);
+TAUPHI1_STSMC_J   = TAUPHI1(pm:end); 
+TAUTHETA1_STSMC_J = TAUTHETA1(pm:end);
+TAUPSI1_STSMC_J   = TAUPSI1(pm:end);
+
+UZ2_STSMC_J       = UZ2(pm:end);
+TAUPHI2_STSMC_J   = TAUPHI2(pm:end); 
+TAUTHETA2_STSMC_J = TAUTHETA2(pm:end);
+TAUPSI2_STSMC_J   = TAUPSI2(pm:end);
+
+save('STSMC_Errores_J.mat','EX1_STSMC_J','EX2_STSMC_J','EY1_STSMC_J','EY2_STSMC_J','EZ1_STSMC_J','EZ2_STSMC_J','EPHI1_STSMC_J','EPHI2_STSMC_J','ETHETA1_STSMC_J','ETHETA2_STSMC_J','EPSI1_STSMC_J','EPSI2_STSMC_J','t','-v7.3');
+save('STSMC_Estados_J.mat','X1_STSMC_J','X2_STSMC_J','Y1_STSMC_J','Y2_STSMC_J','Z1_STSMC_J','Z2_STSMC_J','PHI1_STSMC_J','PHI2_STSMC_J','THETA1_STSMC_J','THETA2_STSMC_J','PSI1_STSMC_J','PSI2_STSMC_J','-v7.3');
+save('STSMC_Deseadas_J.mat','XD1_STSMC_J','XD2_STSMC_J','YD1_STSMC_J','YD2_STSMC_J','ZD1_STSMC_J','ZD2_STSMC_J','PHID1_STSMC_J','PHID2_STSMC_J','THETAD1_STSMC_J','THETAD2_STSMC_J','PSID1_STSMC_J','PSID2_STSMC_J','-v7.3')
+save('STSMC_Control_J.mat','UZ1_STSMC_J','UZ2_STSMC_J','TAUPHI1_STSMC_J','TAUPHI2_STSMC_J','TAUTHETA1_STSMC_J','TAUTHETA2_STSMC_J','TAUPSI1_STSMC_J','TAUPSI2_STSMC_J','-v7.3')
 
 
 
-save('STSMC_Errores_R.mat','EX1_STSMC_R','EX2_STSMC_R','EY1_STSMC_R','EY2_STSMC_R','EZ1_STSMC_R','EZ2_STSMC_R','EPHI1_STSMC_R','EPHI2_STSMC_R','ETHETA1_STSMC_R','ETHETA2_STSMC_R','EPSI1_STSMC_R','EPSI2_STSMC_R','t','-v7.3');
-save('STSMC_Estados_R.mat','X1_STSMC_R','X2_STSMC_R','Y1_STSMC_R','Y2_STSMC_R','Z1_STSMC_R','Z2_STSMC_R','PHI1_STSMC_R','PHI2_STSMC_R','THETA1_STSMC_R','THETA2_STSMC_R','PSI1_STSMC_R','PSI2_STSMC_R','-v7.3');
-save('STSMC_Deseadas_R.mat','XD1_STSMC_R','XD2_STSMC_R','YD1_STSMC_R','YD2_STSMC_R','ZD1_STSMC_R','ZD2_STSMC_R','PHID1_STSMC_R','PHID2_STSMC_R','THETAD1_STSMC_R','THETAD2_STSMC_R','PSID1_STSMC_R','PSID2_STSMC_R','-v7.3')
-save('STSMC_Control_R.mat','UZ1_STSMC_R','UZ2_STSMC_R','TAUPHI1_STSMC_R','TAUPHI2_STSMC_R','TAUTHETA1_STSMC_R','TAUTHETA2_STSMC_R','TAUPSI1_STSMC_R','TAUPSI2_STSMC_R','-v7.3')
+
+%% Grad
+figure(18)
+subplot(2,1,1)
+hold on
+plot(t,PHID1_STSMC_J)
+plot(t,PHID2_STSMC_J)
+leg1=legend('$\theta_{d_2}$','$\theta_{d_1}$');
+lgd = legend;
+lgd.NumColumns = 5;
+set(leg1,'FontSize',16,'interpreter','latex','EdgeColor','none',...
+     'Color','none');
+box on
+hold off
+title('Angulos Deseada','FontSize',16,'interpreter','latex')
+subplot(2,1,2)
+hold on
+plot(t,PHID1_STSMC_J)
+plot(t,PHID2_STSMC_J)
+leg1=legend('$\phi_{d_2}$','$\phi_{d_1}$');
+lgd = legend;
+lgd.NumColumns = 5;
+set(leg1,'FontSize',16,'interpreter','latex','EdgeColor','none',...
+     'Color','none');
+box on
+hold off
+
+figure(4)
+subplot(2,2,1)
+hold on
+plot(t,UZ2_STSMC_J)
+plot(t,UZ1_STSMC_J)
+xlim([0 t_max])
+leg1=legend('$U_{z_2}$','$U_{z_1}$');
+lgd = legend;
+lgd.NumColumns = 5;
+set(leg1,'FontSize',16,'interpreter','latex','EdgeColor','none',...
+     'Color','none');
+box on
+hold off
+
+subplot(2,2,2)
+hold on
+plot(t,TAUPHI2_STSMC_J)
+plot(t,TAUPHI1_STSMC_J)
+xlim([0 t_max])
+leg1=legend('$\tau_{\phi_2}$','$\tau_{\phi_1}$');
+lgd = legend;
+lgd.NumColumns = 5;
+set(leg1,'FontSize',16,'interpreter','latex','EdgeColor','none',...
+     'Color','none');
+box on
+hold off
+
+subplot(2,2,3)
+hold on
+plot(t,TAUTHETA2_STSMC_J)
+plot(t,TAUTHETA1_STSMC_J)
+xlim([0 t_max])
+leg1=legend('$\tau_{\theta_2}$','$\tau_{\theta_1}$');
+lgd = legend;
+lgd.NumColumns = 5;
+set(leg1,'FontSize',16,'interpreter','latex','EdgeColor','none',...
+     'Color','none');
+box on
+hold off
+subplot(2,2,4)
+hold on
+plot(t,TAUPSI2_STSMC_J)
+plot(t,TAUPSI1_STSMC_J)
+xlim([0 t_max])
+leg1=legend('$\tau_{\psi_2}$','$\tau_{\psi_1}$');
+lgd = legend;
+lgd.NumColumns = 5;
+set(leg1,'FontSize',16,'interpreter','latex','EdgeColor','none',...
+     'Color','none');
+box on
+hold off
+
+mtr=2; ntr=3;
+
+figure(2)
+title('Trayectoria Deseada','FontSize',16,'interpreter','latex')
+subplot(mtr,ntr,1)
+hold on
+plot(t,XD2_STSMC_J)
+plot(t,X2_STSMC_J)
+plot(t,X1_STSMC_J)
+ylabel('$m$','FontSize',16,'interpreter','latex')  
+xlabel('$t$','FontSize',16,'interpreter','latex')
+leg1=legend('$x$');
+lgd = legend;
+lgd.NumColumns = 5;
+set(leg1,'FontSize',16,'interpreter','latex','EdgeColor','none',...
+     'Color','none');
+% ylim([-450 510]);
+box on
+hold off
+
+subplot(mtr,ntr,2)
+hold on
+plot(t,YD2_STSMC_J)
+plot(t,Y2_STSMC_J)
+plot(t,Y1_STSMC_J)
+ylabel('$m$','FontSize',16,'interpreter','latex')  
+xlabel('$t$','FontSize',16,'interpreter','latex')
+leg1=legend('$y$');
+lgd = legend;
+lgd.NumColumns = 5;
+set(leg1,'FontSize',16,'interpreter','latex','EdgeColor','none',...
+     'Color','none');
+box on
+hold off
+
+subplot(mtr,ntr,3)
+hold on
+plot(t,ZD2_STSMC_J)
+plot(t,Z2_STSMC_J)
+plot(t,Z1_STSMC_J)
+ylabel('$m$','FontSize',16,'interpreter','latex')  
+xlabel('$t$','FontSize',16,'interpreter','latex')
+leg1=legend('$z$');
+lgd = legend;
+lgd.NumColumns = 5;
+set(leg1,'FontSize',16,'interpreter','latex','EdgeColor','none',...
+     'Color','none');
+box on
+hold off
+
+subplot(mtr,ntr,4)
+hold on
+plot(t,PHID2_STSMC_J)
+plot(t,PHID1_STSMC_J)
+plot(t,PHI2_STSMC_J)
+plot(t,PHI1_STSMC_J)
+ylabel('$m$','FontSize',16,'interpreter','latex')  
+xlabel('$t$','FontSize',16,'interpreter','latex')
+leg1=legend('$\phi$');
+lgd = legend;
+lgd.NumColumns = 5;
+set(leg1,'FontSize',16,'interpreter','latex','EdgeColor','none',...
+     'Color','none');% 
+box on
+hold off
+
+subplot(mtr,ntr,5)
+hold on
+plot(t,THETAD2_STSMC_J)
+plot(t,THETAD1_STSMC_J)
+plot(t,THETA2_STSMC_J)
+plot(t,THETA1_STSMC_J)
+ylabel('$m$','FontSize',16,'interpreter','latex')  
+xlabel('$t$','FontSize',16,'interpreter','latex')
+leg1=legend('$\theta$');
+lgd = legend;
+lgd.NumColumns = 5;
+set(leg1,'FontSize',16,'interpreter','latex','EdgeColor','none',...
+     'Color','none');% 
+box on
+hold off
+
+subplot(mtr,ntr,6)
+hold on
+plot(t,PSID2_STSMC_J)
+plot(t,PSI2_STSMC_J)
+plot(t,PSI1_STSMC_J)
+ylabel('$m$','FontSize',16,'interpreter','latex')  
+xlabel('$t$','FontSize',16,'interpreter','latex')
+leg1=legend('$\psi$');
+lgd = legend;
+lgd.NumColumns = 5;
+set(leg1,'FontSize',16,'interpreter','latex','EdgeColor','none',...
+     'Color','none');% 
+box on
+hold off
+ 
+figure(3)
+subplot(mtr,ntr,1)
+hold on
+plot(t,EX2_STSMC_J)
+plot(t,EX1_STSMC_J)
+ylabel('$m$','FontSize',16,'interpreter','latex')  
+xlabel('$t$','FontSize',16,'interpreter','latex')
+leg1=legend('$e_{x_2}$','$e_{x_1}$');
+lgd = legend;
+lgd.NumColumns = 5;
+set(leg1,'FontSize',16,'interpreter','latex','EdgeColor','none',...
+     'Color','none');
+
+box on
+hold off
+
+subplot(mtr,ntr,2)
+hold on
+plot(t,EY2_STSMC_J)
+plot(t,EY1_STSMC_J)
+ylabel('$m$','FontSize',16,'interpreter','latex')  
+xlabel('$t$','FontSize',16,'interpreter','latex')
+leg1=legend('$e_{y_2}$','$e_{y_1}$');
+lgd = legend;
+lgd.NumColumns = 5;
+set(leg1,'FontSize',16,'interpreter','latex','EdgeColor','none',...
+     'Color','none');
+box on
+hold off
+
+subplot(mtr,ntr,3)
+hold on
+plot(t,EZ2_STSMC_J)
+plot(t,EZ1_STSMC_J)
+ylabel('$m$','FontSize',16,'interpreter','latex')  
+xlabel('$t$','FontSize',16,'interpreter','latex')
+leg1=legend('$e_{z_2}$','$e_{z_1}$');
+lgd = legend;
+lgd.NumColumns = 5;
+set(leg1,'FontSize',16,'interpreter','latex','EdgeColor','none',...
+     'Color','none');
+box on
+hold off
+
+subplot(mtr,ntr,4)
+hold on
+plot(t,EPHI2_STSMC_J)
+plot(t,EPHI1_STSMC_J)
+ylabel('$m$','FontSize',16,'interpreter','latex')  
+xlabel('$t$','FontSize',16,'interpreter','latex')
+leg1=legend('$e_{\phi_2}$','$e_{\phi_1}$');
+lgd = legend;
+lgd.NumColumns = 5;
+set(leg1,'FontSize',16,'interpreter','latex','EdgeColor','none',...
+     'Color','none');% 
+box on
+hold off
+
+subplot(mtr,ntr,5)
+hold on 
+plot(t,ETHETA2_STSMC_J)
+plot(t,ETHETA1_STSMC_J)
+ylabel('$m$','FontSize',16,'interpreter','latex')  
+xlabel('$t$','FontSize',16,'interpreter','latex')
+leg1=legend('$e_{\theta_2}$','$e_{\theta_1}$');
+lgd = legend;
+lgd.NumColumns = 5;
+set(leg1,'FontSize',16,'interpreter','latex','EdgeColor','none',...
+     'Color','none');% 
+box on
+hold off
+
+subplot(mtr,ntr,6)
+hold on
+plot(t,EPSI2_STSMC_J)
+plot(t,EPSI1_STSMC_J)
+ylabel('$m$','FontSize',16,'interpreter','latex')  
+xlabel('$t$','FontSize',16,'interpreter','latex')
+leg1=legend('$e_{\psi_2}$','$e_{\psi_1}$');
+lgd = legend;
+lgd.NumColumns = 5;
+set(leg1,'FontSize',16,'interpreter','latex','EdgeColor','none',...
+     'Color','none');% 
+box on
+hold off
+
+
+figure(1)
+subplot(2,2,1)
+hold on
+plot(t,UZ2_STSMC_J)
+plot(t,UZ1_STSMC_J)
+leg1=legend('$U_{z_2}$','$U_{z_1}$');
+lgd = legend;
+lgd.NumColumns = 5;
+set(leg1,'FontSize',16,'interpreter','latex','EdgeColor','none',...
+     'Color','none');
+box on
+hold off
+subplot(2,2,2)
+hold on
+plot(t,TAUPHI2_STSMC_J)
+plot(t,TAUPHI1_STSMC_J)
+leg1=legend('$\tau_{\phi_2}$','$\tau_{\phi_1}$');
+lgd = legend;
+lgd.NumColumns = 5;
+set(leg1,'FontSize',16,'interpreter','latex','EdgeColor','none',...
+     'Color','none');
+box on
+hold off
+subplot(2,2,3)
+hold on
+plot(t,TAUTHETA2_STSMC_J)
+plot(t,TAUTHETA1_STSMC_J)
+leg1=legend('$\tau_{\theta_2}$','$\tau_{\theta_1}$');
+lgd = legend;
+lgd.NumColumns = 5;
+set(leg1,'FontSize',16,'interpreter','latex','EdgeColor','none',...
+     'Color','none');
+box on
+hold off
+subplot(2,2,4)
+hold on
+plot(t,TAUPSI2_STSMC_J)
+plot(t,TAUPSI1_STSMC_J)
+leg1=legend('$\tau_{\psi_2}$','$\tau_{\psi_1}$');
+lgd = legend;
+lgd.NumColumns = 5;
+set(leg1,'FontSize',16,'interpreter','latex','EdgeColor','none',...
+     'Color','none');
+box on
+hold off
+
+mtr=2; ntr=3;
+
+figure(2)
+title('Trayectoria Deseada','FontSize',16,'interpreter','latex')
+subplot(mtr,ntr,1)
+hold on
+plot(t,XD2_STSMC_J)
+plot(t,X2_STSMC_J)
+plot(t,X1_STSMC_J)
+ylabel('$m$','FontSize',16,'interpreter','latex')  
+xlabel('$t$','FontSize',16,'interpreter','latex')
+leg1=legend('$x$');
+lgd = legend;
+lgd.NumColumns = 5;
+set(leg1,'FontSize',16,'interpreter','latex','EdgeColor','none',...
+     'Color','none');
+% ylim([-450 510]);
+box on
+hold off
+
+subplot(mtr,ntr,2)
+hold on
+plot(t,YD2_STSMC_J)
+plot(t,Y2_STSMC_J)
+plot(t,Y1_STSMC_J)
+ylabel('$m$','FontSize',16,'interpreter','latex')  
+xlabel('$t$','FontSize',16,'interpreter','latex')
+leg1=legend('$y$');
+lgd = legend;
+lgd.NumColumns = 5;
+set(leg1,'FontSize',16,'interpreter','latex','EdgeColor','none',...
+     'Color','none');
+box on
+hold off
+
+subplot(mtr,ntr,3)
+hold on
+plot(t,ZD2_STSMC_J)
+plot(t,Z2_STSMC_J)
+plot(t,Z1_STSMC_J)
+ylabel('$m$','FontSize',16,'interpreter','latex')  
+xlabel('$t$','FontSize',16,'interpreter','latex')
+leg1=legend('$z$');
+lgd = legend;
+lgd.NumColumns = 5;
+set(leg1,'FontSize',16,'interpreter','latex','EdgeColor','none',...
+     'Color','none');
+box on
+hold off
+
+subplot(mtr,ntr,4)
+hold on
+plot(t,PHID2_STSMC_J)
+plot(t,PHID1_STSMC_J)
+plot(t,PHI2_STSMC_J)
+plot(t,PHI1_STSMC_J)
+ylabel('$m$','FontSize',16,'interpreter','latex')  
+xlabel('$t$','FontSize',16,'interpreter','latex')
+leg1=legend('$\phi$');
+lgd = legend;
+lgd.NumColumns = 5;
+set(leg1,'FontSize',16,'interpreter','latex','EdgeColor','none',...
+     'Color','none');% 
+box on
+hold off
+
+subplot(mtr,ntr,5)
+hold on
+plot(t,THETAD2_STSMC_J)
+plot(t,THETAD1_STSMC_J)
+plot(t,THETA2_STSMC_J)
+plot(t,THETA1_STSMC_J)
+ylabel('$m$','FontSize',16,'interpreter','latex')  
+xlabel('$t$','FontSize',16,'interpreter','latex')
+leg1=legend('$\theta$');
+lgd = legend;
+lgd.NumColumns = 5;
+set(leg1,'FontSize',16,'interpreter','latex','EdgeColor','none',...
+     'Color','none');% 
+box on
+hold off
+
+subplot(mtr,ntr,6)
+hold on 
+plot(t,PSID2_STSMC_J)
+plot(t,PSI2_STSMC_J)
+plot(t,PSI1_STSMC_J)
+ylabel('$m$','FontSize',16,'interpreter','latex')  
+xlabel('$t$','FontSize',16,'interpreter','latex')
+leg1=legend('$\psi$');
+lgd = legend;
+lgd.NumColumns = 5;
+set(leg1,'FontSize',16,'interpreter','latex','EdgeColor','none',...
+     'Color','none');% 
+box on
+hold off
+ 
+
+figure(9)
+hold on
+plot3 (X2_STSMC_J,Y2_STSMC_J,Z2_STSMC_J,'LineWidth',3)
+plot3 (X1_STSMC_J,Y1_STSMC_J,Z1_STSMC_J,'LineWidth',3)
+ylabel('X [m]','FontSize',18,'interpreter','latex')  
+xlabel('Y [m]','FontSize',18,'interpreter','latex')
+zlabel('Z [m]','FontSize',18,'interpreter','latex')
+view([.5 .5 .5]);
+box on
+hold off
 
 
 %% Saturacion 

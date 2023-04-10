@@ -1,25 +1,8 @@
-%% Parametros de tiempo
-dt = 0.001; % Intervalo de tiempo (s)
-t_max = 100; % Tiempo máximo de simulación (s)
 
-%% Parametros de la trayectoria deseada.
-r = .2;
-f = pi/9;
-p = 15;
-
-%% Vector invariante en el tiempo de formacion.
-cx = -0.1;
-cy = 0.15;
-cz = 0.1;
-%% Corre los controladores
 %% Parametros de tiempo
 % Tiempo de simulación
 ti = -0.05;
 t = ti:dt:t_max; % Vector de tiempo
-a = 0.109*10^(-6);
-b = -210.6*10^(-6);
-c = 0.154;
-
 
 %% Constantes, Inercias, coeficientes aerodinamicos.
 % Constantes
@@ -281,8 +264,7 @@ ETHETA2 = zeros(length(t), 1);
 EPSI2 = zeros(length(t), 1);
 
 % Senales de control
-UZ2_RPM   = zeros(length(t), 1);
-
+UZ2       = zeros(length(t), 1);
 TAUPHI2   = zeros(length(t), 1);
 TAUTHETA2 = zeros(length(t), 1);
 TAUPSI2   = zeros(length(t), 1);
@@ -342,31 +324,6 @@ for i = 1:length(t)
     
     % Cálculo de la integral del error de posicion del lider
     iex2 = iex2 + ex2 * dt;
-    iey2 = iey2 + ey2 * dt;
-    iez2 = iez2 + ez2 * dt; 
-    
-    % Cálculo de la derivada del error de posicion
-    exp2 = (ex2 - ex_prev2) / dt;
-    eyp2 = (ey2 - ey_prev2) / dt;
-    ezp2 = (ez2 - ez_prev2) / dt;
-    nu_x2 = (-ki_x2 * iex2 - kp_x2 * ex2 - kd_x2 * exp2);
-    nu_y2 = (-ki_y2 * iey2 - kp_y2 * ey2 - kd_y2 * eyp2);
-    nu_z2 = (-ki_z2 * iez2 - kp_z2 * ez2 - kd_z2 * ezp2);
-    
-    
-    u2 = (sqrt((nu_x2+ xdpp2)^2 + (nu_y2+ ydpp2)^2 +(nu_z2 + g + zdpp2)^2))*m;
-    
-    phid2     = asin ((m/u2)*((nu_x2+ xdpp2)*sin(psid2) - (nu_y2+ ydpp2)*cos(psid2))); 
-    phidp2    = (phid2  - phid2_prev ) / dt;
-    phidpp2   = (phidp2 - phidp2_prev) / dt;
-    
-    thetad2     = atan (((nu_x2+ xdpp2)*cos(psid2) + (nu_y2+ ydpp2)*sin(psid2))/(nu_z2+g+ zdpp2));
-    thetad2     = clamp (thetad2, deg2rad(-1),deg2rad(1));
-    thetadp2    = (thetad2  - thetad2_prev ) / dt;
-    thetadpp2   = (thetadp2 - thetadp2_prev) / dt;
-
-    % Cálculo de la integral del error de posicion del lider
-    iex2 = iex2 + ex2 * dt;
     iex2 = clamp(iex2,-.1,.1); 
     iey2 = iey2 + ey2 * dt;
     iey2 = clamp(iey2,-.1,.1); 
@@ -379,22 +336,18 @@ for i = 1:length(t)
     ezp2 = (ez2 - ez_prev2) / dt;
 
     
-    nu_x2 = (-ki_x2 * iex2 - kp_x2 * ex2 - kd_x2 * exp2)+ xdpp2;
-    nu_y2 = (-ki_y2 * iey2 - kp_y2 * ey2 - kd_y2 * eyp2)+ ydpp2;
-    nu_z2 = (-ki_z2 * iez2 - kp_z2 * ez2 - kd_z2 * ezp2)+ zdpp2;
+    nu_x2 = (-ki_x2 * iex2 - kp_x2 * ex2 - kd_x2 * exp2);
+    nu_y2 = (-ki_y2 * iey2 - kp_y2 * ey2 - kd_y2 * eyp2);
+    nu_z2 = (-ki_z2 * iez2 - kp_z2 * ez2 - kd_z2 * ezp2);
     
     
-    u2 = (sqrt((nu_x2)^2 + (nu_y2)^2 +(nu_z2 + g )^2))*m;
+    u2 = (sqrt((nu_x2+ xdpp2)^2 + (nu_y2+ ydpp2)^2 +(nu_z2 + g + zdpp2)^2))*m;
     
-    thrust_gramo = u2*( 1 / 0.00981 );
-    rpm = (sqrt(4*a*(thrust_gramo-c)+b^2) - b)/(2*a);
-    u2_rpm = rpm;
-    
-    phid2     = asin ((m/u2)*((nu_x2)*sin(psid2) - (nu_y2)*cos(psid2))); 
+    phid2     = asin ((m/u2)*((nu_x2+ xdpp2)*sin(psid2) - (nu_y2+ ydpp2)*cos(psid2))); 
     phidp2    = (phid2  - phid2_prev ) / dt;
     phidpp2   = (phidp2 - phidp2_prev) / dt;
     
-    thetad2     = atan (((nu_x2)*cos(psid2) + (nu_y2)*sin(psid2))/(nu_z2+g));
+    thetad2     = atan (((nu_x2+ xdpp2)*cos(psid2) + (nu_y2+ ydpp2)*sin(psid2))/(nu_z2+g+ zdpp2));
     thetad2     = clamp (thetad2, deg2rad(-1),deg2rad(1));
     thetadp2    = (thetad2  - thetad2_prev ) / dt;
     thetadpp2   = (thetadp2 - thetadp2_prev) / dt;
@@ -499,7 +452,6 @@ for i = 1:length(t)
     EPSI2(i) = rad2deg(epsi2);
     
     UZ2(i)       = u2;
-    UZ2_RPM(i)   = u2_rpm;
     TAUPHI2(i)   = tau_phi2;
     TAUTHETA2(i) = tau_theta2;
     TAUPSI2(i)   = tau_psi2;
@@ -711,20 +663,10 @@ for i = 1:length(t)
     thetadp1_prev = thetadp1;
     
     
-   NUX2(i) = nu_x2;
-   NUY2(i) = nu_y2;
-   NUZ2(i) = nu_z2;
    
     
 end
 
-figure
-hold on
-plot(t,NUX2)
-plot(t,NUY2)
-plot(t,NUZ2)
-hold off
-box on
 %% Extraccion de datos
 pm = -ti^(-1)+1; 
 t=t(pm:end);
@@ -781,8 +723,6 @@ UZ2_STSMC_R       = UZ2(pm:end);
 TAUPHI2_STSMC_R   = TAUPHI2(pm:end); 
 TAUTHETA2_STSMC_R = TAUTHETA2(pm:end);
 TAUPSI2_STSMC_R   = TAUPSI2(pm:end);
-
-
 
 
 

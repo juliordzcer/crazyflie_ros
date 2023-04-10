@@ -1,6 +1,6 @@
 clc
 clear all
-close all
+% close all
 
 % Tiempo de simulación
 dt = 0.001; % Intervalo de tiempo (s)
@@ -56,9 +56,9 @@ kp_y = 28.50;
 kd_y = 15.50;
 ki_y = 15;
 
-kp_z = 50.50;
-kd_z = 60.50;
-ki_z = 35.00;
+kp_z = 12.50;
+kd_z = 18.50;
+ki_z = 0.00;
 
 zeta_phi = 5.5;
 k0_phi = 2.6;
@@ -184,6 +184,24 @@ DPSI   = zeros(length(t), 1);
 
 
 for i = 1:length(t)  
+%     % Trayectoria deseada del agente 2 (Lider)
+%     xd     = r *(atan(15) + atan(dt * i-15))*cos(f * dt * i);
+%     xdp    = r * ((15*dt)/(1 + (15*dt-i)^2) + (15*dt)/(1 + (i*dt-15)^2))*cos(f*dt*i) - r * (atan(15) + atan(dt*i-15)) * f * sin(f*dt*i);
+%     xdpp   = 2*r*(((-15*dt+i)*(15*dt-i)*dt)/(1 + (15*dt-i)^2)^2 + ((-15*dt+i)*(15*dt-i)*dt)/(1 + (i*dt-15)^2)^2)*cos(f*dt*i) - r*((15*dt)/(1 + (15*dt-i)^2) + (15*dt)/(1 + (i*dt-15)^2)) * f * sin(f*dt*i) - r*(atan(15) + atan(dt*i-15)) * f^2 * cos(f*dt*i);
+% 
+%     yd     = r *(atan(15) + atan(dt * i-15))*sin(f * dt * i);
+%     ydp    = r * ((15*dt)/(1 + (15*dt-i)^2) + (15*dt)/(1 + (i*dt-15)^2))*sin(f*dt*i) + r * (atan(15) + atan(dt*i-15)) * f * cos(f*dt*i);
+%     ydpp   = 2*r*(((-15*dt+i)*(15*dt-i)*dt)/(1 + (15*dt-i)^2)^2 + ((-15*dt+i)*(15*dt-i)*dt)/(1 + (i*dt-15)^2)^2)*sin(f*dt*i) + r*((15*dt)/(1 + (15*dt-i)^2) + (15*dt)/(1 + (i*dt-15)^2)) * f * cos(f*dt*i) - r*(atan(15) + atan(dt*i-15)) * f^2 * sin(f*dt*i);
+% 
+%     
+%     zd     = 1/2 *(1 + tanh(((dt * i - 5) - 2.5))) + 0.1 * (1 + tanh((dt * i - 35)/3));
+%     zdp = 1/2 * sech(((dt*i-5)-2.5)) * tanh(((dt*i-5)-2.5))/2 + 0.1/3 * sech((dt*i-35)/3) * tanh((dt*i-35)/3);
+%     zdpp = -1/2 * sech(((dt*i-5)-2.5))^2 * tanh(((dt*i-5)-2.5))^2/2 - 0.1/9 * sech((dt*i-35)/3)^2 * tanh((dt*i-35)/3)^2;
+% 
+%     psid   = sin(f*dt*i);
+%     psidp  = f*cos(f*dt*i);
+%     psidpp = -f^2*sin(f*dt*i);
+%     
     
     xd     = r*(atan(p)+atan(dt*i-p)).*cos(f*dt*i);
     xdp    = (xd - xd_prev) / dt;
@@ -473,96 +491,96 @@ end
 
 % Grafica de trayectoria real.
 
-% mtr=2; ntr=3;
-% 
-% figure(2)
+mtr=2; ntr=3;
+
+figure(2)
+title('Trayectoria Deseada','FontSize',16,'interpreter','latex')
+subplot(mtr,ntr,1)
+hold on
+plot(t,X)
 % title('Trayectoria Deseada','FontSize',16,'interpreter','latex')
-% subplot(mtr,ntr,1)
-% hold on
-% plot(t,X)
-% % title('Trayectoria Deseada','FontSize',16,'interpreter','latex')
-% ylabel('$m$','FontSize',16,'interpreter','latex')  
-% xlabel('$t$','FontSize',16,'interpreter','latex')
-% leg1=legend('$x$');
-% lgd = legend;
-% lgd.NumColumns = 5;
-% set(leg1,'FontSize',16,'interpreter','latex','EdgeColor','none',...
-%      'Color','none');
-% % ylim([-450 510]);
-% box on
-% hold off
-% 
-% subplot(mtr,ntr,2)
-% hold on
-% plot(t,Y)
-% % title('Trayectoria Deseada','FontSize',16,'interpreter','latex')
-% ylabel('$m$','FontSize',16,'interpreter','latex')  
-% xlabel('$t$','FontSize',16,'interpreter','latex')
-% leg1=legend('$y$');
-% lgd = legend;
-% lgd.NumColumns = 5;
-% set(leg1,'FontSize',16,'interpreter','latex','EdgeColor','none',...
-%      'Color','none');
-% box on
-% hold off
-% 
-% subplot(mtr,ntr,3)
-% hold on
-% plot(t,Z)
-% % title('Trayectoria Deseada','FontSize',16,'interpreter','latex')
-% ylabel('$m$','FontSize',16,'interpreter','latex')  
-% xlabel('$t$','FontSize',16,'interpreter','latex')
-% leg1=legend('$z$');
-% lgd = legend;
-% lgd.NumColumns = 5;
-% set(leg1,'FontSize',16,'interpreter','latex','EdgeColor','none',...
-%      'Color','none');
-% box on
-% hold off
-% 
-% subplot(mtr,ntr,4)
-% hold on
-% plot(t,PHI)
-% % title('Trayectoria Deseada','FontSize',16,'interpreter','latex')
-% ylabel('$m$','FontSize',16,'interpreter','latex')  
-% xlabel('$t$','FontSize',16,'interpreter','latex')
-% leg1=legend('$\phi$');
-% lgd = legend;
-% lgd.NumColumns = 5;
-% set(leg1,'FontSize',16,'interpreter','latex','EdgeColor','none',...
-%      'Color','none');% 
-% box on
-% hold off
-% 
-% subplot(mtr,ntr,5)
-% hold on
-% plot(t,THETA)
-% % title('Trayectoria Deseada','FontSize',16,'interpreter','latex')
-% ylabel('$m$','FontSize',16,'interpreter','latex')  
-% xlabel('$t$','FontSize',16,'interpreter','latex')
-% leg1=legend('$\phi$');
-% lgd = legend;
-% lgd.NumColumns = 5;
-% set(leg1,'FontSize',16,'interpreter','latex','EdgeColor','none',...
-%      'Color','none');% 
-% box on
-% hold off
-% 
-% subplot(mtr,ntr,6)
-% hold on
-% plot(t,PSI)
-% % title('Trayectoria Deseada','FontSize',16,'interpreter','latex')
-% ylabel('$m$','FontSize',16,'interpreter','latex')  
-% xlabel('$t$','FontSize',16,'interpreter','latex')
-% leg1=legend('$\phi$');
-% lgd = legend;
-% lgd.NumColumns = 5;
-% set(leg1,'FontSize',16,'interpreter','latex','EdgeColor','none',...
-%      'Color','none');% 
-% box on
-% hold off
-%  
-%  
+ylabel('$m$','FontSize',16,'interpreter','latex')  
+xlabel('$t$','FontSize',16,'interpreter','latex')
+leg1=legend('$x$');
+lgd = legend;
+lgd.NumColumns = 5;
+set(leg1,'FontSize',16,'interpreter','latex','EdgeColor','none',...
+     'Color','none');
+% ylim([-450 510]);
+box on
+hold off
+
+subplot(mtr,ntr,2)
+hold on
+plot(t,Y)
+% title('Trayectoria Deseada','FontSize',16,'interpreter','latex')
+ylabel('$m$','FontSize',16,'interpreter','latex')  
+xlabel('$t$','FontSize',16,'interpreter','latex')
+leg1=legend('$y$');
+lgd = legend;
+lgd.NumColumns = 5;
+set(leg1,'FontSize',16,'interpreter','latex','EdgeColor','none',...
+     'Color','none');
+box on
+hold off
+
+subplot(mtr,ntr,3)
+hold on
+plot(t,Z)
+% title('Trayectoria Deseada','FontSize',16,'interpreter','latex')
+ylabel('$m$','FontSize',16,'interpreter','latex')  
+xlabel('$t$','FontSize',16,'interpreter','latex')
+leg1=legend('$z$');
+lgd = legend;
+lgd.NumColumns = 5;
+set(leg1,'FontSize',16,'interpreter','latex','EdgeColor','none',...
+     'Color','none');
+box on
+hold off
+
+subplot(mtr,ntr,4)
+hold on
+plot(t,PHI)
+% title('Trayectoria Deseada','FontSize',16,'interpreter','latex')
+ylabel('$m$','FontSize',16,'interpreter','latex')  
+xlabel('$t$','FontSize',16,'interpreter','latex')
+leg1=legend('$\phi$');
+lgd = legend;
+lgd.NumColumns = 5;
+set(leg1,'FontSize',16,'interpreter','latex','EdgeColor','none',...
+     'Color','none');% 
+box on
+hold off
+
+subplot(mtr,ntr,5)
+hold on
+plot(t,THETA)
+% title('Trayectoria Deseada','FontSize',16,'interpreter','latex')
+ylabel('$m$','FontSize',16,'interpreter','latex')  
+xlabel('$t$','FontSize',16,'interpreter','latex')
+leg1=legend('$\phi$');
+lgd = legend;
+lgd.NumColumns = 5;
+set(leg1,'FontSize',16,'interpreter','latex','EdgeColor','none',...
+     'Color','none');% 
+box on
+hold off
+
+subplot(mtr,ntr,6)
+hold on
+plot(t,PSI)
+% title('Trayectoria Deseada','FontSize',16,'interpreter','latex')
+ylabel('$m$','FontSize',16,'interpreter','latex')  
+xlabel('$t$','FontSize',16,'interpreter','latex')
+leg1=legend('$\phi$');
+lgd = legend;
+lgd.NumColumns = 5;
+set(leg1,'FontSize',16,'interpreter','latex','EdgeColor','none',...
+     'Color','none');% 
+box on
+hold off
+ 
+ 
  
  
  me=2; ne=3;
@@ -654,12 +672,12 @@ box on
 hold off
 
 
-figure(4)
-hold on
-plot3 (XD,YD,ZD)
-plot3 (X,Y,Z)
-box on
-hold off
+% figure(3)
+% hold on
+% plot3 (XD,YD,ZD)
+% plot3 (X,Y,Z)
+% box on
+% hold off
 
     
    

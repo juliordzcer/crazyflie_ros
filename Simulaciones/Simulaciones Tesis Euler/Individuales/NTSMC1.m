@@ -1,41 +1,22 @@
 clc
 clear all
-close all
+clf(4)
+clf(5)
+% close all
 
 % Tiempo de simulación
-dt = 0.001; % Intervalo de tiempo (s)
+dt = 0.0001; % Intervalo de tiempo (s)
 t_max = 100; % Tiempo máximo de simulación (s)
 t = 0:dt:t_max; % Vector de tiempo
 
+
 % Constantes
 g = 9.8; % Aceleración debido a la gravedad (m/s^2)
 m=0.032; % Masa del quadrotor (kg)
 
-
-
-%% Parametros de la trayectoria deseada.
-r = .2;
-f = pi/9;
-p = 15;
-
-%% Vector invariante en el tiempo de formacion.
-cx = -0.1;
-cy = 0.15;
-cz = 0.1;
-%% Corre los controladores
-%% Parametros de tiempo
-% Tiempo de simulación
-ti = -0.05;
-t = ti:dt:t_max; % Vector de tiempo
-a = 0.109*10^(-6);
-b = -210.6*10^(-6);
-c = 0.154;
-
-
-%% Constantes, Inercias, coeficientes aerodinamicos.
-% Constantes
-g = 9.8; % Aceleración debido a la gravedad (m/s^2)
-m=0.032; % Masa del quadrotor (kg)
+ax=0.91e-9;    % kg/s
+ay=0.91e-9;    % kg/s
+az=0.91e-9;   % kg/s
 
 Jx=9.827e-05;
 Jy=8.185e-05;
@@ -46,90 +27,76 @@ w1=0.4;
 w2=0.6;
 w3=0.8;
 
-%% Agente 1 
 % Parametros de los controladores
-kp_x = 28.50;
-kd_x = 15.50;
-ki_x = 15;
 
-kp_y = 28.50;
-kd_y = 15.50;
-ki_y = 15;
+kpx = 15;
+kdx = 5;
+kix = .8;
 
-kp_z = 50.50;
-kd_z = 60.50;
-ki_z = 35.00;
+kpy = 12;
+kdy = 4;
+kiy = 1;
 
-zeta_phi = 5.5;
-k0_phi = 2.6;
-k1_phi = 1.5*zeta_phi^(1/2);
-k2_phi = 1.1*zeta_phi;
+zeta_z=5.5;
+k0_z=20*zeta_z^(-1/2);
+k1_z=4.4*zeta_z^(2/3);
+k2_z=2.5*zeta_z;
 
-zeta_theta =  5.5;
-k0_theta = 2.6;
-k1_theta = 1.5*zeta_theta^(1/2);
-k2_theta = 1.1*zeta_theta;
+zeta_phi = 15.5;
+k0_phi = 20*zeta_phi^(-1/2);
+k1_phi = 4.4*zeta_phi^(2/3);
+k2_phi = 2.5*zeta_phi;
 
-zeta_psi = 8.5;
-k0_psi = 2.1;
-k1_psi = 1.5*zeta_psi^(1/2);
-k2_psi = 1.1*zeta_psi;
+zeta_theta = 15.5;
+k0_theta = 20*zeta_theta^(-1/2);
+k1_theta = 4.4*zeta_theta^(2/3);
+k2_theta = 2.5*zeta_theta;
 
-x   = 0; % Posición en x (m)
-y   = 0; % Posición en y (m)
-z   = 0; % Posición en z (m)
-xp  = 0; % Velocidad en x (m/s)
-yp  = 0; % Velocidad en y (m/s)
-zp  = 0; % Velocidad en z (m/s)
+zeta_psi=10;
+k0_psi=20*zeta_psi^(-1/2);
+k1_psi=4.4*zeta_psi^(2/3);
+k2_psi=2.5*zeta_psi;
+
+% Estado inicial
+x = 0; % Posición en x (m)
+y = 0; % Posición en y (m)
+z = 0; % Posición en z (m)
+xp = 0; % Velocidad en x (m/s)
+yp = 0; % Velocidad en y (m/s)
+zp = 0; % Velocidad en z (m/s)
 xpp = 0; % Aceleracion en x (m/s^2)
 ypp = 0; % Aceleracion en y (m/s^2)
 zpp = 0; % Aceleracion en z (m/s^2)
 
-phi     = 0; % Posición en phi (deg)
-theta   = 0; % Posición en theta (deg)
-psi     = 0; % Posición en psi (deg)
-phip    = 0; % Velocidad en phi (deg/s)
-thetap  = 0; % Velocidad en theta (deg/s)
-psip    = 0; % Velocidad en psi (deg/s)
-phipp   = 0; % Aceleracion en phi (deg/s^2)
+phi = 0; % Posición en phi (deg)
+theta = 0; % Posición en theta (deg)
+psi = 0; % Posición en psi (deg)
+phip = 0; % Velocidad en phi (deg/s)
+thetap = 0; % Velocidad en theta (deg/s)
+psip = 0; % Velocidad en psi (deg/s)
+phipp = 0; % Aceleracion en phi (deg/s^2)
 thetapp = 0; % Aceleracion en theta (deg/s^2)
-psipp   = 0; % Aceleracion en psi (deg/s^2)
+psipp = 0; % Aceleracion en psi (deg/s^2)
 
 ex_prev = 0; % Error previo en x (m)
-iex     = 0; % Integral del error en x (m)
+iex = 0; % Integral del error en x (m)
 ey_prev = 0; % Error previo en y (m)
-iey     = 0; % Integral del error en y (m)
+iey = 0; % Integral del error en y (m)
 ez_prev = 0; % Error previo en z (m)
-iez     = 0; % Integral del error en z (m)
+iez = 0; % Integral del error en z (m)
 
-ephi_prev   = 0; % Error previo en phi (deg)
-iephi       = 0; % Integral del error en phi (deg)
+ephi_prev = 0; % Error previo en phi (deg)
+iephi = 0; % Integral del error en phi (deg)
 etheta_prev = 0; % Error previo en theta (deg)
-ietheta     = 0; % Integral del error en theta (deg)
-epsi_prev   = 0; % Error previo en psi (deg)
-iepsi       = 0; % Integral del error en psi (deg)
+ietheta = 0; % Integral del error en theta (deg)
+epsi_prev = 0; % Error previo en psi (deg)
+iepsi = 0; % Integral del error en psi (deg)
 
-phi3   = 0;
+
+z3 = 0;
+phi3 = 0;
 theta3 = 0;
-psi3   = 0;
-
-xd_prev  = 0;
-xdp_prev = 0;
-yd_prev  = 0;
-ydp_prev = 0;
-zd_prev  = 0;
-zdp_prev = 0;
-psid_prev = 0;
-psidp_prev = 0;
-
-phid_prev = 0;
-phidp_prev = 0;
-thetad_prev = 0;
-thetadp_prev = 0;
-
-nu_x = 0;
-nu_y = 0;
-nu_z = 0;
+psi3 = 0;
 
 % Inicialización de vectores para almacenar los resultados
 X = zeros(length(t), 1);
@@ -166,129 +133,107 @@ EPHI = zeros(length(t), 1);
 ETHETA = zeros(length(t), 1);
 EPSI = zeros(length(t), 1);
 
-% Senales de control
-UZ_RPM   = zeros(length(t), 1);
-
-TAUPHI   = zeros(length(t), 1);
-TAUTHETA = zeros(length(t), 1);
-TAUPSI   = zeros(length(t), 1);
-
-NUX = zeros(length(t), 1);
-NUY = zeros(length(t), 1);
-NUZ = zeros(length(t), 1);
-
-DPHI   = zeros(length(t), 1);
+DX = zeros(length(t), 1);
+DY = zeros(length(t), 1);
+DZ = zeros(length(t), 1);
+DPHI = zeros(length(t), 1);
 DTHETA = zeros(length(t), 1);
-DPSI   = zeros(length(t), 1);
+DPSI = zeros(length(t), 1);
 
+r = 1;
+f = pi/6;
 
-
-for i = 1:length(t)  
+% Bucle de simulación
+for i = 1:length(t)
     
-    xd     = r*(atan(p)+atan(dt*i-p)).*cos(f*dt*i);
-    xdp    = (xd - xd_prev) / dt;
-    xdpp   = (xdp - xdp_prev) / dt;
-
-    yd     = r*(atan(p)+atan(dt*i-p)).*sin(f*dt*i);
-    ydp    = (yd - yd_prev) / dt;
-    ydpp   = (ydp - ydp_prev) / dt;
-    
-    zd     = (.4/2)*(1+tanh(((dt*i-7.5))));
-    zdp    = (zd  - zd_prev ) / dt;
-    zdpp   = (zdp - zdp_prev) / dt;
-    
+    % Trayectoria deseada.
+    xd     =r*(atan(15)+atan(dt*i-15)).*cos(f*dt*i);
+    yd     =r*(atan(15)+atan(dt*i-15)).*sin(f*dt*i);
+    zd     =1/2*(1+tanh(((dt*i-5)-2.5)))+0.1*(1+tanh((dt*i-35)/3));  
     psid   = sin(f*dt*i);
-    psidp  = (psid  - psid_prev ) / dt;
-    psidpp = (psidp - psidp_prev) / dt;
     
     % Perturbaciones 
-    dphi   = (-0.3+0.2*sin(w1*dt*i)-0.2*sin(w2*dt*i)+0.2*cos(w2*dt*i));
-    dtheta = (-0.3+0.2*cos(w3*dt*i)-0.2*sin(w1*dt*i)+0.2*cos(w3*dt*i));
-    dpsi   = (-0.3+0.2*cos(w3*dt*i)-0.2*sin(w2*dt*i)+0.2*cos(w3*dt*i));
+    dx     = d * (0.3*sin(w1*dt*i));
+    dy     = d * (0.3*cos(w1*dt*i));
+    dz     = d * (-0.5+0.1*sin(w1*dt*i)-0.1*sin(w2*dt*i)+0.1*cos(w3*dt*i));
+    dphi   = d * (-0.5+0.2*sin(w1*dt*i)-0.2*sin(w2*dt*i)+0.2*cos(w2*dt*i));
+    dtheta = d * (-0.5+0.2*cos(w3*dt*i)-0.2*sin(w1*dt*i)+0.2*cos(w3*dt*i));
+    dpsi   = d * (-0.5+0.2*cos(w3*dt*i)-0.2*sin(w2*dt*i)+0.2*cos(w3*dt*i));
+
     
-    % Cálculo del error de posicion del lider
+    % Cálculo del error de posicion
     ex = x - xd;
     ey = y - yd;
     ez = z - zd;
     
-
-    % Cálculo de la integral del error de posicion del lider
+    % Cálculo de la integral del error de posicion
     iex = iex + ex * dt;
     iey = iey + ey * dt;
-    iez = iez + ez * dt; 
+    iez = iez + ez * dt;
     
     % Cálculo de la derivada del error de posicion
     exp = (ex - ex_prev) / dt;
     eyp = (ey - ey_prev) / dt;
     ezp = (ez - ez_prev) / dt;
-
     
-    nu_x = (-ki_x * iex - kp_x * ex - kd_x * exp)+ xdpp;
-    nu_y = (-ki_y * iey - kp_y * ey - kd_y * eyp)+ ydpp;
-    nu_z = (-ki_z * iez - kp_z * ez - kd_z * ezp)+ zdpp;
+    % Calculo de phi* y theta* 
     
+    thetad  = -(kpx*ex + kix*iex + kdx*exp)/g; 
+    phid    = (kpy*ey + kiy*iey + kdy*eyp)/g;
     
-    u = (sqrt((nu_x)^2 + (nu_y)^2 +(nu_z + g )^2))*m;
-    
-    thrust_gramo = u*( 1 / 0.00981 );
-    rpm = (sqrt(4*a*(thrust_gramo-c)+b^2) - b)/(2*a);
-    u2_rpm = rpm;
-    
-    phid     = asin ((m/u)*((nu_x)*sin(psid) - (nu_y)*cos(psid))); 
-    phidp    = (phid  - phid_prev ) / dt;
-    phidpp   = (phidp - phidp_prev) / dt;
-    
-    thetad     = atan (((nu_x)*cos(psid) + (nu_y)*sin(psid))/(nu_z+g));
-    thetadp    = (thetad  - thetad_prev ) / dt;
-    thetadpp   = (thetadp - thetadp_prev) / dt;
-    
-    % Cálculo del error de orientacion del lider
+    % Cálculo del error de orientacion
     ephi   = phi - phid;
     etheta = theta - thetad;
-    epsi   = psi - psid;    
+    epsi   = psi - psid;
     
-    % Cálculo de la integral del error de posicion del lider
+    % Cálculo de la integral del error de posicion
     iephi   = iephi + ephi * dt;
     ietheta = ietheta + etheta * dt;
     iepsi   = iepsi + epsi * dt;
     
-    % Cálculo de la derivada del error de posicion del lider 
+    % Cálculo de la derivada del error de posicion
     ephip   = (ephi - ephi_prev) / dt;
     ethetap = (etheta - etheta_prev) / dt;
-    epsip   = (epsi - epsi_prev) / dt;  
+    epsip   = (epsi - epsi_prev) / dt;    
     
-
-    % Control de posicion para el lider.
-    % Control de Phi 
-    phi_mphi = ephip + k0_phi*((abs(ephi)^(2/3))*sign(ephi));
+    % Cálculo de la fuerza requerida utilizando el controlador STSMC 
+    
+    z_mphi = ez + k0_z*((abs(ezp)^(3/2))*sign(ezp));
+    z3 = z3 +(-k2_z*sign(z_mphi))*dt;
+    z_bar= -k1_z*((abs(z_mphi)^(1/3))*sign(z_mphi)) + z3;
+    
+    u =((z_bar+g)/(cos(theta)*cos(phi)))*m;
+    
+    % Control de Phi
+    phi_mphi = ephi + k0_phi*((abs(ephip)^(3/2))*sign(ephip));
     phi3 = phi3 + (-k2_phi*sign(phi_mphi))*dt;    
-    tau_bar_phi = -k1_phi*((abs(phi_mphi)^(1/2))*sign(phi_mphi)) + phi3;
-    
-    tau_phi = Jx * ( tau_bar_phi - ((Jy-Jz)/Jx) * thetap * psip + phidpp);
+    tau_bar_phi = -k1_phi*((abs(phi_mphi)^(1/3))*sign(phi_mphi)) + phi3;
+
+    tau_phi=Jx*(tau_bar_phi-((Jy-Jz)/Jx)*thetap*psip);
 
     % Control de Theta
-    phi_mtheta = ethetap + k0_theta*((abs(etheta)^(2/3))*sign(etheta));
-    theta3 = theta3 + (-k2_theta*sign(phi_mtheta))*dt;
-    tau_bar_theta = -k1_theta*((abs(phi_mtheta)^(1/2))*sign(phi_mtheta)) + theta3;
+
+    phi_mth = etheta + k0_theta*((abs(ethetap)^(3/2))*sign(ethetap));
+    theta3 = theta3 + (-k2_theta*sign(phi_mth))*dt;
+    tau_bar_theta = -k1_theta*((abs(phi_mth)^(1/3))*sign(phi_mth)) + theta3;
     
-    tau_theta = Jy * ( tau_bar_theta - ((Jz-Jx)/Jy) * phip * psip + thetadpp);
-    
+    tau_theta=Jy*(tau_bar_theta-((Jz-Jx)/Jy)*phip*psip);
    
     % Control de Psi
-    phi_mpsi = epsip + k0_psi*((abs(epsi)^(2/3))*sign(epsi));
+    
+    phi_mpsi = epsi + k0_psi*((abs(epsip)^(3/2))*sign(epsip));
     psi3 = psi3 + (-k2_psi*sign(phi_mpsi))*dt;
-    tau_bar_psi = -k1_psi*((abs(phi_mpsi)^(1/2))*sign(phi_mpsi)) + psi3;
+    tau_bar_psi = -k1_psi*((abs(phi_mpsi)^(1/3))*sign(phi_mpsi)) + psi3;
+
+    tau_psi = Jz*(tau_bar_psi-((Jx-Jy)/Jz)*thetap*phip);
     
-    tau_psi = Jz * ( tau_bar_psi - ((Jx-Jy)/Jz) * thetap * phip + psidpp);
-    
-       
-    % Modelo dinamico del quadrotor del lider 
-    xpp     = (u/m)*(cos(phi) * sin(theta)*cos(psi)+sin(phi)*sin(psi));
-    ypp     = (u/m)*(cos(phi) * sin(theta)*sin(psi)-sin(phi)*cos(psi));
-    zpp     = (u/m)*(cos(phi) * cos(theta))-g;
-    phipp   = (tau_phi/Jx)   + ((Jy-Jz)/Jx) * thetap * psip + dphi;
-    thetapp = (tau_theta/Jy) + ((Jz-Jx)/Jy) * phip   * psip + dtheta;
-    psipp   = (tau_psi/Jz)   + ((Jx-Jy)/Jz) * thetap * phip + dpsi;
+    % Modelo dinamico del quadrotor
+    xpp     = (u/m)*(cos(phi) * sin(theta)*cos(psi)+sin(phi)*sin(psi))-ax*xp+dx;
+    ypp     = (u/m)*(cos(phi) * sin(theta)*sin(psi)-sin(phi)*cos(psi))-ay*yp+dy;
+    zpp     = (u/m)*(cos(phi) * cos(theta))-g-az*zp+dz;
+    phipp   = (tau_phi/Jx)   + ((Jy-Jz)/Jx) * thetap *psip+dphi;
+    thetapp = (tau_theta/Jy) + ((Jz-Jx)/Jy) * phip*psip+dtheta;
+    psipp   = (tau_psi/Jz)   + ((Jx-Jy)/Jz) * thetap *phip+dpsi;
     
     xp = xp + xpp * dt;
     yp = yp + ypp * dt;
@@ -304,7 +249,8 @@ for i = 1:length(t)
     theta = theta + thetap * dt;
     psi   = psi + psip * dt;    
     
-    % Almacenamiento de los resultados en los vectore
+    
+    % Almacenamiento de los resultados en los vectores
     
     X(i) = x;
     Y(i) = y;
@@ -316,9 +262,9 @@ for i = 1:length(t)
     YPP(i) = ypp;
     ZPP(i) = zpp;
 
-    PHI(i) = rad2deg(phi);
-    THETA(i) = rad2deg(theta);
-    PSI(i) = rad2deg(psi);
+    PHI(i) = phi;
+    THETA(i) = theta;
+    PSI(i) = psi;
     PHIP(i) = phip;
     THETAP(i) = thetap;
     PSIP(i) = psip;
@@ -329,28 +275,26 @@ for i = 1:length(t)
     XD(i) = xd;
     YD(i) = yd;
     ZD(i) = zd;
-    PHID(i) = rad2deg(phid);
-    THETAD(i) = rad2deg(thetad);
-    PSID(i) = rad2deg(psid);
+    PHID(i) = phid;
+    THETAD(i) = thetad;
+    PSID(i) = psid;
     
     EX(i) = ex;
     EY(i) = ey;
     EZ(i) = ez;
-    EPHI(i) = rad2deg(ephi);
-    ETHETA(i) = rad2deg(etheta);
-    EPSI(i) = rad2deg(epsi);
-    
-    UZ(i)       = u;
-    UZ_RPM(i)   = u2_rpm;
-    TAUPHI(i)   = tau_phi;
-    TAUTHETA(i) = tau_theta;
-    TAUPSI(i)   = tau_psi;
+    EPHI(i) = ephi;
+    ETHETA(i) = etheta;
+    EPSI(i) = epsi;
     
     
+    DX(i) = dx;
+    DY(i) = dy;
+    DZ(i) = dz;
     DPHI(i) = dphi;
     DTHETA(i) = dtheta;
     DPSI(i) = dpsi;
     
+    % Actualización del error previo
     ex_prev = ex;
     ey_prev = ey;
     ez_prev = ez;
@@ -358,33 +302,105 @@ for i = 1:length(t)
     etheta_prev = etheta;
     epsi_prev = epsi;
     
-    % Derivada de las trayectorias deseadas
-    xd_prev  = xd;
-    xdp_prev = xdp;
-    yd_prev  = yd;
-    ydp_prev = ydp;
-    zd_prev  = zd;
-    zdp_prev = zdp;
-    psid_prev = psid;
-    psidp_prev = psidp;
-    phid_prev = phid;
-    phidp_prev = phidp;
-    thetad_prev = thetad;
-    thetadp_prev = thetadp;
-    
-   NUX(i) = nu_x;
-   NUY(i) = nu_y;
-   NUZ(i) = nu_z;
-   
-    
 end
-
-
-% Grafica de trayectoria.
+% 
+% 
+% % Grafica de perturbaciones.
+% 
+% mp=2; np=3;
+% 
+% figure(1)
+% title('Perturbaciones','FontSize',16,'interpreter','latex')
+% subplot(mp,np,1)
+% hold on
+% plot(t,DX)
+% % title('Perturbaciones','FontSize',16,'interpreter','latex')
+% ylabel('$m$','FontSize',16,'interpreter','latex')  
+% xlabel('$t$','FontSize',16,'interpreter','latex')
+% leg1=legend('$d_x$');
+% lgd = legend;
+% lgd.NumColumns = 5;
+% set(leg1,'FontSize',16,'interpreter','latex','EdgeColor','none',...
+%      'Color','none');
+% % ylim([-450 510]);
+% box on
+% hold off
+% 
+% subplot(mp,np,2)
+% hold on
+% plot(t,DY)
+% % title('Perturbaciones','FontSize',16,'interpreter','latex')
+% ylabel('$m$','FontSize',16,'interpreter','latex')  
+% xlabel('$t$','FontSize',16,'interpreter','latex')
+% leg1=legend('$d_y$');
+% lgd = legend;
+% lgd.NumColumns = 5;
+% set(leg1,'FontSize',16,'interpreter','latex','EdgeColor','none',...
+%      'Color','none');
+% box on
+% hold off
+% 
+% subplot(mp,np,3)
+% hold on
+% plot(t,DZ)
+% % title('Perturbaciones','FontSize',16,'interpreter','latex')
+% ylabel('$m$','FontSize',16,'interpreter','latex')  
+% xlabel('$t$','FontSize',16,'interpreter','latex')
+% leg1=legend('$d_z$');
+% lgd = legend;
+% lgd.NumColumns = 5;
+% set(leg1,'FontSize',16,'interpreter','latex','EdgeColor','none',...
+%      'Color','none');
+% box on
+% hold off
+% 
+% subplot(mp,np,4)
+% hold on
+% plot(t,DPHI)
+% % title('Perturbaciones','FontSize',16,'interpreter','latex')
+% ylabel('$grados$','FontSize',16,'interpreter','latex')  
+% xlabel('$t$','FontSize',16,'interpreter','latex')
+% leg1=legend('$d_\phi$');
+% lgd = legend;
+% lgd.NumColumns = 5;
+% set(leg1,'FontSize',16,'interpreter','latex','EdgeColor','none',...
+%      'Color','none');
+% box on
+% hold off
+% 
+% subplot(mp,np,5)
+% hold on
+% plot(t,DTHETA)
+% % title('Perturbaciones','FontSize',16,'interpreter','latex')
+% ylabel('$grados$','FontSize',16,'interpreter','latex')  
+% xlabel('$t$','FontSize',16,'interpreter','latex')
+% leg1=legend('$d_\theta$');
+% lgd = legend;
+% lgd.NumColumns = 5;
+% set(leg1,'FontSize',16,'interpreter','latex','EdgeColor','none',...
+%      'Color','none');
+% box on
+% hold off
+% 
+% subplot(mp,np,6)
+% hold on
+% plot(t,DPSI)
+% % title('Perturbaciones','FontSize',16,'interpreter','latex')
+% ylabel('$grados$','FontSize',16,'interpreter','latex')  
+% xlabel('$t$','FontSize',16,'interpreter','latex')
+% leg1=legend('$d_\psi$');
+% lgd = legend;
+% lgd.NumColumns = 5;
+% set(leg1,'FontSize',16,'interpreter','latex','EdgeColor','none',...
+%      'Color','none');
+% box on
+% hold off
+% 
+% % Grafica de trayectoria.
 % 
 % mt=2; nt=3;
 % 
-% figure(1)
+% figure(2)
 % title('Trayectoria Deseada','FontSize',16,'interpreter','latex')
 % subplot(mt,nt,1)
 % hold on
@@ -470,12 +486,12 @@ end
 %      'Color','none');
 % box on
 % hold off
-
-% Grafica de trayectoria real.
-
+% 
+% % Grafica de trayectoria real.
+% 
 % mtr=2; ntr=3;
 % 
-% figure(2)
+% figure(3)
 % title('Trayectoria Deseada','FontSize',16,'interpreter','latex')
 % subplot(mtr,ntr,1)
 % hold on
@@ -561,12 +577,12 @@ end
 %      'Color','none');% 
 % box on
 % hold off
-%  
-%  
+ 
+ 
  
  
  me=2; ne=3;
-figure(3)
+figure(4)
 title('Trayectoria Deseada','FontSize',16,'interpreter','latex')
 subplot(me,ne,1)
 hold on
@@ -654,12 +670,10 @@ box on
 hold off
 
 
-figure(4)
+figure(5)
 hold on
 plot3 (XD,YD,ZD)
 plot3 (X,Y,Z)
 box on
 hold off
 
-    
-   

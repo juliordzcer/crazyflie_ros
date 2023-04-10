@@ -184,22 +184,40 @@ DPSI   = zeros(length(t), 1);
 
 
 for i = 1:length(t)  
-    
-    xd     = r*(atan(p)+atan(dt*i-p)).*cos(f*dt*i);
-    xdp    = (xd - xd_prev) / dt;
-    xdpp   = (xdp - xdp_prev) / dt;
+    % Trayectoria deseada del agente 2 (Lider)
+    xd     = r *(atan(15) + atan(dt * i-15))*cos(f * dt * i);
+    xdp    = r * ((15*dt)/(1 + (15*dt-i)^2) + (15*dt)/(1 + (i*dt-15)^2))*cos(f*dt*i) - r * (atan(15) + atan(dt*i-15)) * f * sin(f*dt*i);
+    xdpp   = 2*r*(((-15*dt+i)*(15*dt-i)*dt)/(1 + (15*dt-i)^2)^2 + ((-15*dt+i)*(15*dt-i)*dt)/(1 + (i*dt-15)^2)^2)*cos(f*dt*i) - r*((15*dt)/(1 + (15*dt-i)^2) + (15*dt)/(1 + (i*dt-15)^2)) * f * sin(f*dt*i) - r*(atan(15) + atan(dt*i-15)) * f^2 * cos(f*dt*i);
 
-    yd     = r*(atan(p)+atan(dt*i-p)).*sin(f*dt*i);
-    ydp    = (yd - yd_prev) / dt;
-    ydpp   = (ydp - ydp_prev) / dt;
+    yd     = r *(atan(15) + atan(dt * i-15))*sin(f * dt * i);
+    ydp    = r * ((15*dt)/(1 + (15*dt-i)^2) + (15*dt)/(1 + (i*dt-15)^2))*sin(f*dt*i) + r * (atan(15) + atan(dt*i-15)) * f * cos(f*dt*i);
+    ydpp   = 2*r*(((-15*dt+i)*(15*dt-i)*dt)/(1 + (15*dt-i)^2)^2 + ((-15*dt+i)*(15*dt-i)*dt)/(1 + (i*dt-15)^2)^2)*sin(f*dt*i) + r*((15*dt)/(1 + (15*dt-i)^2) + (15*dt)/(1 + (i*dt-15)^2)) * f * cos(f*dt*i) - r*(atan(15) + atan(dt*i-15)) * f^2 * sin(f*dt*i);
+
     
-    zd     = (.4/2)*(1+tanh(((dt*i-7.5))));
-    zdp    = (zd  - zd_prev ) / dt;
-    zdpp   = (zdp - zdp_prev) / dt;
-    
+    zd     = 1/2 *(1 + tanh(((dt * i - 5) - 2.5))) + 0.1 * (1 + tanh((dt * i - 35)/3));
+    zdp = 1/2 * sech(((dt*i-5)-2.5)) * tanh(((dt*i-5)-2.5))/2 + 0.1/3 * sech((dt*i-35)/3) * tanh((dt*i-35)/3);
+    zdpp = -1/2 * sech(((dt*i-5)-2.5))^2 * tanh(((dt*i-5)-2.5))^2/2 - 0.1/9 * sech((dt*i-35)/3)^2 * tanh((dt*i-35)/3)^2;
+
     psid   = sin(f*dt*i);
-    psidp  = (psid  - psid_prev ) / dt;
-    psidpp = (psidp - psidp_prev) / dt;
+    psidp  = f*cos(f*dt*i);
+    psidpp = -f^2*sin(f*dt*i);
+    
+    
+%     xd     = r*(atan(p)+atan(dt*i-p)).*cos(f*dt*i);
+%     xdp    = (xd - xd_prev) / dt;
+%     xdpp   = (xdp - xdp_prev) / dt;
+% 
+%     yd     = r*(atan(p)+atan(dt*i-p)).*sin(f*dt*i);
+%     ydp    = (yd - yd_prev) / dt;
+%     ydpp   = (ydp - ydp_prev) / dt;
+%     
+%     zd     = (.4/2)*(1+tanh(((dt*i-7.5))));
+%     zdp    = (zd  - zd_prev ) / dt;
+%     zdpp   = (zdp - zdp_prev) / dt;
+%     
+%     psid   = 0;%sin(f*dt*i);
+%     psidp  = (psid  - psid_prev ) / dt;
+%     psidpp = (psidp - psidp_prev) / dt;
     
     % Perturbaciones 
     dphi   = (-0.3+0.2*sin(w1*dt*i)-0.2*sin(w2*dt*i)+0.2*cos(w2*dt*i));
@@ -654,12 +672,12 @@ box on
 hold off
 
 
-figure(4)
-hold on
-plot3 (XD,YD,ZD)
-plot3 (X,Y,Z)
-box on
-hold off
+% figure(3)
+% hold on
+% plot3 (XD,YD,ZD)
+% plot3 (X,Y,Z)
+% box on
+% hold off
 
     
    

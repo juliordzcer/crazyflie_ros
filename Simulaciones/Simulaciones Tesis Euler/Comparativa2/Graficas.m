@@ -17,7 +17,7 @@ cy = 0.15;
 cz = 0.1;
 %% Corre los controladores
 
-run('STSMC_J.m');
+% run('STSMC_J.m');
 run('STSMC_R.m');
 
 %% Carga los datos de interes de los controladores

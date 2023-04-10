@@ -260,9 +260,11 @@ for i = 1:length(t)
 
     % Control de posicion para el lider.
     % Control de Phi 
-    phi_mphi = ephip + k0_phi*((abs(ephi)^(2/3))*sign(ephi));
-    phi3 = phi3 + (-k2_phi*sign(phi_mphi))*dt;    
-    tau_bar_phi = -k1_phi*((abs(phi_mphi)^(1/2))*sign(phi_mphi)) + phi3;
+%     phi_mphi = ephip + k0_phi*((abs(ephi)^(2/3))*sign(ephi));
+%     phi3 = phi3 + (-k2_phi*sign(phi_mphi))*dt;    
+%     tau_bar_phi = -k1_phi*((abs(phi_mphi)^(1/2))*sign(phi_mphi)) + phi3;
+
+    tau_bar_phi = -k1_phi*;
     
     tau_phi = Jx * ( tau_bar_phi - ((Jy-Jz)/Jx) * thetap * psip + phidpp);
 
