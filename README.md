@@ -147,8 +147,8 @@ See http://wiki.bitcraze.se/projects:crazyflie:userguide:tips_and_tricks for det
 #### cmd_vel
 
 Similar to the hector_quadrotor, package the fields are used as following:
-* linear.y: roll [e.g. -30 to 30 degrees]
-* linear.x: pitch [e.g. -30 to 30 degrees]
+* linear.y: roll [e.g. -10 to 10 degrees]
+* linear.x: pitch [e.g. -10 to 10 degrees]
 * angular.z: yawrate [e.g. -200 to 200 degrees/second]
 * linear.z: thrust [10000 to 60000 (mapped to PWM output)]
 
@@ -161,25 +161,6 @@ Similar to the hector_quadrotor, package the fields are used as following:
 * orientation is not set (this could be done by the magnetometer readings in the future.)
 * update: 10ms (time between crazyflie and ROS not synchronized!)
 * can be viewed in rviz
-
-#### temperature
-* sensor_msgs/Temperature
-* From Barometer (10DOF version only) in degree Celcius (Sensor readings might be higher than expected because the PCB warms up; see http://www.bitcraze.se/2014/02/logging-and-parameter-frameworks-turtorial/)
-* update: 100ms (time between crazyflie and ROS not synchronized!)
-
-#### magnetic_field
-* sensor_msgs/MagneticField
-* update: 100ms (time between crazyflie and ROS not synchronized!)
-
-#### pressure
-* Float32
-* hPa (or mbar)
-* update: 100ms (time between crazyflie and ROS not synchronized!)
-
-#### battery
-* Float32
-* Volts
-* update: 100ms (time between crazyflie and ROS not synchronized!)
 
 ## Notes
 
