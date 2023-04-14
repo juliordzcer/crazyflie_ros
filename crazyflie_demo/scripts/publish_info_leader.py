@@ -19,24 +19,15 @@ class AttitudePublisher:
         self.attitude_pub = rospy.Publisher('/crazyflie2/info_leader', Twist, queue_size=50)
 
         self.masa = 0.032
-        self.a = 0.109e-6
-        self.b = -210.59e-6
-        self.c = 0.1517
 
     def pose_callback(self, msg):
         # Extraer los ángulos de rotación rpy a partir del mensaje "pose"
         q = msg.pose.orientation
         rpy1 = t.euler_from_quaternion([q.x, q.y, q.z, q.w])
         # Extraer pitch y roll de los ángulos rpy
-<<<<<<< HEAD
         self.roll = rpy1[0]
         self.pitch = rpy1[1]
         
-=======
-        self.roll = rpy[0]
-        self.pitch = rpy[1]
-
->>>>>>> main
     def thrust_callback(self, msg):
         # Extraer los ángulos de rotación rpy a partir del mensaje "pose"
         self.thrust = msg.linear.z
@@ -52,7 +43,8 @@ class AttitudePublisher:
         attitude = Twist()
 
         # Calcular la fuerza de empuje a partir del valor de thrust
-        self.thrust_newton = self.a*self.thrust**2 + self.b*self.thrust + self.c
+        self.thrust_gramos = 1.0942e-07*self.thrust**2 - 2.1059e-04*self.thrust + 1.5417e-01
+        self.thrust_newtons = self.thrust_gramos * 0.00980665
 
         # Calcular las aceleraciones a partir de los ángulos y la velocidad de ascenso
         self.gammax = (self.thrust_newton/self.masa)*(m.cos(self.roll)*m.sin(self.pitch)*m.cos(self.yaw) + m.sin(self.roll)*m.sin(self.yaw))
