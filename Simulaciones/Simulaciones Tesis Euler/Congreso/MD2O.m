@@ -2,17 +2,6 @@ clc
 clear all
 % close all
 
-% Tiempo de simulación
-dt = 0.001; % Intervalo de tiempo (s)
-t_max = 100; % Tiempo máximo de simulación (s)
-t = 0:dt:t_max; % Vector de tiempo
-
-% Constantes
-g = 9.8; % Aceleración debido a la gravedad (m/s^2)
-m=0.032; % Masa del quadrotor (kg)
-
-
-
 %% Parametros de la trayectoria deseada.
 r = .2;
 f = pi/9;
@@ -22,8 +11,10 @@ p = 15;
 cx = -0.1;
 cy = 0.15;
 cz = 0.1;
-%% Corre los controladores
 %% Parametros de tiempo
+dt = 0.001; % Intervalo de tiempo (s)
+t_max = 100; % Tiempo máximo de simulación (s)
+
 % Tiempo de simulación
 ti = -0.05;
 t = ti:dt:t_max; % Vector de tiempo
@@ -60,20 +51,18 @@ kp_z = 12.50;
 kd_z = 18.50;
 ki_z = 0.00;
 
-zeta_phi = 5.5;
-k0_phi = 2.6;
-k1_phi = 1.5*zeta_phi^(1/2);
-k2_phi = 1.1*zeta_phi;
+k1_phi = 20;
+k2_phi = 35;
+k3_phi = .8;
 
-zeta_theta =  5.5;
-k0_theta = 2.6;
-k1_theta = 1.5*zeta_theta^(1/2);
-k2_theta = 1.1*zeta_theta;
+k1_theta = 30;
+k2_theta = 35;
+k3_theta = .8;
 
-zeta_psi = 8.5;
-k0_psi = 2.1;
-k1_psi = 1.5*zeta_psi^(1/2);
-k2_psi = 1.1*zeta_psi;
+k1_psi = 10;
+k2_psi = 20;
+k3_psi = 1;
+
 
 x   = 0; % Posición en x (m)
 y   = 0; % Posición en y (m)
@@ -184,24 +173,6 @@ DPSI   = zeros(length(t), 1);
 
 
 for i = 1:length(t)  
-%     % Trayectoria deseada del agente 2 (Lider)
-%     xd     = r *(atan(15) + atan(dt * i-15))*cos(f * dt * i);
-%     xdp    = r * ((15*dt)/(1 + (15*dt-i)^2) + (15*dt)/(1 + (i*dt-15)^2))*cos(f*dt*i) - r * (atan(15) + atan(dt*i-15)) * f * sin(f*dt*i);
-%     xdpp   = 2*r*(((-15*dt+i)*(15*dt-i)*dt)/(1 + (15*dt-i)^2)^2 + ((-15*dt+i)*(15*dt-i)*dt)/(1 + (i*dt-15)^2)^2)*cos(f*dt*i) - r*((15*dt)/(1 + (15*dt-i)^2) + (15*dt)/(1 + (i*dt-15)^2)) * f * sin(f*dt*i) - r*(atan(15) + atan(dt*i-15)) * f^2 * cos(f*dt*i);
-% 
-%     yd     = r *(atan(15) + atan(dt * i-15))*sin(f * dt * i);
-%     ydp    = r * ((15*dt)/(1 + (15*dt-i)^2) + (15*dt)/(1 + (i*dt-15)^2))*sin(f*dt*i) + r * (atan(15) + atan(dt*i-15)) * f * cos(f*dt*i);
-%     ydpp   = 2*r*(((-15*dt+i)*(15*dt-i)*dt)/(1 + (15*dt-i)^2)^2 + ((-15*dt+i)*(15*dt-i)*dt)/(1 + (i*dt-15)^2)^2)*sin(f*dt*i) + r*((15*dt)/(1 + (15*dt-i)^2) + (15*dt)/(1 + (i*dt-15)^2)) * f * cos(f*dt*i) - r*(atan(15) + atan(dt*i-15)) * f^2 * sin(f*dt*i);
-% 
-%     
-%     zd     = 1/2 *(1 + tanh(((dt * i - 5) - 2.5))) + 0.1 * (1 + tanh((dt * i - 35)/3));
-%     zdp = 1/2 * sech(((dt*i-5)-2.5)) * tanh(((dt*i-5)-2.5))/2 + 0.1/3 * sech((dt*i-35)/3) * tanh((dt*i-35)/3);
-%     zdpp = -1/2 * sech(((dt*i-5)-2.5))^2 * tanh(((dt*i-5)-2.5))^2/2 - 0.1/9 * sech((dt*i-35)/3)^2 * tanh((dt*i-35)/3)^2;
-% 
-%     psid   = sin(f*dt*i);
-%     psidp  = f*cos(f*dt*i);
-%     psidpp = -f^2*sin(f*dt*i);
-%     
     
     xd     = r*(atan(p)+atan(dt*i-p)).*cos(f*dt*i);
     xdp    = (xd - xd_prev) / dt;
@@ -278,25 +249,15 @@ for i = 1:length(t)
 
     % Control de posicion para el lider.
     % Control de Phi 
-    phi_mphi = ephip + k0_phi*((abs(ephi)^(2/3))*sign(ephi));
-    phi3 = phi3 + (-k2_phi*sign(phi_mphi))*dt;    
-    tau_bar_phi = -k1_phi*((abs(phi_mphi)^(1/2))*sign(phi_mphi)) + phi3;
-    
+    tau_bar_phi = -k1_phi*ephi -k2_phi*ephip - k3_phi*sign(ephi);
     tau_phi = Jx * ( tau_bar_phi - ((Jy-Jz)/Jx) * thetap * psip + phidpp);
 
     % Control de Theta
-    phi_mtheta = ethetap + k0_theta*((abs(etheta)^(2/3))*sign(etheta));
-    theta3 = theta3 + (-k2_theta*sign(phi_mtheta))*dt;
-    tau_bar_theta = -k1_theta*((abs(phi_mtheta)^(1/2))*sign(phi_mtheta)) + theta3;
-    
+    tau_bar_theta = -k1_theta*etheta - k2_theta*ethetap - k3_theta*sign(etheta);
     tau_theta = Jy * ( tau_bar_theta - ((Jz-Jx)/Jy) * phip * psip + thetadpp);
     
-   
     % Control de Psi
-    phi_mpsi = epsip + k0_psi*((abs(epsi)^(2/3))*sign(epsi));
-    psi3 = psi3 + (-k2_psi*sign(phi_mpsi))*dt;
-    tau_bar_psi = -k1_psi*((abs(phi_mpsi)^(1/2))*sign(phi_mpsi)) + psi3;
-    
+    tau_bar_psi = -k1_psi*epsi - k2_psi*epsip - k3_psi*sign(epsi);
     tau_psi = Jz * ( tau_bar_psi - ((Jx-Jy)/Jz) * thetap * phip + psidpp);
     
        
@@ -589,7 +550,6 @@ title('Trayectoria Deseada','FontSize',16,'interpreter','latex')
 subplot(me,ne,1)
 hold on
 plot(t,EX)
-% title('Trayectoria Deseada','FontSize',16,'interpreter','latex')
 ylabel('$m$','FontSize',16,'interpreter','latex')  
 xlabel('$t$','FontSize',16,'interpreter','latex')
 leg1=legend('$e_x$');
@@ -597,14 +557,12 @@ lgd = legend;
 lgd.NumColumns = 5;
 set(leg1,'FontSize',16,'interpreter','latex','EdgeColor','none',...
      'Color','none');
-% ylim([-450 510]);
 box on
 hold off
 
 subplot(me,ne,2)
 hold on
 plot(t,EY)
-% title('Trayectoria Deseada','FontSize',16,'interpreter','latex')
 ylabel('$m$','FontSize',16,'interpreter','latex')  
 xlabel('$t$','FontSize',16,'interpreter','latex')
 leg1=legend('$e_y$');
@@ -618,7 +576,6 @@ hold off
 subplot(me,ne,3)
 hold on
 plot(t,EZ)
-% title('Trayectoria Deseada','FontSize',16,'interpreter','latex')
 ylabel('$m$','FontSize',16,'interpreter','latex')  
 xlabel('$t$','FontSize',16,'interpreter','latex')
 leg1=legend('$e_z$');
@@ -632,7 +589,6 @@ hold off
 subplot(me,ne,4)
 hold on
 plot(t,EPHI)
-% title('Trayectoria Deseada','FontSize',16,'interpreter','latex')
 ylabel('$m$','FontSize',16,'interpreter','latex')  
 xlabel('$t$','FontSize',16,'interpreter','latex')
 leg1=legend('$e_\phi$');
@@ -646,7 +602,6 @@ hold off
 subplot(me,ne,5)
 hold on
 plot(t,ETHETA)
-% title('Trayectoria Deseada','FontSize',16,'interpreter','latex')
 ylabel('$m$','FontSize',16,'interpreter','latex')  
 xlabel('$t$','FontSize',16,'interpreter','latex')
 leg1=legend('$e_\theta$');
@@ -660,7 +615,6 @@ hold off
 subplot(me,ne,6)
 hold on
 plot(t,EPSI)
-% title('Trayectoria Deseada','FontSize',16,'interpreter','latex')
 ylabel('$m$','FontSize',16,'interpreter','latex')  
 xlabel('$t$','FontSize',16,'interpreter','latex')
 leg1=legend('$e_\psi$');
@@ -672,12 +626,12 @@ box on
 hold off
 
 
-% figure(3)
-% hold on
-% plot3 (XD,YD,ZD)
-% plot3 (X,Y,Z)
-% box on
-% hold off
+figure(4)
+hold on
+plot3 (XD,YD,ZD)
+plot3 (X,Y,Z)
+box on
+hold off
 
     
    

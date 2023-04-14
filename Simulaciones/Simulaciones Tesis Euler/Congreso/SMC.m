@@ -1,17 +1,6 @@
 clc
 clear all
-close all
-
-% Tiempo de simulación
-dt = 0.001; % Intervalo de tiempo (s)
-t_max = 100; % Tiempo máximo de simulación (s)
-t = 0:dt:t_max; % Vector de tiempo
-
-% Constantes
-g = 9.8; % Aceleración debido a la gravedad (m/s^2)
-m=0.032; % Masa del quadrotor (kg)
-
-
+% close all
 
 %% Parametros de la trayectoria deseada.
 r = .2;
@@ -22,11 +11,14 @@ p = 15;
 cx = -0.1;
 cy = 0.15;
 cz = 0.1;
-%% Corre los controladores
 %% Parametros de tiempo
+dt = 0.001; % Intervalo de tiempo (s)
+t_max = 100; % Tiempo máximo de simulación (s)
+
 % Tiempo de simulación
 ti = -0.05;
 t = ti:dt:t_max; % Vector de tiempo
+
 a = 0.109*10^(-6);
 b = -210.6*10^(-6);
 c = 0.154;
@@ -56,24 +48,20 @@ kp_y = 28.50;
 kd_y = 15.50;
 ki_y = 15;
 
-kp_z = 50.50;
-kd_z = 60.50;
-ki_z = 35.00;
+kp_z = 12.50;
+kd_z = 18.50;
+ki_z = 0.00;
 
-zeta_phi = 5.5;
-k0_phi = 2.6;
-k1_phi = 1.5*zeta_phi^(1/2);
-k2_phi = 1.1*zeta_phi;
+k1_phi = 100;
+k2_phi = 1;
 
-zeta_theta =  5.5;
-k0_theta = 2.6;
-k1_theta = 1.5*zeta_theta^(1/2);
-k2_theta = 1.1*zeta_theta;
+k1_theta = 100;
+k2_theta = 1;
 
-zeta_psi = 8.5;
-k0_psi = 2.1;
-k1_psi = 1.5*zeta_psi^(1/2);
-k2_psi = 1.1*zeta_psi;
+k1_psi = 80;
+k2_psi = 1;
+
+
 
 x   = 0; % Posición en x (m)
 y   = 0; % Posición en y (m)
@@ -173,6 +161,8 @@ TAUPHI   = zeros(length(t), 1);
 TAUTHETA = zeros(length(t), 1);
 TAUPSI   = zeros(length(t), 1);
 
+TAUPHIBAR  = zeros(length(t), 1);
+
 NUX = zeros(length(t), 1);
 NUY = zeros(length(t), 1);
 NUZ = zeros(length(t), 1);
@@ -260,27 +250,19 @@ for i = 1:length(t)
 
     % Control de posicion para el lider.
     % Control de Phi 
-    phi_mphi = ephip + k0_phi*((abs(ephi)^(2/3))*sign(ephi));
-    phi3 = phi3 + (-k2_phi*sign(phi_mphi))*dt;    
-    tau_bar_phi = -k1_phi*((abs(phi_mphi)^(1/2))*sign(phi_mphi)) + phi3;
-    
+    S_phi = ephip + k1_phi*ephi;
+    tau_bar_phi = -k1_phi*ephip - k2_phi*sign(S_phi);
     tau_phi = Jx * ( tau_bar_phi - ((Jy-Jz)/Jx) * thetap * psip + phidpp);
 
     % Control de Theta
-    phi_mtheta = ethetap + k0_theta*((abs(etheta)^(2/3))*sign(etheta));
-    theta3 = theta3 + (-k2_theta*sign(phi_mtheta))*dt;
-    tau_bar_theta = -k1_theta*((abs(phi_mtheta)^(1/2))*sign(phi_mtheta)) + theta3;
-    
+    S_theta = ethetap + k1_theta*etheta;
+    tau_bar_theta = -k1_theta*ethetap - k2_theta*sign(S_theta);
     tau_theta = Jy * ( tau_bar_theta - ((Jz-Jx)/Jy) * phip * psip + thetadpp);
     
-   
     % Control de Psi
-    phi_mpsi = epsip + k0_psi*((abs(epsi)^(2/3))*sign(epsi));
-    psi3 = psi3 + (-k2_psi*sign(phi_mpsi))*dt;
-    tau_bar_psi = -k1_psi*((abs(phi_mpsi)^(1/2))*sign(phi_mpsi)) + psi3;
-    
+    S_psi = epsip + k1_psi*epsi;
+    tau_bar_psi = -k1_psi*epsip - k2_psi*sign(S_psi);
     tau_psi = Jz * ( tau_bar_psi - ((Jx-Jy)/Jz) * thetap * phip + psidpp);
-    
        
     % Modelo dinamico del quadrotor del lider 
     xpp     = (u/m)*(cos(phi) * sin(theta)*cos(psi)+sin(phi)*sin(psi));
@@ -345,6 +327,8 @@ for i = 1:length(t)
     TAUPHI(i)   = tau_phi;
     TAUTHETA(i) = tau_theta;
     TAUPSI(i)   = tau_psi;
+    
+    TAUPHIBAR(i)   = tau_bar_phi;
     
     
     DPHI(i) = dphi;
@@ -562,7 +546,7 @@ end
 % box on
 % hold off
 %  
-%  
+ 
  
  
  me=2; ne=3;
@@ -571,7 +555,6 @@ title('Trayectoria Deseada','FontSize',16,'interpreter','latex')
 subplot(me,ne,1)
 hold on
 plot(t,EX)
-% title('Trayectoria Deseada','FontSize',16,'interpreter','latex')
 ylabel('$m$','FontSize',16,'interpreter','latex')  
 xlabel('$t$','FontSize',16,'interpreter','latex')
 leg1=legend('$e_x$');
@@ -579,14 +562,12 @@ lgd = legend;
 lgd.NumColumns = 5;
 set(leg1,'FontSize',16,'interpreter','latex','EdgeColor','none',...
      'Color','none');
-% ylim([-450 510]);
 box on
 hold off
 
 subplot(me,ne,2)
 hold on
 plot(t,EY)
-% title('Trayectoria Deseada','FontSize',16,'interpreter','latex')
 ylabel('$m$','FontSize',16,'interpreter','latex')  
 xlabel('$t$','FontSize',16,'interpreter','latex')
 leg1=legend('$e_y$');
@@ -600,7 +581,6 @@ hold off
 subplot(me,ne,3)
 hold on
 plot(t,EZ)
-% title('Trayectoria Deseada','FontSize',16,'interpreter','latex')
 ylabel('$m$','FontSize',16,'interpreter','latex')  
 xlabel('$t$','FontSize',16,'interpreter','latex')
 leg1=legend('$e_z$');
@@ -614,7 +594,6 @@ hold off
 subplot(me,ne,4)
 hold on
 plot(t,EPHI)
-% title('Trayectoria Deseada','FontSize',16,'interpreter','latex')
 ylabel('$m$','FontSize',16,'interpreter','latex')  
 xlabel('$t$','FontSize',16,'interpreter','latex')
 leg1=legend('$e_\phi$');
@@ -628,7 +607,6 @@ hold off
 subplot(me,ne,5)
 hold on
 plot(t,ETHETA)
-% title('Trayectoria Deseada','FontSize',16,'interpreter','latex')
 ylabel('$m$','FontSize',16,'interpreter','latex')  
 xlabel('$t$','FontSize',16,'interpreter','latex')
 leg1=legend('$e_\theta$');
@@ -642,7 +620,6 @@ hold off
 subplot(me,ne,6)
 hold on
 plot(t,EPSI)
-% title('Trayectoria Deseada','FontSize',16,'interpreter','latex')
 ylabel('$m$','FontSize',16,'interpreter','latex')  
 xlabel('$t$','FontSize',16,'interpreter','latex')
 leg1=legend('$e_\psi$');
@@ -653,13 +630,26 @@ set(leg1,'FontSize',16,'interpreter','latex','EdgeColor','none',...
 box on
 hold off
 
-
 figure(4)
-hold on
-plot3 (XD,YD,ZD)
-plot3 (X,Y,Z)
+hold on 
 box on
+plot(t,TAUPHIBAR)
+box off
 hold off
 
+figure(5)
+hold on 
+box on
+plot(t,TAUPHI)
+box off
+hold off
+
+
+% figure(4)
+% hold on
+% plot3 (XD,YD,ZD)
+% plot3 (X,Y,Z)
+% box on
+% hold off
+
     
-   
