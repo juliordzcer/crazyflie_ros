@@ -80,11 +80,11 @@ public:
         , m_startZ(0)
     {
         ros::NodeHandle nh;
-        m_listener.waitForTransform(m_worldFrame, m_frame, ros::Time(0), ros::Duration(5.0)); 
-        m_pubNav = nh.advertise<geometry_msgs::Twist>("cmd_vel", 50);
-        m_subscribeGoal = nh.subscribe("goal", 50, &Controller::goalChanged, this);
-        m_subscribeGoalVel = nh.subscribe("goalvel", 50, &Controller::goalvelChanged, this);
-        m_subscribeGoalAcc = nh.subscribe("goalacc", 50, &Controller::goalaccChanged, this);
+        m_listener.waitForTransform(m_worldFrame, m_frame, ros::Time(0), ros::Duration(10.0)); 
+        m_pubNav = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1);
+        m_subscribeGoal = nh.subscribe("goal", 1, &Controller::goalChanged, this);
+        m_subscribeGoalVel = nh.subscribe("goalvel", 1, &Controller::goalvelChanged, this);
+        m_subscribeGoalAcc = nh.subscribe("goalacc", 1, &Controller::goalaccChanged, this);
         m_serviceTakeoff = nh.advertiseService("takeoff", &Controller::takeoff, this);
         m_serviceLand = nh.advertiseService("land", &Controller::land, this);
     }
@@ -171,11 +171,7 @@ private:
             {
                 tf::StampedTransform transform;
                 m_listener.lookupTransform(m_worldFrame, m_frame, ros::Time(0), transform);
-<<<<<<< HEAD
                 if (m_thrust > 15000)
-=======
-                if (transform.getOrigin().z() > m_startZ + 0.01 || m_thrust > 20000)
->>>>>>> main
                 {
                     pidReset();
                     m_state = Automatic;
@@ -191,7 +187,6 @@ private:
 
             }
             break;
-<<<<<<< HEAD
 
             case Landing:
             {
@@ -214,22 +209,6 @@ private:
             // intentional fall-thru
 
             case Automatic: {
-=======
-    case Landing:
-        {
-            m_thrust -= 1000 * dt;
-            if (m_thrust < 40000)
-            {
-                m_thrust = 0;
-            }
-            geometry_msgs::Twist msg;
-            msg.linear.z = m_thrust;
-            m_pubNav.publish(msg);
-        }
-        break;
-            // intentional fall-thru
-        case Automatic: {
->>>>>>> main
             tf::StampedTransform transform;
             try {
                 m_listener.lookupTransform(m_worldFrame, m_frame, ros::Time(0), transform);
@@ -287,7 +266,6 @@ private:
             float phi = asin((NUXS * sin(yaw_d) - NUYS * cos(yaw_d))*( m / u )) ;
             float theta = atan((NUXS * cos(yaw_d) + NUYS * sin(yaw_d)) / (NUZS + 9.81));
 
-<<<<<<< HEAD
             if (m_height < 0.06)
             {
                 geometry_msgs::Twist msg;
@@ -311,17 +289,6 @@ private:
             m_thrust = u_rpm;
 
 
-=======
-            m_thrust = u_rpm;
-
-            geometry_msgs::Twist msg;
-            msg.linear.x = 0;//std::max(std::min(rad2deg(theta), 10.0f), -10.0f);
-            msg.linear.y = 0;//std::max(std::min(rad2deg(phi), 10.0f), -10.0f);
-            msg.linear.z = u_rpm;
-            msg.angular.z = m_pidYaw.update(0.0, yaw);
-            msg.angular.x = m_startZ;
-            m_pubNav.publish(msg);
->>>>>>> main
         }
             break;
         case Idle:
