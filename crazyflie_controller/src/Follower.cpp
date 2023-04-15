@@ -68,21 +68,22 @@ public:
             "yaw")
         , m_state(Idle)
         , m_goal()
-        , m_gamma()
+        , m_attleader()
+        , m_goalacc()
         , m_subscribeGoal()
         , m_subscribeAttL()
+        , m_subscribeGoalAcc()
         , m_serviceTakeoff()
         , m_serviceLand()
-        , m_height(0)
         , m_thrust(0)
         , m_startZ(0)
     {
         ros::NodeHandle nh;
         m_listener.waitForTransform(m_worldFrame, m_frame, ros::Time(0), ros::Duration(10.0)); 
         m_pubNav = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1);
-        
         m_subscribeGoal = nh.subscribe("goal", 1, &Controller::goalChanged, this);
-        m_subscribeAttL = nh.subscribe("info_leader", 1, &Controller::gamma, this);
+        m_subscribeAttL = nh.subscribe("info_leader", 1, &Controller::attleaderChanged, this);
+        m_subscribeGoalAcc = nh.subscribe("goalacc", 1, &Controller::goalaccChanged, this);
         m_serviceTakeoff = nh.advertiseService("takeoff", &Controller::takeoff, this);
         m_serviceLand = nh.advertiseService("land", &Controller::land, this);
     }
@@ -100,10 +101,15 @@ private:
     {
         m_goal = *msg;
     }
-    void gamma(
+    void attleaderChanged(
         const geometry_msgs::Twist::ConstPtr& msg)
     {
-        m_gamma = *msg;
+        m_attleader = *msg;
+    }
+    void goalaccChanged(
+        const geometry_msgs::Twist::ConstPtr& msg)
+    {
+        m_goalacc = *msg;
     }
 
 
@@ -168,11 +174,9 @@ private:
             {
                 tf::StampedTransform transform;
                 m_listener.lookupTransform(m_worldFrame, m_frame, ros::Time(0), transform);
-                if (m_thrust > 15000)
+                if (transform.getOrigin().z() > m_startZ + 0.05 || m_thrust > 20000)
                 {
-                    pidReset();
                     m_state = Automatic;
-                    m_thrust = 0;
                 }
                 else
                 {
@@ -181,32 +185,26 @@ private:
                     msg.linear.z = m_thrust;
                     m_pubNav.publish(msg);
                 }
+
             }
             break;
-
-            case Landing:
+        case Landing:
             {
-            tf::StampedTransform transform;
-            try {
+                m_goal.pose.position.z = m_startZ + 0.05;
+                tf::StampedTransform transform;
                 m_listener.lookupTransform(m_worldFrame, m_frame, ros::Time(0), transform);
-                m_height = transform.getOrigin().z(); // Actualizar la altura
-            } catch (tf::TransformException& ex) {
-                ROS_ERROR("%s", ex.what());
-                return;
-            }
-                m_thrust -= 1000 * dt;
-                if (m_thrust < 0 || m_height < 0.06 ) 
-                {
-                    m_thrust = 0;
+                if (transform.getOrigin().z() <= m_startZ + 0.05) {
+                    m_state = Idle;
+                    geometry_msgs::Twist msg;
+                    m_pubNav.publish(msg);
                 }
             }
             break;
-
+            // intentional fall-thru
             case Automatic: {
             tf::StampedTransform transform;
             try {
                 m_listener.lookupTransform(m_worldFrame, m_frame, ros::Time(0), transform);
-                m_height = transform.getOrigin().z(); // Actualizar la altura
             } catch (tf::TransformException& ex) {
                 ROS_ERROR("%s", ex.what());
                 return;
@@ -248,9 +246,21 @@ private:
             float b = -210.59*powf(10,-6);
             float c = 0.1517;
             
-            float NUXS = (m_pidNUX.update(0.0, targetDrone.pose.position.x)) + m_gamma.linear.x;
-            float NUYS = (m_pidNUY.update(0.0, targetDrone.pose.position.y)) + m_gamma.linear.y;
-            float NUZS = (m_pidNUZ.update(0.0, targetDrone.pose.position.z)) + m_gamma.linear.z;
+            float u2_rpm = m_attleader.linear.z;
+            float u2_gramos = a*u2_rpm*u2_rpm + b*u2_rpm + c;
+            float u2 = u2_gramos * (9.80665 / 1000);
+
+            float phi2   = m_attleader.angular.x;
+            float theta2 = m_attleader.angular.y;
+            float psi2   = m_attleader.angular.z;
+
+            float gammax = (u2/m)*(cos(phi2)*sin(theta2)*cos(psi2) + sin(phi2)*sin(psi2)); 
+            float gammay = (u2/m)*(cos(phi2)*sin(theta2)*sin(psi2) - sin(phi2)*cos(psi2));
+            float gammaz = (u2/m)*(cos(phi2)*cos(theta2));
+
+            float NUXS = (m_pidNUX.update(0.0, targetDrone.pose.position.x)) + gammax;
+            float NUYS = (m_pidNUY.update(0.0, targetDrone.pose.position.y)) + gammay;
+            float NUZS = (m_pidNUZ.update(0.0, targetDrone.pose.position.z)) + gammaz;
 
             float u = sqrt(pow(NUXS, 2) + pow(NUYS, 2) + pow((NUZS), 2)) * m;
             u = std::max(std::min(u, 4.0f), 0.0f);
@@ -260,28 +270,15 @@ private:
             float phi = asin((NUXS * sin(yaw_d) - NUYS * cos(yaw_d))*( m / u )) ;
             float theta = atan((NUXS * cos(yaw_d) + NUYS * sin(yaw_d)) / (NUZS));
 
-            if (m_height < 0.06)
-            {
-                geometry_msgs::Twist msg;
-                msg.linear.x = 0;
-                msg.linear.y = 0;
-                msg.linear.z = u_rpm;
-                msg.angular.z = 0;
-                m_pubNav.publish(msg);
-            }
-            else
-            { 
-                float tol = 9.0f; 
-                geometry_msgs::Twist msg;
-                msg.linear.x = std::max(std::min(rad2deg(theta), tol), -tol);
-                msg.linear.y = std::max(std::min(rad2deg(phi), tol), -tol);
-                msg.linear.z = u_rpm;
-                msg.angular.z = m_pidYaw.update(0.0, yaw);
-                m_pubNav.publish(msg);
-            }
+            geometry_msgs::Twist msg;
+            msg.linear.x = std::max(std::min(rad2deg(theta), 10.0f), -10.0f);
+            msg.linear.y = std::max(std::min(rad2deg(phi), 10.0f), -10.0f);
+            msg.linear.z = u_rpm;
+            msg.angular.z = m_pidYaw.update(0.0, yaw);
+            msg.angular.x = gammax;
+            msg.angular.y = gammay;
 
-            m_thrust = u_rpm;
-
+            m_pubNav.publish(msg);
         }
             break;
         case Idle:
@@ -314,12 +311,13 @@ private:
     PID m_pidYaw;
     State m_state;
     geometry_msgs::PoseStamped m_goal;
-    geometry_msgs::Twist m_gamma;
+    geometry_msgs::Twist m_attleader;
+    geometry_msgs::Twist m_goalacc;
     ros::Subscriber m_subscribeGoal;
     ros::Subscriber m_subscribeAttL;
+    ros::Subscriber m_subscribeGoalAcc;
     ros::ServiceServer m_serviceTakeoff;
     ros::ServiceServer m_serviceLand;
-    float m_height;
     float m_thrust;
     float m_startZ;
 };

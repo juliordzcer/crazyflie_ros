@@ -1,18 +1,14 @@
 <?xml version="1.0"?>
 <launch>
   <arg name="joy_dev" default="/dev/input/js0" />
-<<<<<<< HEAD
   <arg name="uri" default="radio://0/80/2M/E7E7E7E701" /> 
   <!-- <arg name="uri" default="radio://0/90/2M/E7E7E7E702" />  -->
   <!-- <arg name="uri" default="radio://1/70/2M/E7E7E7E703" />  -->
-=======
-  <!-- <arg name="uri" default="radio://0/80/2M/E7E7E7E701" />  -->
-  <!-- <arg name="uri" default="radio://0/90/2M/E7E7E7E702" />  -->
-  <arg name="uri" default="radio://0/70/2M/E7E7E7E703" /> 
->>>>>>> main
   <arg name="frame" default="crazyflie" /> <!--For OptiTrack users: frame name should match the Rigid-body name on Motive-->
   <arg name="ip" default="192.168.2.10" /> <!--Adjust this parameter-->
   <arg name="port" default="3883" />
+
+
 
   <include file="$(find crazyflie_driver)/launch/crazyflie_server.launch">
   </include>
@@ -37,6 +33,8 @@
 
     <node name="pose" pkg="crazyflie_demo" type="trajectory_node.py" output="screen">
     </node>
+
+  <node name="info" pkg="crazyflie_demo" type="publish_gamma.py" output="screen" />
 
     <!--Run vrpn client-->
     <!--For OptiTrack users: make sure you edit vrpn_client_ros.cpp file to adjust axes transformation-->

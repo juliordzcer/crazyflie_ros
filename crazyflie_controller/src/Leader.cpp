@@ -8,8 +8,6 @@
 
 #include "pid.hpp"
 
-#define CLAMP(x, a, b) std::min(std::max((x), (a)), (b))
-
 double get(
     const ros::NodeHandle& n,
     const std::string& name) {
@@ -113,6 +111,7 @@ private:
         m_goalacc = *msg;
     }
 
+
     bool takeoff(
         std_srvs::Empty::Request& req,
         std_srvs::Empty::Response& res)
@@ -171,7 +170,7 @@ private:
             {
                 tf::StampedTransform transform;
                 m_listener.lookupTransform(m_worldFrame, m_frame, ros::Time(0), transform);
-                if (m_thrust > 15000)
+                if (transform.getOrigin().z() > m_startZ + 0.05 || m_thrust > 20000)
                 {
                     pidReset();
                     m_state = Automatic;
@@ -190,16 +189,8 @@ private:
 
             case Landing:
             {
-            tf::StampedTransform transform;
-            try {
-                m_listener.lookupTransform(m_worldFrame, m_frame, ros::Time(0), transform);
-                m_height = transform.getOrigin().z(); // Actualizar la altura
-            } catch (tf::TransformException& ex) {
-                ROS_ERROR("%s", ex.what());
-                return;
-            }
                 m_thrust -= 1000 * dt;
-                if (m_thrust < 0 || m_height < 0.06 ) 
+                if (m_thrust < 0 || m_thrust < 30000 ) 
                 {
                     m_thrust = 0;
                 }
@@ -252,7 +243,7 @@ private:
             float NUXS = (m_pidNUX.update(0.0, targetDrone.pose.position.x)) + m_goalacc.linear.x;
             float NUYS = (m_pidNUY.update(0.0, targetDrone.pose.position.y)) + m_goalacc.linear.y;
             float NUZS = (m_pidNUZ.update(0.0, targetDrone.pose.position.z)) + m_goalacc.linear.z;
-
+            
             float a = 0.109*powf(10,-6);
             float b = -210.59*powf(10,-6);
             float c = 0.1517;
@@ -266,7 +257,7 @@ private:
             float phi = asin((NUXS * sin(yaw_d) - NUYS * cos(yaw_d))*( m / u )) ;
             float theta = atan((NUXS * cos(yaw_d) + NUYS * sin(yaw_d)) / (NUZS + 9.81));
 
-            if (m_height < 0.06)
+            if (m_height < 0.05)
             {
                 geometry_msgs::Twist msg;
                 msg.linear.x = 0;
@@ -277,10 +268,9 @@ private:
             }
             else
             { 
-                float tol = 9.0f; 
                 geometry_msgs::Twist msg;
-                msg.linear.x = std::max(std::min(rad2deg(theta), tol), -tol);
-                msg.linear.y = std::max(std::min(rad2deg(phi), tol), -tol);
+                msg.linear.x = std::max(std::min(rad2deg(theta), 10.0f), -10.0f);
+                msg.linear.y = std::max(std::min(rad2deg(phi), 10.0f), -10.0f);
                 msg.linear.z = u_rpm;
                 msg.angular.z = m_pidYaw.update(0.0, yaw);
                 m_pubNav.publish(msg);
@@ -344,7 +334,7 @@ int main(int argc, char **argv)
   std::string frame;
   n.getParam("frame", frame);
   double frequency;
-  n.param("frequency", frequency, 50.0);
+  n.param("frequency", frequency, 100.0);
 
   Controller controller(worldFrame, frame, n);
   controller.run(frequency);
