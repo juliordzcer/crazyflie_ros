@@ -79,10 +79,10 @@ public:
     {
         ros::NodeHandle nh;
         m_listener.waitForTransform(m_worldFrame, m_frame, ros::Time(0), ros::Duration(10.0)); 
-        m_pubNav = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1);
-        m_subscribeGoal = nh.subscribe("goal", 1, &Controller::goalChanged, this);
-        m_subscribeGoalVel = nh.subscribe("goalvel", 1, &Controller::goalvelChanged, this);
-        m_subscribeGoalAcc = nh.subscribe("goalacc", 1, &Controller::goalaccChanged, this);
+        m_pubNav = nh.advertise<geometry_msgs::Twist>("cmd_vel", 100);
+        m_subscribeGoal = nh.subscribe("goal", 100, &Controller::goalChanged, this);
+        m_subscribeGoalVel = nh.subscribe("goalvel", 100, &Controller::goalvelChanged, this);
+        m_subscribeGoalAcc = nh.subscribe("goalacc", 100, &Controller::goalaccChanged, this);
         m_serviceTakeoff = nh.advertiseService("takeoff", &Controller::takeoff, this);
         m_serviceLand = nh.advertiseService("land", &Controller::land, this);
     }
