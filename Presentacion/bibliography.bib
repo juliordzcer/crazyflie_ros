@@ -1,0 +1,648 @@
+%%% ====================================================================
+%%%  BibTeX-file{
+%%%     author          = "Gerry Murray",
+%%%     version         = "1.2",
+%%%     date            = "2 April 2012",
+%%%     filename        = "acmsmall-sample-bibfile.bib",
+%%%     address         = "ACM, NY",
+%%%     email           = "murray at hq.acm.org",
+%%%     codetable       = "ISO/ASCII",
+%%%     keywords        = "ACM Reference Format, bibliography, citation, references",
+%%%     supported       = "yes",
+%%%     docstring       = "This BibTeX database file contains 'bibdata' entries
+%%%                        that 'match' the examples provided in the Specifications Document
+%%%                        AND, also, 'legacy'-type bibs. It should assist authors in 
+%%%                        choosing the 'correct' at-bibtype and necessary bib-fields
+%%%                        so as to obtain the appropriate ACM Reference Format output. 
+%%%			   It also contains many 'Standard Abbreviations'. "
+%%%  }
+%%% ====================================================================
+
+% Journals
+
+% First the Full Name is given, then the abbreviation used in the AMS Math
+% Reviews, with an indication if it could not be found there.
+% Note the 2nd overwrites the 1st, so swap them if you want the full name.
+
+ %{AMS}
+ @String{AMSTrans = "American Mathematical Society Translations" }
+ @String{AMSTrans = "Amer. Math. Soc. Transl." }
+ @String{BullAMS = "Bulletin of the American Mathematical Society" }
+ @String{BullAMS = "Bull. Amer. Math. Soc." }
+ @String{ProcAMS = "Proceedings of the American Mathematical Society" }
+ @String{ProcAMS = "Proc. Amer. Math. Soc." }
+ @String{TransAMS = "Transactions of the American Mathematical Society" }
+ @String{TransAMS = "Trans. Amer. Math. Soc." }
+
+ %ACM
+ @String{CACM = "Communications of the {ACM}" }
+ @String{CACM = "Commun. {ACM}" }
+ @String{CompServ = "Comput. Surveys" }
+ @String{JACM = "J. ACM" }
+ @String{ACMMathSoft = "{ACM} Transactions on Mathematical Software" }
+ @String{ACMMathSoft = "{ACM} Trans. Math. Software" }
+ @String{SIGNUM = "{ACM} {SIGNUM} Newsletter" }
+ @String{SIGNUM = "{ACM} {SIGNUM} Newslett." }
+
+ @String{AmerSocio = "American Journal of Sociology" }
+ @String{AmerStatAssoc = "Journal of the American Statistical Association" }
+ @String{AmerStatAssoc = "J. Amer. Statist. Assoc." }
+ @String{ApplMathComp = "Applied Mathematics and Computation" }
+ @String{ApplMathComp = "Appl. Math. Comput." }
+ @String{AmerMathMonthly = "American Mathematical Monthly" }
+ @String{AmerMathMonthly = "Amer. Math. Monthly" }
+ @String{BIT = "{BIT}" }
+ @String{BritStatPsych = "British Journal of Mathematical and Statistical
+          Psychology" }
+ @String{BritStatPsych = "Brit. J. Math. Statist. Psych." }
+ @String{CanMathBull = "Canadian Mathematical Bulletin" }
+ @String{CanMathBull = "Canad. Math. Bull." }
+ @String{CompApplMath = "Journal of Computational and Applied Mathematics" }
+ @String{CompApplMath = "J. Comput. Appl. Math." }
+ @String{CompPhys = "Journal of Computational Physics" }
+ @String{CompPhys = "J. Comput. Phys." }
+ @String{CompStruct = "Computers and Structures" }
+ @String{CompStruct = "Comput. \& Structures" }
+ @String{CompJour = "The Computer Journal" }
+ @String{CompJour = "Comput. J." }
+ @String{CompSysSci = "Journal of Computer and System Sciences" }
+ @String{CompSysSci = "J. Comput. System Sci." }
+ @String{Computing = "Computing" }
+ @String{ContempMath = "Contemporary Mathematics" }
+ @String{ContempMath = "Contemp. Math." }
+ @String{Crelle = "Crelle's Journal" }
+ @String{GiornaleMath = "Giornale di Mathematiche" }
+ @String{GiornaleMath = "Giorn. Mat." } % didn't find in AMS MR., ibid.
+
+ %IEEE
+ @String{Computer = "{IEEE} Computer" }
+ @String{IEEETransComp = "{IEEE} Transactions on Computers" }
+ @String{IEEETransComp = "{IEEE} Trans. Comput." }
+ @String{IEEETransAC = "{IEEE} Transactions on Automatic Control" }
+ @String{IEEETransAC = "{IEEE} Trans. Automat. Control" }
+ @String{IEEESpec = "{IEEE} Spectrum" } % didn't find in AMS MR
+ @String{ProcIEEE = "Proceedings of the {IEEE}" }
+ @String{ProcIEEE = "Proc. {IEEE}" } % didn't find in AMS MR
+ @String{IEEETransAeroElec = "{IEEE} Transactions on Aerospace and Electronic
+     Systems" }
+ @String{IEEETransAeroElec = "{IEEE} Trans. Aerospace Electron. Systems" }
+
+ @String{IMANumerAna = "{IMA} Journal of Numerical Analysis" }
+ @String{IMANumerAna = "{IMA} J. Numer. Anal." }
+ @String{InfProcLet = "Information Processing Letters" }
+ @String{InfProcLet = "Inform. Process. Lett." }
+ @String{InstMathApp = "Journal of the Institute of Mathematics and
+     its Applications" }
+ @String{InstMathApp = "J. Inst. Math. Appl." }
+ @String{IntControl = "International Journal of Control" }
+ @String{IntControl = "Internat. J. Control" }
+ @String{IntNumerEng = "International Journal for Numerical Methods in
+     Engineering" }
+ @String{IntNumerEng = "Internat. J. Numer. Methods Engrg." }
+ @String{IntSuper = "International Journal of Supercomputing Applications" }
+ @String{IntSuper = "Internat. J. Supercomputing Applic." } % didn't find
+%% in AMS MR
+ @String{Kibernetika = "Kibernetika" }
+ @String{JResNatBurStand = "Journal of Research of the National Bureau
+     of Standards" }
+ @String{JResNatBurStand = "J. Res. Nat. Bur. Standards" }
+ @String{LinAlgApp = "Linear Algebra and its Applications" }
+ @String{LinAlgApp = "Linear Algebra Appl." }
+ @String{MathAnaAppl = "Journal of Mathematical Analysis and Applications" }
+ @String{MathAnaAppl = "J. Math. Anal. Appl." }
+ @String{MathAnnalen = "Mathematische Annalen" }
+ @String{MathAnnalen = "Math. Ann." }
+ @String{MathPhys = "Journal of Mathematical Physics" }
+ @String{MathPhys = "J. Math. Phys." }
+ @String{MathComp = "Mathematics of Computation" }
+ @String{MathComp = "Math. Comp." }
+ @String{MathScand = "Mathematica Scandinavica" }
+ @String{MathScand = "Math. Scand." }
+ @String{TablesAidsComp = "Mathematical Tables and Other Aids to Computation" }
+ @String{TablesAidsComp = "Math. Tables Aids Comput." }
+ @String{NumerMath = "Numerische Mathematik" }
+ @String{NumerMath = "Numer. Math." }
+ @String{PacificMath = "Pacific Journal of Mathematics" }
+ @String{PacificMath = "Pacific J. Math." }
+ @String{ParDistComp = "Journal of Parallel and Distributed Computing" }
+ @String{ParDistComp = "J. Parallel and Distrib. Comput." } % didn't find
+%% in AMS MR
+ @String{ParComputing = "Parallel Computing" }
+ @String{ParComputing = "Parallel Comput." }
+ @String{PhilMag = "Philosophical Magazine" }
+ @String{PhilMag = "Philos. Mag." }
+ @String{ProcNAS = "Proceedings of the National Academy of Sciences
+                    of the USA" }
+ @String{ProcNAS = "Proc. Nat. Acad. Sci. U. S. A." }
+ @String{Psychometrika = "Psychometrika" }
+ @String{QuartMath = "Quarterly Journal of Mathematics, Oxford, Series (2)" }
+ @String{QuartMath = "Quart. J. Math. Oxford Ser. (2)" }
+ @String{QuartApplMath = "Quarterly of Applied Mathematics" }
+ @String{QuartApplMath = "Quart. Appl. Math." }
+ @String{RevueInstStat = "Review of the International Statisical Institute" }
+ @String{RevueInstStat = "Rev. Inst. Internat. Statist." }
+
+ %SIAM
+ @String{JSIAM = "Journal of the Society for Industrial and Applied
+     Mathematics" }
+ @String{JSIAM = "J. Soc. Indust. Appl. Math." }
+ @String{JSIAMB = "Journal of the Society for Industrial and Applied
+     Mathematics, Series B, Numerical Analysis" }
+ @String{JSIAMB = "J. Soc. Indust. Appl. Math. Ser. B Numer. Anal." }
+ @String{SIAMAlgMeth = "{SIAM} Journal on Algebraic and Discrete Methods" }
+ @String{SIAMAlgMeth = "{SIAM} J. Algebraic Discrete Methods" }
+ @String{SIAMAppMath = "{SIAM} Journal on Applied Mathematics" }
+ @String{SIAMAppMath = "{SIAM} J. Appl. Math." }
+ @String{SIAMComp = "{SIAM} Journal on Computing" }
+ @String{SIAMComp = "{SIAM} J. Comput." }
+ @String{SIAMMatrix = "{SIAM} Journal on Matrix Analysis and Applications" }
+ @String{SIAMMatrix = "{SIAM} J. Matrix Anal. Appl." }
+ @String{SIAMNumAnal = "{SIAM} Journal on Numerical Analysis" }
+ @String{SIAMNumAnal = "{SIAM} J. Numer. Anal." }
+ @String{SIAMReview = "{SIAM} Review" }
+ @String{SIAMReview = "{SIAM} Rev." }
+ @String{SIAMSciStat = "{SIAM} Journal on Scientific and Statistical
+     Computing" }
+ @String{SIAMSciStat = "{SIAM} J. Sci. Statist. Comput." }
+
+ @String{SoftPracExp = "Software Practice and Experience" }
+ @String{SoftPracExp = "Software Prac. Experience" } % didn't find in AMS MR
+ @String{StatScience = "Statistical Science" }
+ @String{StatScience = "Statist. Sci." }
+ @String{Techno = "Technometrics" }
+ @String{USSRCompMathPhys = "{USSR} Computational Mathematics and Mathematical
+     Physics" }
+ @String{USSRCompMathPhys = "{U. S. S. R.} Comput. Math. and Math. Phys." }
+ @String{VLSICompSys = "Journal of {VLSI} and Computer Systems" }
+ @String{VLSICompSys = "J. {VLSI} Comput. Syst." }
+ @String{ZAngewMathMech = "Zeitschrift fur Angewandte Mathematik und
+     Mechanik" }
+ @String{ZAngewMathMech = "Z. Angew. Math. Mech." }
+ @String{ZAngewMathPhys = "Zeitschrift fur Angewandte Mathematik und Physik" }
+ @String{ZAngewMathPhys = "Z. Angew. Math. Phys." }
+
+% Publishers % ================================================= |
+
+ @String{Academic = "Academic Press" }
+ @String{ACMPress = "{ACM} Press" }
+ @String{AdamHilger = "Adam Hilger" }
+ @String{AddisonWesley = "Addison-Wesley" }
+ @String{AllynBacon = "Allyn and Bacon" }
+ @String{AMS = "American Mathematical Society" }
+ @String{Birkhauser = "Birkha{\"u}ser" }
+ @String{CambridgePress = "Cambridge University Press" }
+ @String{Chelsea = "Chelsea" }
+ @String{ClaredonPress = "Claredon Press" }
+ @String{DoverPub = "Dover Publications" }
+ @String{Eyolles = "Eyolles" }
+ @String{HoltRinehartWinston = "Holt, Rinehart and Winston" }
+ @String{Interscience = "Interscience" }
+ @String{JohnsHopkinsPress = "The Johns Hopkins University Press" }
+ @String{JohnWileySons = "John Wiley and Sons" }
+ @String{Macmillan = "Macmillan" }
+ @String{MathWorks = "The Math Works Inc." }
+ @String{McGrawHill = "McGraw-Hill" }
+ @String{NatBurStd = "National Bureau of Standards" }
+ @String{NorthHolland = "North-Holland" }
+ @String{OxfordPress = "Oxford University Press" }  %address Oxford or London?
+ @String{PergamonPress = "Pergamon Press" }
+ @String{PlenumPress = "Plenum Press" }
+ @String{PrenticeHall = "Prentice-Hall" }
+ @String{SIAMPub = "{SIAM} Publications" }
+ @String{Springer = "Springer-Verlag" }
+ @String{TexasPress = "University of Texas Press" }
+ @String{VanNostrand = "Van Nostrand" }
+ @String{WHFreeman = "W. H. Freeman and Co." }
+
+%MY ENTRIES
+
+@book{maxwell1890scientific,
+  title={The Scientific Papers of James Clerk Maxwell...},
+  author={Maxwell, James Clerk},
+  volume={2},
+  year={1890},
+  publisher={University Press}
+}
+
+
+
+  title={Monitoring and mapping with robot swarms for agricultural applications},
+  author={Albani, Dario and IJsselmuiden, Joris and Haken, Ramon and Trianni, Vito},
+  booktitle={2017 14th IEEE International Conference on Advanced Video and Signal Based Surveillance (AVSS)},
+  pages={1--6},
+  year={2017},
+  organization={IEEE}
+}
+
+@inproceedings{maza2009multi,
+  title={Multi-UAV cooperation and control for load transportation and deployment},
+  author={Maza, Ivan and Kondak, Konstantin and Bernard, Markus and Ollero, An{\'\i}bal},
+  booktitle={Selected papers from the 2nd International Symposium on UAVs, Reno, Nevada, USA June 8--10, 2009},
+  pages={417--449},
+  year={2009},
+  organization={Springer}
+}
+
+@book{li2017cooperative,
+  title={Cooperative control of multi-agent systems: a consensus region approach},
+  author={Li, Zhongkui and Duan, Zhisheng},
+  year={2017},
+  publisher={CRC press}
+}
+
+@article{ren2007information,
+  title={Information consensus in multivehicle cooperative control},
+  author={Ren, Wei and Beard, Randal W and Atkins, Ella M},
+  journal={IEEE Control systems magazine},
+  volume={27},
+  number={2},
+  pages={71--82},
+  year={2007},
+  publisher={IEEE}
+}
+
+@article{turpin2012trajectory,
+  title={Trajectory design and control for aggressive formation flight with quadrotors},
+  author={Turpin, Matthew and Michael, Nathan and Kumar, Vijay},
+  journal={Autonomous Robots},
+  volume={33},
+  number={1},
+  pages={143--156},
+  year={2012},
+  publisher={Springer}
+}
+
+@article{dong2014time,
+  title={Time-varying formation control for unmanned aerial vehicles: Theories and applications},
+  author={Dong, Xiwang and Yu, Bocheng and Shi, Zongying and Zhong, Yisheng},
+  journal={IEEE Transactions on Control Systems Technology},
+  volume={23},
+  number={1},
+  pages={340--348},
+  year={2014},
+  publisher={IEEE}
+}
+
+@inproceedings{wang2020distributed,
+  title={Distributed Consensus Control of Multiple UAVs in a Constrained Environment},
+  author={Wang, Gang and Yang, Weixin and Zhao, Na and Ji, Yunfeng and Shen, Yantao and Xu, Hao and Li, Peng},
+  booktitle={2020 IEEE International Conference on Robotics and Automation (ICRA)},
+  pages={3234--3240},
+  year={2020},
+  organization={IEEE}
+}
+
+@inproceedings{toksoz2019decentralized,
+  title={Decentralized formation control of a swarm of quadrotor helicopters},
+  author={Toks{\"o}z, Mehmet Altan and O{\u{g}}uz, Sinan and Gazi, Veysel},
+  booktitle={2019 IEEE 15th International Conference on Control and Automation (ICCA)},
+  pages={1006--1013},
+  year={2019},
+  organization={IEEE}
+}
+
+@article{cao2010distributed,
+  title={Distributed containment control for multiple autonomous vehicles with double-integrator dynamics: algorithms and experiments},
+  author={Cao, Yongcan and Stuart, Daniel and Ren, Wei and Meng, Ziyang},
+  journal={IEEE Transactions on Control Systems Technology},
+  volume={19},
+  number={4},
+  pages={929--938},
+  year={2010},
+  publisher={IEEE}
+}
+
+@inproceedings{wang2012containment,
+  title={Containment control for multiple quadrotors with stationary leaders under directed graphs},
+  author={Wang, Yinqiu and Wu, Qinghe and Wang, Yao},
+  booktitle={2012 IEEE 51st IEEE Conference on Decision and Control (CDC)},
+  pages={2781--2786},
+  year={2012},
+  organization={IEEE}
+}
+
+@article{dong2018theory,
+  title={Theory and experiment on formation-containment control of multiple multirotor unmanned aerial vehicle systems},
+  author={Dong, Xiwang and Hua, Yongzhao and Zhou, Yan and Ren, Zhang and Zhong, Yisheng},
+  journal={IEEE Transactions on Automation Science and Engineering},
+  volume={16},
+  number={1},
+  pages={229--240},
+  year={2018},
+  publisher={IEEE}
+}
+
+@article{hu2021decentralized,
+  title={A decentralized cluster formation containment framework for multirobot systems},
+  author={Hu, Junyan and Bhowmick, Parijat and Jang, Inmo and Arvin, Farshad and Lanzon, Alexander},
+  journal={IEEE Transactions on Robotics},
+  volume={37},
+  number={6},
+  pages={1936--1955},
+  year={2021},
+  publisher={IEEE}
+}
+
+@misc{carrillo2013quad,
+  title={Quad Rotorcraft Control, Advances in Industrial Control},
+  author={Carrillo, LR Garc{\'\i}a and L{\'o}pez, AE Dzul and Lozano, R and P{\'e}gard, C},
+  year={2013},
+  publisher={Springer-Verlag, London}
+}
+
+@inproceedings{inproceedings,
+author = {González-Sierra, Jaime and Ríos, Héctor and Dzul, Alejandro},
+year = {2017},
+month = {05},
+pages = {},
+title = {Regulación Robusta de Salida vía Modos Deslizantes Continuos. Parte II: Formación de Quad-Rotors Líder-Seguidor}
+}
+@article{rios2018continuous,
+  title={Continuous sliding-mode control strategies for quadrotor robust tracking: Real-time application},
+  author={R{\'\i}os, H{\'e}ctor and Falc{\'o}n, Romeo and Gonz{\'a}lez, Oscar A and Dzul, Alejandro},
+  journal={IEEE Transactions on Industrial Electronics},
+  volume={66},
+  number={2},
+  pages={1264--1272},
+  year={2018},
+  publisher={IEEE}
+}
+
+@article{belkhouche2005modeling,
+  title={Modeling and controlling a robotic convoy using guidance laws strategies},
+  author={Belkhouche, Fethi and Belkhouche, Boumediene},
+  journal={IEEE Transactions on Systems, Man, and Cybernetics, Part B (Cybernetics)},
+  volume={35},
+  number={4},
+  pages={813--825},
+  year={2005},
+  publisher={IEEE}
+}
+
+@inproceedings{dimarogonas2005formation,
+  title={Formation control and collision avoidance for multi-agent systems and a connection between formation infeasibility and flocking behavior},
+  author={Dimarogonas, Dimos V and Kyriakopoulos, Kostas J},
+  booktitle={Proceedings of the 44th IEEE Conference on Decision and Control},
+  pages={84--89},
+  year={2005},
+  organization={IEEE}
+}
+
+@book{ren2008distributed,
+  title={Distributed consensus in multi-vehicle cooperative control},
+  author={Ren, Wei and Beard, Randal W},
+  volume={27},
+  number={2},
+  year={2008},
+  publisher={Springer}
+}
+
+@article{mcguire2019minimal,
+  title={Minimal navigation solution for a swarm of tiny flying robots to explore an unknown environment},
+  author={McGuire, KN and De Wagter, Christophe and Tuyls, Karl and Kappen, HJ and de Croon, Guido CHE},
+  journal={Science Robotics},
+  volume={4},
+  number={35},
+  pages={eaaw9710},
+  year={2019},
+  publisher={American Association for the Advancement of Science}
+}
+@article{kingston2008decentralized,
+  title={Decentralized perimeter surveillance using a team of UAVs},
+  author={Kingston, Derek and Beard, Randal W and Holt, Ryan S},
+  journal={IEEE Transactions on Robotics},
+  volume={24},
+  number={6},
+  pages={1394--1404},
+  year={2008},
+  publisher={IEEE}
+}
+
+@article{senanayake2016search,
+  title={Search and tracking algorithms for swarms of robots: A survey},
+  author={Senanayake, Madhubhashi and Senthooran, Ilankaikone and Barca, Jan Carlo and Chung, Hoam and Kamruzzaman, Joarder and Murshed, Manzur},
+  journal={Robotics and Autonomous Systems},
+  volume={75},
+  pages={422--434},
+  year={2016},
+  publisher={Elsevier}
+}
+
+@inproceedings{albani2017monitoring,
+  title={Monitoring and mapping with robot swarms for agricultural applications},
+  author={Albani, Dario and IJsselmuiden, Joris and Haken, Ramon and Trianni, Vito},
+  booktitle={2017 14th IEEE International Conference on Advanced Video and Signal Based Surveillance (AVSS)},
+  pages={1--6},
+  year={2017},
+  organization={IEEE}
+}
+
+@inproceedings{maza2009multi,
+  title={Multi-UAV cooperation and control for load transportation and deployment},
+  author={Maza, Ivan and Kondak, Konstantin and Bernard, Markus and Ollero, An{\'\i}bal},
+  booktitle={Selected papers from the 2nd International Symposium on UAVs, Reno, Nevada, USA June 8--10, 2009},
+  pages={417--449},
+  year={2009},
+  organization={Springer}
+}
+
+@book{li2017cooperative,
+  title={Cooperative control of multi-agent systems: a consensus region approach},
+  author={Li, Zhongkui and Duan, Zhisheng},
+  year={2017},
+  publisher={CRC press}
+}
+
+@article{ren2007information,
+  title={Information consensus in multivehicle cooperative control},
+  author={Ren, Wei and Beard, Randal W and Atkins, Ella M},
+  journal={IEEE Control systems magazine},
+  volume={27},
+  number={2},
+  pages={71--82},
+  year={2007},
+  publisher={IEEE}
+}
+
+@article{turpin2012trajectory,
+  title={Trajectory design and control for aggressive formation flight with quadrotors},
+  author={Turpin, Matthew and Michael, Nathan and Kumar, Vijay},
+  journal={Autonomous Robots},
+  volume={33},
+  number={1},
+  pages={143--156},
+  year={2012},
+  publisher={Springer}
+}
+
+@article{dong2014time,
+  title={Time-varying formation control for unmanned aerial vehicles: Theories and applications},
+  author={Dong, Xiwang and Yu, Bocheng and Shi, Zongying and Zhong, Yisheng},
+  journal={IEEE Transactions on Control Systems Technology},
+  volume={23},
+  number={1},
+  pages={340--348},
+  year={2014},
+  publisher={IEEE}
+}
+
+@inproceedings{wang2020distributed,
+  title={Distributed Consensus Control of Multiple UAVs in a Constrained Environment},
+  author={Wang, Gang and Yang, Weixin and Zhao, Na and Ji, Yunfeng and Shen, Yantao and Xu, Hao and Li, Peng},
+  booktitle={2020 IEEE International Conference on Robotics and Automation (ICRA)},
+  pages={3234--3240},
+  year={2020},
+  organization={IEEE}
+}
+
+@inproceedings{toksoz2019decentralized,
+  title={Decentralized formation control of a swarm of quadrotor helicopters},
+  author={Toks{\"o}z, Mehmet Altan and O{\u{g}}uz, Sinan and Gazi, Veysel},
+  booktitle={2019 IEEE 15th International Conference on Control and Automation (ICCA)},
+  pages={1006--1013},
+  year={2019},
+  organization={IEEE}
+}
+
+@article{cao2010distributed,
+  title={Distributed containment control for multiple autonomous vehicles with double-integrator dynamics: algorithms and experiments},
+  author={Cao, Yongcan and Stuart, Daniel and Ren, Wei and Meng, Ziyang},
+  journal={IEEE Transactions on Control Systems Technology},
+  volume={19},
+  number={4},
+  pages={929--938},
+  year={2010},
+  publisher={IEEE}
+}
+
+@inproceedings{wang2012containment,
+  title={Containment control for multiple quadrotors with stationary leaders under directed graphs},
+  author={Wang, Yinqiu and Wu, Qinghe and Wang, Yao},
+  booktitle={2012 IEEE 51st IEEE Conference on Decision and Control (CDC)},
+  pages={2781--2786},
+  year={2012},
+  organization={IEEE}
+}
+
+@article{dong2018theory,
+  title={Theory and experiment on formation-containment control of multiple multirotor unmanned aerial vehicle systems},
+  author={Dong, Xiwang and Hua, Yongzhao and Zhou, Yan and Ren, Zhang and Zhong, Yisheng},
+  journal={IEEE Transactions on Automation Science and Engineering},
+  volume={16},
+  number={1},
+  pages={229--240},
+  year={2018},
+  publisher={IEEE}
+}
+
+@article{hu2021decentralized,
+  title={A decentralized cluster formation containment framework for multirobot systems},
+  author={Hu, Junyan and Bhowmick, Parijat and Jang, Inmo and Arvin, Farshad and Lanzon, Alexander},
+  journal={IEEE Transactions on Robotics},
+  volume={37},
+  number={6},
+  pages={1936--1955},
+  year={2021},
+  publisher={IEEE}
+}
+
+@misc{carrillo2013quad,
+  title={Quad Rotorcraft Control, Advances in Industrial Control},
+  author={Carrillo, LR Garc{\'\i}a and L{\'o}pez, AE Dzul and Lozano, R and P{\'e}gard, C},
+  year={2013},
+  publisher={Springer-Verlag, London}
+}
+
+@inproceedings{inproceedings,
+author = {González-Sierra, Jaime and Ríos, Héctor and Dzul, Alejandro},
+year = {2017},
+month = {05},
+pages = {},
+title = {Regulación Robusta de Salida vía Modos Deslizantes Continuos. Parte II: Formación de Quad-Rotors Líder-Seguidor}
+}
+@article{rios2018continuous,
+  title={Continuous sliding-mode control strategies for quadrotor robust tracking: Real-time application},
+  author={R{\'\i}os, H{\'e}ctor and Falc{\'o}n, Romeo and Gonz{\'a}lez, Oscar A and Dzul, Alejandro},
+  journal={IEEE Transactions on Industrial Electronics},
+  volume={66},
+  number={2},
+  pages={1264--1272},
+  year={2018},
+  publisher={IEEE}
+}
+
+@article{doi:10.1080/00207179308923053,
+author = { ARIE   LEVANT },
+title = {Sliding order and sliding accuracy in sliding mode control},
+journal = {International Journal of Control},
+volume = {58},
+number = {6},
+pages = {1247-1263},
+year  = {1993},
+publisher = {Taylor & Francis},
+doi = {10.1080/00207179308923053},
+
+URL = { 
+    
+        https://doi.org/10.1080/00207179308923053
+    
+    
+
+},
+eprint = { 
+    
+        https://doi.org/10.1080/00207179308923053
+    
+    
+
+}
+}
+
+@article{belkhouche2005modeling,
+  title={Modeling and controlling a robotic convoy using guidance laws strategies},
+  author={Belkhouche, Fethi and Belkhouche, Boumediene},
+  journal={IEEE Transactions on Systems, Man, and Cybernetics, Part B (Cybernetics)},
+  volume={35},
+  number={4},
+  pages={813--825},
+  year={2005},
+  publisher={IEEE}
+}
+
+@inproceedings{dimarogonas2005formation,
+  title={Formation control and collision avoidance for multi-agent systems and a connection between formation infeasibility and flocking behavior},
+  author={Dimarogonas, Dimos V and Kyriakopoulos, Kostas J},
+  booktitle={Proceedings of the 44th IEEE Conference on Decision and Control},
+  pages={84--89},
+  year={2005},
+  organization={IEEE}
+}
+
+@article{torres2017design,
+  title={Design of continuous twisting algorithm},
+  author={Torres-Gonz{\'a}lez, V{\'\i}ctor and Sanchez, Tonametl and Fridman, Leonid M and Moreno, Jaime A},
+  journal={Automatica},
+  volume={80},
+  pages={119--126},
+  year={2017},
+  publisher={Elsevier}
+}
+
+@article{fridman2015continuous,
+  title={Continuous nested algorithms: The fifth generation of sliding mode controllers},
+  author={Fridman, Leonid and Moreno, Jaime A and Bandyopadhyay, Bijnan and Kamal, Shyam and Chalanga, Asif},
+  journal={Recent advances in sliding modes: From control to intelligent mechatronics},
+  pages={5--35},
+  year={2015},
+  publisher={Springer}
+}
+
+@article{kamal2016continuous,
+  title={Continuous terminal sliding-mode controller},
+  author={Kamal, Shyam and Moreno, Jaime A and Chalanga, Asif and Bandyopadhyay, Bijnan and Fridman, Leonid M},
+  journal={Automatica},
+  volume={69},
+  pages={308--314},
+  year={2016},
+  publisher={Elsevier}
+}
