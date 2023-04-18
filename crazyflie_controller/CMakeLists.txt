@@ -19,10 +19,10 @@ include_directories(
 add_executable(crazyflie_controller src/Leader.cpp)
 
 add_executable(follower_controller src/Follower.cpp)
+add_executable(controller_controller src/controller.cpp)
 
-
+target_link_libraries(controller_controller ${catkin_LIBRARIES})
 target_link_libraries(follower_controller ${catkin_LIBRARIES})
-
 target_link_libraries(crazyflie_controller ${catkin_LIBRARIES})
 
 

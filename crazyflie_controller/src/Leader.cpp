@@ -2,6 +2,7 @@
 #include <tf/transform_listener.h>
 #include <std_srvs/Empty.h>
 #include <geometry_msgs/Twist.h>
+#include <std_msgs/Float32.h>
 
 #include <cmath>
 #include <vector>
@@ -27,6 +28,7 @@ public:
         : m_worldFrame(worldFrame)
         , m_frame(frame)
         , m_pubNav()
+        , m_pubLu()
         , m_listener()
         , m_pidNUX(
             get(n, "PIDs/NUX/kp"),
@@ -79,10 +81,11 @@ public:
     {
         ros::NodeHandle nh;
         m_listener.waitForTransform(m_worldFrame, m_frame, ros::Time(0), ros::Duration(10.0)); 
-        m_pubNav = nh.advertise<geometry_msgs::Twist>("cmd_vel", 100);
-        m_subscribeGoal = nh.subscribe("goal", 100, &Controller::goalChanged, this);
-        m_subscribeGoalVel = nh.subscribe("goalvel", 100, &Controller::goalvelChanged, this);
-        m_subscribeGoalAcc = nh.subscribe("goalacc", 100, &Controller::goalaccChanged, this);
+        m_pubNav = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1);
+        m_pubLu = nh.advertise<std_msgs::Float32>("leader_u", 1);
+        m_subscribeGoal = nh.subscribe("goal", 1, &Controller::goalChanged, this);
+        m_subscribeGoalVel = nh.subscribe("goalvel", 1, &Controller::goalvelChanged, this);
+        m_subscribeGoalAcc = nh.subscribe("goalacc", 1, &Controller::goalaccChanged, this);
         m_serviceTakeoff = nh.advertiseService("takeoff", &Controller::takeoff, this);
         m_serviceLand = nh.advertiseService("land", &Controller::land, this);
     }
@@ -160,6 +163,27 @@ private:
         return deg *  M_PI / 180 ;
     }
 
+    float sign(float n)
+    {
+    if(n > 0)
+        return 1.0;
+    else if(n < 0)
+        return -1.0;
+    else
+        return 0.0;
+    }
+
+    float calculate_rpm(float  thrust_newtons) {
+
+    float thrust_gramos = thrust_newtons / 0.00980665f;
+    float a = 1.0942e-07f;
+    float b = -2.1059e-04f;
+    float c = 1.5417e-01f;
+    float discriminante = powf(b, 2.0f) - 4.0f * a * (c - fabsf(thrust_gramos));
+    
+    return (-b + sqrtf(discriminante)) / (2.0f * a) * sign(thrust_gramos);
+    }
+
     void iteration(const ros::TimerEvent& e)
     {
         float dt = e.current_real.toSec() - e.last_real.toSec();
@@ -170,7 +194,7 @@ private:
             {
                 tf::StampedTransform transform;
                 m_listener.lookupTransform(m_worldFrame, m_frame, ros::Time(0), transform);
-                if (transform.getOrigin().z() > m_startZ + 0.05 || m_thrust > 20000)
+                if (transform.getOrigin().z() > m_startZ + 0.05 || m_thrust > 16000)
                 {
                     pidReset();
                     m_state = Automatic;
@@ -243,19 +267,17 @@ private:
             float NUXS = (m_pidNUX.update(0.0, targetDrone.pose.position.x)) + m_goalacc.linear.x;
             float NUYS = (m_pidNUY.update(0.0, targetDrone.pose.position.y)) + m_goalacc.linear.y;
             float NUZS = (m_pidNUZ.update(0.0, targetDrone.pose.position.z)) + m_goalacc.linear.z;
-            
-            float a = 0.109*powf(10,-6);
-            float b = -210.59*powf(10,-6);
-            float c = 0.1517;
 
             float m = 0.032;
             float u = sqrt(pow(NUXS, 2) + pow(NUYS, 2) + pow((NUZS + 9.81), 2)) * m;
-            u = std::max(std::min(u, 4.0f), 0.0f);
-            float u_gramos = u * (1 / (9.80665 / 1000));
-            float u_rpm = (sqrt(4 * a * (u_gramos - c) + pow(b, 2)) - b) / (2 * a);
-            u_rpm = std::max(std::min(u_rpm, 60000.0f), 10000.0f);
+            u = std::max(std::min(u, 4.2f), 0.0f);
+            float u_rpm = std::max(std::min(calculate_rpm(u), 60000.0f), 10000.0f);
             float phi = asin((NUXS * sin(yaw_d) - NUYS * cos(yaw_d))*( m / u )) ;
             float theta = atan((NUXS * cos(yaw_d) + NUYS * sin(yaw_d)) / (NUZS + 9.81));
+            
+            std_msgs::Float32 msg_u;
+            msg_u.data = u;
+            m_pubLu.publish(msg_u);
 
             if (m_height < 0.05)
             {
@@ -304,6 +326,7 @@ private:
     std::string m_worldFrame;
     std::string m_frame;
     ros::Publisher m_pubNav;
+    ros::Publisher m_pubLu;
     tf::TransformListener m_listener;
     PID m_pidNUX;
     PID m_pidNUY;
@@ -334,7 +357,7 @@ int main(int argc, char **argv)
   std::string frame;
   n.getParam("frame", frame);
   double frequency;
-  n.param("frequency", frequency, 100.0);
+  n.param("frequency", frequency, 50.0);
 
   Controller controller(worldFrame, frame, n);
   controller.run(frequency);
