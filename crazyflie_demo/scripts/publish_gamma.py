@@ -7,7 +7,7 @@ from std_msgs.msg import Float32
 
 import tf.transformations as t
 
-class AttitudePublisher:
+class AttitudeGamma:
     def __init__(self):
         self.roll = 0
         self.pitch = 0
@@ -38,7 +38,7 @@ class AttitudePublisher:
         rpy = t.euler_from_quaternion([q.x, q.y, q.z, q.w])
         self.yaw = rpy[2]
 
-    def publish_attitude(self):
+    def publish_gamma(self):
         attitude = Twist()
 
         # Calcular las aceleraciones a partir de los ángulos y la velocidad de ascenso
@@ -54,10 +54,10 @@ class AttitudePublisher:
 
 if __name__ == '__main__':
     rospy.init_node('gamma')
-    attitude_publisher = AttitudePublisher()
+    attitude_publisher = AttitudeGamma()
 
     # Mantener el nodo en ejecución
     rate = rospy.Rate(100)
     while not rospy.is_shutdown():
-        attitude_publisher.publish_attitude()
+        attitude_publisher.publish_gamma()
         rate.sleep()

@@ -8,6 +8,10 @@
   <arg name="ip" default="192.168.2.10" /> <!--Adjust this parameter-->
   <arg name="port" default="3883" />
 
+
+
+
+
   <include file="$(find crazyflie_driver)/launch/crazyflie_server.launch">
   </include>
    <group ns="crazyflie">
@@ -31,7 +35,6 @@
     <include file="$(find crazyflie_controller)/launch/Leader.launch">
       <arg name="frame" value="$(arg frame)" />
     </include>
-
 
     <node name="pose" pkg="crazyflie_demo" type="trajectory_node.py" output="screen">
     </node>
