@@ -68,11 +68,9 @@ public:
             "yaw")
         , m_state(Idle)
         , m_goal()
-        , m_statecameras()
         , m_goalvel()
         , m_goalacc()
         , m_subscribeGoal()
-        , m_subscribeStateCameras()
         , m_subscribeGoalVel()
         , m_subscribeGoalAcc()
         , m_serviceTakeoff()
@@ -86,7 +84,6 @@ public:
         m_pubNav = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1);
         m_pubLu = nh.advertise<std_msgs::Float32>("leader_u", 1);
         m_subscribeGoal = nh.subscribe("goal", 1, &Controller::goalChanged, this);
-        m_subscribeStateCameras = nh.subscribe("vrpn_client_node/crazyflie/pose", 1, &Controller::stateCameras, this);
         m_subscribeGoalVel = nh.subscribe("goalvel", 1, &Controller::goalvelChanged, this);
         m_subscribeGoalAcc = nh.subscribe("goalacc", 1, &Controller::goalaccChanged, this);
         m_serviceTakeoff = nh.advertiseService("takeoff", &Controller::takeoff, this);
@@ -105,11 +102,6 @@ private:
         const geometry_msgs::PoseStamped::ConstPtr& msg)
     {
         m_goal = *msg;
-    }
-    void stateCameras(
-        const geometry_msgs::PoseStamped::ConstPtr& msg)
-    {
-        m_statecameras= *msg;
     }
     void goalvelChanged(
         const geometry_msgs::Twist::ConstPtr& msg)
@@ -130,7 +122,9 @@ private:
         ROS_INFO("Takeoff requested!");
         m_state = TakingOff;
 
-        m_startZ = 0;
+        tf::StampedTransform transform;
+        m_listener.lookupTransform(m_worldFrame, m_frame, ros::Time(0), transform);
+        m_startZ = transform.getOrigin().z();
 
         return true;
     }
@@ -198,7 +192,9 @@ private:
         {
         case TakingOff:
             {
-                if (m_statecameras.pose.position.z > 0.05 || m_thrust > 16000)
+                tf::StampedTransform transform;
+                m_listener.lookupTransform(m_worldFrame, m_frame, ros::Time(0), transform);
+                if (transform.getOrigin().z() > m_startZ + 0.05 || m_thrust > 16000)
                 {
                     pidReset();
                     m_state = Automatic;
@@ -211,13 +207,14 @@ private:
                     msg.linear.z = m_thrust;
                     m_pubNav.publish(msg);
                 }
+
             }
             break;
 
             case Landing:
             {
                 m_thrust -= 1000 * dt;
-                if (m_thrust < 0 || m_statecameras.pose.position.z < 0.05 ) 
+                if (m_thrust < 0 || m_thrust < 30000 ) 
                 {
                     m_thrust = 0;
                 }
@@ -227,41 +224,62 @@ private:
             // intentional fall-thru
 
             case Automatic: {
+            tf::StampedTransform transform;
+            try {
+                m_listener.lookupTransform(m_worldFrame, m_frame, ros::Time(0), transform);
+                m_height = transform.getOrigin().z(); // Actualizar la altura
+            } catch (tf::TransformException& ex) {
+                ROS_ERROR("%s", ex.what());
+                return;
+            }
+
+            geometry_msgs::PoseStamped targetWorld;
+            targetWorld.header.stamp = transform.stamp_;
+            targetWorld.header.frame_id = m_worldFrame;
+            targetWorld.pose = m_goal.pose;
 
             tf::Quaternion q_target(
-                m_goal.pose.orientation.x,
-                m_goal.pose.orientation.y,
-                m_goal.pose.orientation.z,
-                m_goal.pose.orientation.w
+                targetWorld.pose.orientation.x,
+                targetWorld.pose.orientation.y,
+                targetWorld.pose.orientation.z,
+                targetWorld.pose.orientation.w
             );
-            double rolld, pitchd, yawd;
-            tf::Matrix3x3(q_target).getRPY(rolld, pitchd, yawd);
+            double roll_d, pitch_d, yaw_d;
+            tf::Matrix3x3(q_target).getRPY(roll_d, pitch_d, yaw_d);
+
+            geometry_msgs::PoseStamped targetDrone;
+            try {
+                m_listener.transformPose(m_frame, targetWorld, targetDrone);
+            } catch (tf::TransformException& ex) {
+                ROS_ERROR("%s", ex.what());
+                return;
+            }
 
             tf::Quaternion q_target_drone(
-                m_statecameras.pose.orientation.x,
-                m_statecameras.pose.orientation.y,
-                m_statecameras.pose.orientation.z,
-                m_statecameras.pose.orientation.w
+                targetDrone.pose.orientation.x,
+                targetDrone.pose.orientation.y,
+                targetDrone.pose.orientation.z,
+                targetDrone.pose.orientation.w
             );
             double roll, pitch, yaw;
             tf::Matrix3x3(q_target_drone).getRPY(roll, pitch, yaw);
 
-            float NUXS = (m_pidNUX.update(m_statecameras.pose.position.x, m_goal.pose.position.x)) + m_goalacc.linear.x;
-            float NUYS = (m_pidNUY.update(m_statecameras.pose.position.y, m_goal.pose.position.y)) + m_goalacc.linear.y;
-            float NUZS = (m_pidNUZ.update(m_statecameras.pose.position.z, m_goal.pose.position.z)) + m_goalacc.linear.z;
+            float NUXS = (m_pidNUX.update(0.0, targetDrone.pose.position.x)) + m_goalacc.linear.x;
+            float NUYS = (m_pidNUY.update(0.0, targetDrone.pose.position.y)) + m_goalacc.linear.y;
+            float NUZS = (m_pidNUZ.update(0.0, targetDrone.pose.position.z)) + m_goalacc.linear.z;
 
-            float m = 0.032f;
-            float u = sqrtf(powf(NUXS, 2.0f) + powf(NUYS, 2.0f) + powf((NUZS + 9.81f), 2.0f)) * m;
-            u = std::max(std::min(u, 5.0f), 0.0f);
+            float m = 0.032;
+            float u = sqrt(pow(NUXS, 2) + pow(NUYS, 2) + pow((NUZS + 9.81), 2)) * m;
+            u = std::max(std::min(u, 4.2f), 0.0f);
             float u_rpm = std::max(std::min(calculate_rpm(u), 60000.0f), 10000.0f);
-            float phi = asinf((NUXS * sin(yawd) - NUYS * cos(yawd))*( m / u )) ;
-            float theta = atanf((NUXS * cos(yawd) + NUYS * sin(yawd)) / (NUZS + 9.81));
+            float phi = asin((NUXS * sin(yaw_d) - NUYS * cos(yaw_d))*( m / u )) ;
+            float theta = atan((NUXS * cos(yaw_d) + NUYS * sin(yaw_d)) / (NUZS + 9.81));
             
             std_msgs::Float32 msg_u;
             msg_u.data = u;
             m_pubLu.publish(msg_u);
 
-            if (m_statecameras.pose.position.z < 0.05)
+            if (m_height < 0.05)
             {
                 geometry_msgs::Twist msg;
                 msg.linear.x = 0;
@@ -276,7 +294,7 @@ private:
                 msg.linear.x = std::max(std::min(rad2deg(theta), 10.0f), -10.0f);
                 msg.linear.y = std::max(std::min(rad2deg(phi), 10.0f), -10.0f);
                 msg.linear.z = u_rpm;
-                msg.angular.z = m_pidYaw.update(yaw, yawd);
+                msg.angular.z = m_pidYaw.update(0.0, yaw);
                 m_pubNav.publish(msg);
             }
 
@@ -316,11 +334,9 @@ private:
     PID m_pidYaw;
     State m_state;
     geometry_msgs::PoseStamped m_goal;
-    geometry_msgs::PoseStamped m_statecameras;
     geometry_msgs::Twist m_goalvel;
     geometry_msgs::Twist m_goalacc;
     ros::Subscriber m_subscribeGoal;
-    ros::Subscriber m_subscribeStateCameras;
     ros::Subscriber m_subscribeGoalVel;
     ros::Subscriber m_subscribeGoalAcc;
     ros::ServiceServer m_serviceTakeoff;
