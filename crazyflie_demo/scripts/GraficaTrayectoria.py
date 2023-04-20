@@ -19,7 +19,7 @@ dz = (h/2) * np.tanh(t-7.5) * (1 - np.tanh(t-7.5))
 
 ddx = -r * (np.arctan(p) + np.arctan(t - p)) * w**2 * np.cos(w * t)
 ddy = -r * (np.arctan(p) + np.arctan(t - p)) * w**2 * np.sin(w * t)
-ddz = (h/2) * np.tanh(t-7.5) * (1 - np.tanh(t-7.5)) * (1 - 2*np.tanh(t-7.5))
+ddz = (h/2) * np.tanh(t-7.5) * (1 - np.tanh(t-7.5)) * (1 - 2*np.tanh(t-7.5)) + 9.8
 
 # Creación de las figuras
 fig1, ax1 = plt.subplots()

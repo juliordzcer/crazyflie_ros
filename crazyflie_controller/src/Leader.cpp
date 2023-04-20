@@ -194,7 +194,7 @@ private:
             {
                 tf::StampedTransform transform;
                 m_listener.lookupTransform(m_worldFrame, m_frame, ros::Time(0), transform);
-                if (transform.getOrigin().z() > m_startZ + 0.05 || m_thrust > 16000)
+                if (transform.getOrigin().z() > m_startZ + 0.05 || m_thrust > 15000)
                 {
                     pidReset();
                     m_state = Automatic;
@@ -213,13 +213,23 @@ private:
 
             case Landing:
             {
-                m_thrust -= 1000 * dt;
-                if (m_thrust < 0 || m_thrust < 30000 ) 
+                m_thrust = 52000;
+
+                geometry_msgs::Twist msg;
+                msg.linear.z = m_thrust;
+                m_pubNav.publish(msg);
+
+                tf::StampedTransform transform;
+                m_listener.lookupTransform(m_worldFrame, m_frame, ros::Time(0), transform);
+                if (transform.getOrigin().z() <= m_startZ + 0.05)
                 {
-                    m_thrust = 0;
+                    m_state = Idle;
+                    geometry_msgs::Twist msg;
+                    m_pubNav.publish(msg);
                 }
             }
             break;
+
 
             // intentional fall-thru
 
@@ -272,6 +282,7 @@ private:
             float u = sqrt(pow(NUXS, 2) + pow(NUYS, 2) + pow((NUZS + 9.81), 2)) * m;
             u = std::max(std::min(u, 4.2f), 0.0f);
             float u_rpm = std::max(std::min(calculate_rpm(u), 60000.0f), 10000.0f);
+            
             float phi = asin((NUXS * sin(yaw_d) - NUYS * cos(yaw_d))*( m / u )) ;
             float theta = atan((NUXS * cos(yaw_d) + NUYS * sin(yaw_d)) / (NUZS + 9.81));
             
@@ -279,7 +290,7 @@ private:
             msg_u.data = u;
             m_pubLu.publish(msg_u);
 
-            if (m_height < 0.05)
+            if (m_height < 0.07)
             {
                 geometry_msgs::Twist msg;
                 msg.linear.x = 0;
@@ -290,9 +301,10 @@ private:
             }
             else
             { 
+                float tol = 8.0f;
                 geometry_msgs::Twist msg;
-                msg.linear.x = std::max(std::min(rad2deg(theta), 10.0f), -10.0f);
-                msg.linear.y = std::max(std::min(rad2deg(phi), 10.0f), -10.0f);
+                msg.linear.x = std::max(std::min(rad2deg(theta), tol), -tol);
+                msg.linear.y = std::max(std::min(rad2deg(phi), tol), -tol);
                 msg.linear.z = u_rpm;
                 msg.angular.z = m_pidYaw.update(0.0, yaw);
                 m_pubNav.publish(msg);

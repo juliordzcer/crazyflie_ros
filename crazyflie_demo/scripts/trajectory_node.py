@@ -50,7 +50,7 @@ def trajectory_circle():
 
         x = r * (np.arctan(p) + np.arctan(t - p)) * np.cos(w * t) #- 0.5
         y = r * (np.arctan(p) + np.arctan(t - p)) * np.sin(w * t)
-        z = (h/2) * (1 + np.tanh(t-7.5))
+        z = (h/2) * (1 + np.tanh(t-7.5)) + 0.05
         yaw = 0
 
             # Publicar posicion actual

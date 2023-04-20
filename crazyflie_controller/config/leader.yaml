@@ -1,24 +1,24 @@
 PIDs:
   NUX:
-    kp: 25.5
-    kd: 8.17
-    ki: 5.0
+    kp: 28.5
+    kd: 16.5
+    ki: 10.0
     minOutput: -800.0
     maxOutput: 800.0
     integratorMin: -1
     integratorMax: 1
   NUY:
-    kp: 25.5
-    kd: 8.17
-    ki: 5.0
+    kp: 28.5
+    kd: 16.5
+    ki: 10.0
     minOutput: -800.0
     maxOutput: 800.0
     integratorMin: -1
     integratorMax: 1
   NUZ:
     kp: 75.7
-    kd: 55.0
-    ki: 15.0
+    kd: 60.0
+    ki: 35.0
     minOutput: 0.0
     maxOutput: 300.0
     integratorMin: -100
