@@ -9,9 +9,8 @@ t = ti:dt:t_max; % Vector de tiempo
 g = 9.8; % Aceleración debido a la gravedad (m/s^2)
 m=0.032; % Masa del quadrotor (kg)
 
-Jx=9.827e-05;
-Jy=8.185e-05;
-Jz=9.613e-05;
+
+
 
 d=1;
 w1=0.4;

@@ -20,8 +20,8 @@ def joy_callback(joy_msg):
     if joy_msg.buttons[5] == 1 and not button_pressed:
         rospy.loginfo('Trayectoria iniciada')
         button_pressed = True
-        r = 0.18
-        h = 0.8
+        r = 0.16
+        h = 0.4
         t = 0.0
     elif joy_msg.buttons[5] == 1 and button_pressed:
         rospy.loginfo('Trayectoria reiniciada')
@@ -50,7 +50,7 @@ def trajectory_circle():
 
         x = r * (np.arctan(p) + np.arctan(t - p)) * np.cos(w * t) #- 0.5
         y = r * (np.arctan(p) + np.arctan(t - p)) * np.sin(w * t)
-        z = (h/2) * (1 + np.tanh(t-7.5)) + 0.05
+        z = (h/2) * (1 + np.tanh(t-7.5)) + 0.1
         yaw = 0
 
             # Publicar posicion actual

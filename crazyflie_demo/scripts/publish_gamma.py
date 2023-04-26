@@ -20,11 +20,7 @@ class AttitudeGamma:
         self.attitude_pub = rospy.Publisher('gamma', Twist, queue_size=50)
 
         self.masa = 0.032
-    # def acc_d_callback(self,msg):
-    #     self.accx = msg.linear.x; 
-    #     self.accy = msg.linear.y; 
-    #     self.accz = msg.linear.z; 
-
+        
     def pose_callback(self, msg):
         # Extraer los ángulos de rotación rpy a partir del mensaje "pose"
         q = msg.pose.orientation
@@ -36,7 +32,7 @@ class AttitudeGamma:
         
     def thrust_callback(self, msg):
         # Extraer el empuje del seguidor
-        self.thrust = msg.data*.1
+        self.thrust = msg.data
 
     def yaw_callback(self, msg):
         # Extraer el ángulo yaw a partir del mensaje "pose"

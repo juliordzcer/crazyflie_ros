@@ -5,6 +5,8 @@ import math as m
 from sensor_msgs.msg import Imu
 from geometry_msgs.msg import PoseStamped, Twist
 import tf.transformations as t
+from std_msgs.msg import Float32
+
 
 class ImuLinearAccelPublisher:
     def __init__(self):
@@ -18,53 +20,51 @@ class ImuLinearAccelPublisher:
         twist_msg.linear.z = msg.linear_acceleration.z
         self.linear_accel_pub.publish(twist_msg)
 
-class AttitudePublisher:
+class GammaPublisher:
     def __init__(self):
         self.roll = 0
         self.pitch = 0
         self.yaw = 0
         self.thrust = 0
-        self.pose_sub = rospy.Subscriber('/crazyflie1/pose', PoseStamped, self.pose_callback)
-        self.thrust_sub = rospy.Subscriber('/crazyflie1/cmd_vel', Twist, self.thrust_callback)
-        self.yaw_sub = rospy.Subscriber('/crazyflie1/vrpn_client_node/crazyflie1/pose', PoseStamped, self.yaw_callback)
-        self.attitude_pub = rospy.Publisher('/crazyflie2/info_leader', Twist, queue_size=50)
+        self.pose_sub = rospy.Subscriber('/crazyflie1/pose', Twist, self.pose_callback)
+        self.thrust_sub = rospy.Subscriber('/crazyflie1/leader_u', Float32, self.thrust_callback)
+        self.gamma_pub = rospy.Publisher('/crazyflie2/info_leader', Twist, queue_size=50)
+
+        self.masa = 0.032
 
     def pose_callback(self, msg):
         # Extraer los ángulos de rotación rpy a partir del mensaje "pose"
-        q = msg.pose.orientation
-        rpy = t.euler_from_quaternion([q.x, q.y, q.z, q.w])
-        # Extraer pitch y roll de los ángulos rpy
-        self.roll = rpy[0]
-        self.pitch = rpy[1]
+
+        self.roll  = msg.angular.x
+        self.pitch = msg.angular.y
+        self.yaw   = msg.angular.z
         
     def thrust_callback(self, msg):
-        # Extraer los ángulos de rotación rpy a partir del mensaje "pose"
-        self.thrust = msg.linear.z
+        # Extraer el empuje del seguidor
+        self.thrust = msg.data
 
-    def yaw_callback(self, msg):
-        # Extraer el ángulo yaw a partir del mensaje "pose"
-        q = msg.pose.orientation
-        rpy = t.euler_from_quaternion([q.x, q.y, q.z, q.w])
-        self.yaw = rpy[2]
-        # self.yaw = m.degrees(rpy[2])
+    def publish_gamma(self):
+        gamma = Twist()
 
-    def publish_attitude(self):
-        attitude = Twist()
-        attitude.linear.z = self.thrust
-        attitude.angular.x = self.roll
-        attitude.angular.y = self.pitch 
-        attitude.angular.z = self.yaw
-        self.attitude_pub.publish(attitude)
+        # Calcular las aceleraciones a partir de los ángulos y la velocidad de ascenso
+        self.gammax = (self.thrust/self.masa)*(m.cos(self.roll)*m.sin(self.pitch)*m.cos(self.yaw) + m.sin(self.roll)*m.sin(self.yaw))
+        self.gammay = (self.thrust/self.masa)*(m.cos(self.roll)*m.sin(self.pitch)*m.sin(self.yaw) - m.sin(self.roll)*m.cos(self.yaw))
+        self.gammaz = (self.thrust/self.masa)*(m.cos(self.roll)*m.cos(self.pitch))
+
+        gamma.linear.x = self.gammax
+        gamma.linear.y = self.gammay 
+        gamma.linear.z = self.gammaz
+        self.gamma_pub.publish(gamma)
 
 if __name__ == '__main__':
     rospy.init_node('PubLeaderInfo')
     imu_linear_accel_publisher = ImuLinearAccelPublisher()
-    attitude_publisher = AttitudePublisher()
+    gamma_publisher = GammaPublisher()
 
     # Mantener el nodo en ejecución
     rate = rospy.Rate(100)
     while not rospy.is_shutdown():
-        attitude_publisher.publish_attitude()
+        gamma_publisher.publish_gamma()
         rate.sleep()
 
 
