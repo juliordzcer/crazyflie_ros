@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <launch>
   <arg name="joy_dev" default="/dev/input/js0" />
-  <arg name="uri" default="radio://0/80/250K/E7E7E7E701" /> 
-  <!-- <arg name="uri" default="radio://0/90/2M/E7E7E7E702" />  -->
+  <!-- <arg name="uri" default="radio://0/80/250K/E7E7E7E701" />  -->
+  <arg name="uri" default="radio://0/90/2M/E7E7E7E702" /> 
   <!-- <arg name="uri" default="radio://0/70/250K/E7E7E7E703" />  -->
   <arg name="frame" default="crazyflie" /> <!--For OptiTrack users: frame name should match the Rigid-body name on Motive-->
   <arg name="ip" default="192.168.2.10" /> <!--Adjust this parameter-->
