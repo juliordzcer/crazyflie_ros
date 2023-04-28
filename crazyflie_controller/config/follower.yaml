@@ -23,7 +23,6 @@ PIDs:
     maxOutput: 300.0
     integratorMin: -100
     integratorMax: 100
-
   Yaw:
     kp: -200.0
     kd: -20.0

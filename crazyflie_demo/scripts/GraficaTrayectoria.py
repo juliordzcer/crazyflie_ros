@@ -11,7 +11,7 @@ t = np.linspace(0, 100, 1000)
 # Cálculo de las coordenadas x, y, z y sus derivadas
 x = r * (np.arctan(p) + np.arctan(t - p)) * np.cos(w * t)
 y =  r * (np.arctan(p) + np.arctan(t - p)) * np.sin(w * t)
-z = .5 #(h/2) * (1 + np.tanh(t-7.5))
+z = 1.5 * t/t #(h/2) * (1 + np.tanh(t-7.5))
 
 dx = -r * (np.arctan(p) + np.arctan(t - p)) * w * np.sin(w * t)
 dy = r * (np.arctan(p) + np.arctan(t - p)) * w * np.cos(w * t)

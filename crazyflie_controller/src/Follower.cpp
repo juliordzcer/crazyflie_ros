@@ -286,25 +286,25 @@ private:
             float phi = asin((NUXS * sin(yaw_d) - NUYS * cos(yaw_d))*( m / u )) ;
             float theta = atan((NUXS * cos(yaw_d) + NUYS * sin(yaw_d)) / (NUZS + 9.81));
 
-            if (m_height < 0.07)
-            {
-                geometry_msgs::Twist msg;
-                msg.linear.x = 0;
-                msg.linear.y = 0;
-                msg.linear.z = u_rpm;
-                msg.angular.z = 0;
-                m_pubNav.publish(msg);
-            }
-            else
-            { 
-                float tol = 8.0f;
+            // if (m_height < 0.07)
+            // {
+            //     geometry_msgs::Twist msg;
+            //     msg.linear.x = 0;
+            //     msg.linear.y = 0;
+            //     msg.linear.z = u_rpm;
+            //     msg.angular.z = 0;
+            //     m_pubNav.publish(msg);
+            // }
+            // else
+            // { 
+                float tol = 9.0f;
                 geometry_msgs::Twist msg;
                 msg.linear.x = std::max(std::min(rad2deg(theta), tol), -tol);
                 msg.linear.y = std::max(std::min(rad2deg(phi), tol), -tol);
                 msg.linear.z = u_rpm;
                 msg.angular.z = m_pidYaw.update(0.0, yaw);
                 m_pubNav.publish(msg);
-            }
+            // }
             
             m_thrust = u_rpm;
 

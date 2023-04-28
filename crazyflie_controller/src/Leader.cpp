@@ -213,7 +213,7 @@ private:
 
             case Landing:
             {
-                m_thrust = 52000;
+                m_thrust = 51000;
 
                 geometry_msgs::Twist msg;
                 msg.linear.z = m_thrust;
@@ -375,7 +375,7 @@ int main(int argc, char **argv)
   std::string frame;
   n.getParam("frame", frame);
   double frequency;
-  n.param("frequency", frequency, 50.0);
+  n.param("frequency", frequency, 10.0);
 
   Controller controller(worldFrame, frame, n);
   controller.run(frequency);

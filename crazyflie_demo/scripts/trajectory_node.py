@@ -21,7 +21,7 @@ def joy_callback(joy_msg):
         rospy.loginfo('Trayectoria iniciada')
         button_pressed = True
         r = 0.16
-        h = 0.4
+        h = 0.5
         t = 0.0
     elif joy_msg.buttons[5] == 1 and button_pressed:
         rospy.loginfo('Trayectoria reiniciada')
@@ -93,7 +93,7 @@ def trajectory_circle():
 
             
             # Actualizar el tiempo
-        t += 0.01
+        t += 0.008
         rate.sleep()
 
 if __name__ == '__main__':

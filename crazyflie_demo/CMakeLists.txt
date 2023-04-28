@@ -4,9 +4,7 @@ project(crazyflie_demo)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS
-  roscpp
-)
+find_package(catkin REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -80,7 +78,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES crazyflie_demo
- CATKIN_DEPENDS roscpp
+#  CATKIN_DEPENDS other_catkin_pkg
 #  DEPENDS system_lib
 )
 
@@ -90,26 +88,24 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-include_directories(
-  ${catkin_INCLUDE_DIRS}
-)
+# include_directories(include)
 
 ## Declare a cpp library
 # add_library(crazyflie_demo
 #   src/${PROJECT_NAME}/crazyflie_demo.cpp
 # )
 
-# Declare a cpp executable
-# add_executable(quadrotor_teleop src/quadrotor_teleop.cpp)
+## Declare a cpp executable
+# add_executable(crazyflie_demo_node src/crazyflie_demo_node.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
 # add_dependencies(crazyflie_demo_node crazyflie_demo_generate_messages_cpp)
 
-# Specify libraries to link a library or executable target against
-#target_link_libraries(quadrotor_teleop
-#  ${catkin_LIBRARIES}
-#)
+## Specify libraries to link a library or executable target against
+# target_link_libraries(crazyflie_demo_node
+#   ${catkin_LIBRARIES}
+# )
 
 #############
 ## Install ##
