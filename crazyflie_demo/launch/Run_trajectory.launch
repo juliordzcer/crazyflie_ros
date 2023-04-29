@@ -55,8 +55,4 @@
 
   </group>
 
-
-  <param name="robot_description" command="$(find xacro)/xacro $(find crazyflie_description)/urdf/crazyflie2.urdf.xacro" />
-  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find crazyflie_demo)/launch/crazyflie_pos.rviz" required="true" />
-
 </launch>
