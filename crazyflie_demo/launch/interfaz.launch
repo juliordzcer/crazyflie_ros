@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<launch>
+
+    <!-- Lanzar el nodo "turtle_sim_controller" -->
+  <node pkg="crazyflie_demo" type="turtle.py" name="turtle_simd_controller">
+</node>
+  <!-- Ejecutar el comando "rosrun turtlesim turtlesim_node" para iniciar TurtleSim -->
+  <node pkg="turtlesim" type="turtlesim_node" name="turtlesim_node"/>
+
+
+    <!-- Inicia el nodo ROS para la interfaz gráfica -->
+    <node pkg="crazyflie_demo" type="visual.py" name="visual" output="screen">
+        <param name="param_name" value="/my_param"/>
+    </node>
+</launch>
+
+

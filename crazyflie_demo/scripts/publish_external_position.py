@@ -5,9 +5,7 @@ import tf
 from geometry_msgs.msg import PointStamped, TransformStamped, PoseStamped #PoseStamped added to support vrpn_client
 from crazyflie_driver.srv import UpdateParams
 
-def onNewTransform(pose):
-    global msg
-    global pub
+def onNewTransform(self, pose):
     global firstTransform
 
     if firstTransform:
@@ -21,19 +19,10 @@ def onNewTransform(pose):
         update_params(["kalman/resetEstimation"]) 
         firstTransform = False
 
-    else:
-        msg.header.frame_id = pose.header.frame_id
-        msg.header.stamp = pose.header.stamp
-        msg.header.seq += 1
-        msg.point.x = pose.pose.position.x
-        msg.point.y = pose.pose.position.y
-        msg.point.z = pose.pose.position.z
-        pub.publish(msg)
-
 
 if __name__ == '__main__':
-    rospy.init_node('publish_external_position_vrpn', anonymous=True)
-    topic = rospy.get_param("~topic", "/crazyflie/vrpn_client_node/crazyflie/pose")
+    rospy.init_node('publish_external_position', anonymous=True)
+    topic = rospy.get_param("~topic", "vrpn_client_node/crazyflie/pose")
 
     rospy.wait_for_service('update_params')
     rospy.loginfo("found update_params service")
@@ -41,11 +30,6 @@ if __name__ == '__main__':
 
     firstTransform = True
 
-    msg = PointStamped()
-    msg.header.seq = 0
-    msg.header.stamp = rospy.Time.now()
-
-    pub = rospy.Publisher("external_position", PointStamped, queue_size=1)
     rospy.Subscriber(topic, PoseStamped, onNewTransform)
 
     rospy.spin()

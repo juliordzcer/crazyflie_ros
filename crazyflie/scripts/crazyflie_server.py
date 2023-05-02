@@ -19,6 +19,7 @@ import cflib
 import cflib.crtp
 from cflib.crazyflie import Crazyflie
 from cflib.crazyflie.log import LogConfig
+from cflib.utils import power_switch
 
 class CrazyflieROS:
     Disconnected = 0
@@ -42,18 +43,17 @@ class CrazyflieROS:
 
         # Publishers.
         self._cmdVel = Twist()
+        self._extpos = PoseStamped()
         self._subCmdVel = rospy.Subscriber(tf_prefix + "/cmd_vel", Twist, self._cmdVelChanged)
+        self._subExtPose = rospy.Subscriber(tf_prefix + "/ExtPose", PoseStamped, self._ExtPoseChanged)
         self._pubPose = rospy.Publisher(tf_prefix + "/pose", Twist, queue_size=10)
-        self._pubImu = rospy.Publisher(tf_prefix + "/imu", Imu, queue_size=10)
-        self._pubTemp = rospy.Publisher(tf_prefix + "/temperature", Temperature, queue_size=10)
-        self._pubMag = rospy.Publisher(tf_prefix + "/magnetic_field", MagneticField, queue_size=10)
-        self._pubPressure = rospy.Publisher(tf_prefix + "/pressure", Float32, queue_size=10)
-        self._pubBattery = rospy.Publisher(tf_prefix + "/battery", Float32, queue_size=10)
 
         self._state = CrazyflieROS.Disconnected
 
+        # Services
         rospy.Service(tf_prefix + "/update_params", UpdateParams, self._update_params)
         rospy.Service(tf_prefix + "/emergency", Empty, self._emergency)
+
         self._isEmergency = False
 
         Thread(target=self._update).start()
@@ -71,26 +71,6 @@ class CrazyflieROS:
         rospy.loginfo("Connected to %s" % link_uri)
         self._state = CrazyflieROS.Connected
 
-        if self.enable_logging_imu:
-            self._lg_imu = LogConfig(name="Imu", period_in_ms=10)
-            self._lg_imu.add_variable("acc.x", "float")
-            self._lg_imu.add_variable("acc.y", "float")
-            self._lg_imu.add_variable("acc.z", "float")
-            self._lg_imu.add_variable("gyro.x", "float")
-            self._lg_imu.add_variable("gyro.y", "float")
-            self._lg_imu.add_variable("gyro.z", "float")
-
-            self._cf.log.add_config(self._lg_imu)
-
-            if self._lg_imu.valid:
-                # This callback will receive the data
-                self._lg_imu.data_received_cb.add_callback(self._log_data_imu)
-                # This callback will be called on errors
-                self._lg_imu.error_cb.add_callback(self._log_error)
-                # Start the logging
-                self._lg_imu.start()
-            else:
-                rospy.logfatal("Could not add logconfig since some variables are not in TOC")
 
         if self.enable_logging_pose:
             self._lg_pose = LogConfig(name="Pose", period_in_ms=10)
@@ -160,28 +140,6 @@ class CrazyflieROS:
         """Callback from the log API when an error occurs"""
         rospy.logfatal("Error when logging %s: %s" % (logconf.name, msg))
 
-    def _log_data_imu(self, timestamp, data, logconf):
-        """Callback froma the log API when data arrives"""
-        msg = Imu()
-        # ToDo: it would be better to convert from timestamp to rospy time
-        msg.header.stamp = rospy.Time.now()
-        msg.header.frame_id = self.tf_prefix + "/base_link"
-        msg.orientation_covariance[0] = -1 # orientation not supported
-
-        # measured in deg/s; need to convert to rad/s
-        msg.angular_velocity.x = math.radians(data["gyro.x"])
-        msg.angular_velocity.y = math.radians(data["gyro.y"])
-        msg.angular_velocity.z = math.radians(data["gyro.z"])
-
-        # measured in mG; need to convert to m/s^2
-        msg.linear_acceleration.x = data["acc.x"] * 9.81
-        msg.linear_acceleration.y = data["acc.y"] * 9.81
-        msg.linear_acceleration.z = data["acc.z"] * 9.81
-
-        self._pubImu.publish(msg)
-
-        #print "[%d][%s]: %s" % (timestamp, logconf.name, data)
-
 
     def _log_data_Pose(self, timestamp, data, logconf):
         """Callback froma the log API when data arrives"""
@@ -192,9 +150,9 @@ class CrazyflieROS:
         msg.linear.z = data["stateEstimate.z"]
         
         # measured in quaternions
-        msg.angular.x = math.radians(data['stabilizer.roll'])
-        msg.angular.y = math.radians(data["stabilizer.pitch"])
-        msg.angular.z = math.radians(data["stabilizer.yaw"])
+        msg.angular.x = (data['stabilizer.roll'])
+        msg.angular.y = (data["stabilizer.pitch"])
+        msg.angular.z = (data["stabilizer.yaw"])
 
         self._pubPose.publish(msg)
 
@@ -215,6 +173,7 @@ class CrazyflieROS:
     def _emergency(self, req):
         rospy.logfatal("Emergency requested!")
         self._isEmergency = True
+        self._cf.loc.send_emergency_stop()
         return EmptyResponse()
 
     def _send_setpoint(self):
@@ -223,12 +182,31 @@ class CrazyflieROS:
         yawrate = self._cmdVel.angular.z
         thrust  = min(max(0, int(self._cmdVel.linear.z)), 59000)
         #print(roll, pitch, yawrate, thrust)
-        self._cf.commander.send_setpoint(roll, pitch, 0, thrust)
-
+        self._cf.commander.send_setpoint(roll, pitch, yawrate, thrust)
+    
     def _cmdVelChanged(self, data):
         self._cmdVel = data
         if not self._isEmergency:
             self._send_setpoint()
+
+
+    # Send external pose.
+    def _ExtPoseChanged(self, msg):
+
+        self._extpos = msg
+        
+        x = self._extpos.pose.position.x
+        y = self._extpos.pose.position.y
+        z = self._extpos.pose.position.z
+        quat = self._extpos.pose.orientation
+        if isnan(quat.x):
+            self._cf.extpos.send_extpos(x, y, z)
+        else:
+            self._cf.extpos.send_extpose(x, y, z, quat.x, quat.y, quat.z, quat.w)
+        
+
+
+
 
     def _update(self):
         while not rospy.is_shutdown():
@@ -241,11 +219,11 @@ class CrazyflieROS:
                 # Crazyflie will shut down if we don't send any command for 500ms
                 # Hence, make sure that we don't wait too long
                 # However, if there is no connection anymore, we try to get the flie down
-                if self._subCmdVel.get_num_connections() > 0:
-                    self._send_setpoint()
-                else:
-                    self._cmdVel = Twist()
-                    self._send_setpoint()
+                # if self._subCmdVel.get_num_connections() > 0:
+                #     self._send_setpoint()
+                # else:
+                #     self._cmdVel = Twist()
+                #     self._send_setpoint()
                 rospy.sleep(0.2)
             else:
                 rospy.sleep(0.5)
@@ -256,6 +234,9 @@ class CrazyflieROS:
         # since the message queue is not flushed before closing
         rospy.sleep(0.1)
         self._cf.close_link()
+
+
+
 
 def add_crazyflie(req):
     rospy.loginfo("Adding %s as %s with trim(%f, %f). Logging_imu: %s, Logging_pose: %s" % (req.uri, req.tf_prefix, req.roll_trim, req.pitch_trim, str(req.enable_logging_imu), str(req.enable_logging_pose)))
@@ -271,117 +252,3 @@ if __name__ == '__main__':
     rospy.Service("add_crazyflie", AddCrazyflie, add_crazyflie)
     rospy.spin()
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    # Intentar primero con los quaterniones por separado, y despues con los comprimidos y probar la siguiente funcion
-
-    # # decompress a quaternion, see quatcompress.h in firmware
-    # # input: 32-bit number, output q = [x,y,z,w]
-    # def quatdecompress(comp):
-    #     q = np.zeros(4)
-    #     mask = (1 << 9) - 1
-    #     i_largest = comp >> 30
-    #     sum_squares = 0
-    #     for i in range(3, -1, -1):
-    #         if i != i_largest:
-    #         mag = comp & mask
-    #         negbit = (comp >> 9) & 0x1
-    #         comp = comp >> 10
-    #         q[i] = mag / mask / np.sqrt(2)
-    #         if negbit == 1:
-    #             q[i] = -q[i]
-    #         sum_squares += q[i] * q[i]
-    #     q[i_largest] = np.sqrt(1.0 - sum_squares)
-    #     return q
-    
-
-
-
-    # def _log_data_log2(self, timestamp, data, logconf):
-    #     """Callback froma the log API when data arrives"""
-    #     msg = Temperature()
-    #     # ToDo: it would be better to convert from timestamp to rospy time
-    #     msg.header.stamp = rospy.Time.now()
-    #     msg.header.frame_id = self.tf_prefix + "/base_link"
-    #     # measured in degC
-    #     msg.temperature = data["baro.temp"]
-    #     self._pubTemp.publish(msg)
-
-    #     # ToDo: it would be better to convert from timestamp to rospy time
-    #     msg = MagneticField()
-    #     msg.header.stamp = rospy.Time.now()
-    #     msg.header.frame_id = self.tf_prefix + "/base_link"
-
-    #     # measured in Tesla
-    #     msg.magnetic_field.x = data["mag.x"]
-    #     msg.magnetic_field.y = data["mag.y"]
-    #     msg.magnetic_field.z = data["mag.z"]
-
-    #     self._pubMag.publish(msg)
-
-    #     msg = Float32()
-    #     # hPa (=mbar)
-    #     msg.data = data["baro.pressure"]
-    #     self._pubPressure.publish(msg)
-
-    #     # V
-    #     msg.data = data["pm.vbat"]
-    #     self._pubBattery.publish(msg)
-
-
-
-
-
-            # self._lg_log2 = LogConfig(name="LOG2", period_in_ms=100)
-            # self._lg_log2.add_variable("mag.x", "float")
-            # self._lg_log2.add_variable("mag.y", "float")
-            # self._lg_log2.add_variable("mag.z", "float")
-            # self._lg_log2.add_variable("baro.temp", "float")
-            # self._lg_log2.add_variable("baro.pressure", "float")
-            # self._lg_log2.add_variable("pm.vbat", "float")
-            # # self._lg_log2.add_variable("pm.state", "uint8_t")
-
-            # self._cf.log.add_config(self._lg_log2)
-            # if self._lg_log2.valid:
-            #     # This callback will receive the data
-            #     self._lg_log2.data_received_cb.add_callback(self._log_data_log2)
-            #     # This callback will be called on errors
-            #     self._lg_log2.error_cb.add_callback(self._log_error)
-            #     # Start the logging
-            #     self._lg_log2.start()
-            # else:
-            #     rospy.logfatal("Could not add logconfig since some variables are not in TOC")
-
-        # self._lg_log3 = LogConfig(name="LOG3", period_in_ms=100)
-        # self._lg_log3.add_variable("motor.m1", "int32_t")
-        # self._lg_log3.add_variable("motor.m2", "int32_t")
-        # self._lg_log3.add_variable("motor.m3", "int32_t")
-        # self._lg_log3.add_variable("motor.m4", "int32_t")
-        # self._lg_log3.add_variable("stabalizer.pitch", "float")
-        # self._lg_log3.add_variable("stabalizer.roll", "float")
-        # self._lg_log3.add_variable("stabalizer.thrust", "uint16_")
-        # self._lg_log3.add_variable("stabalizer.yaw", "float")
-        #
-        # self._cf.log.add_config(self._lg_log3)
-        #if self._lg_log3.valid:
-        #    # This callback will receive the data
-        #    self._lg_log3.data_received_cb.add_callback(self._log_data_log3)
-        #    # This callback will be called on errors
-        #    self._lg_log3.error_cb.add_callback(self._log_error)
-        #    # Start the logging
-        #    self._lg_log3.start()
-        #else:
-        #    rospy.logfatal("Could not add logconfig since some variables are not in TOC")
