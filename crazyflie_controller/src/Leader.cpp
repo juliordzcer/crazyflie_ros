@@ -68,7 +68,7 @@ public:
             "yaw")
         , m_state(Idle)
         , m_goal()
-        , m_goalvel()
+        , m_cameras()
         , m_goalacc()
         , m_subscribeGoal()
         , m_subscribeGoalVel()
@@ -84,7 +84,7 @@ public:
         m_pubNav = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1);
         m_pubLu = nh.advertise<std_msgs::Float32>("leader_u", 1);
         m_subscribeGoal = nh.subscribe("goal", 1, &Controller::goalChanged, this);
-        m_subscribeGoalVel = nh.subscribe("goalvel", 1, &Controller::goalvelChanged, this);
+        m_subscribeGoalVel = nh.subscribe("vrpn_client_node/crazyflie/pose", 1, &Controller::camerasChanged, this);
         m_subscribeGoalAcc = nh.subscribe("goalacc", 1, &Controller::goalaccChanged, this);
         m_serviceTakeoff = nh.advertiseService("takeoff", &Controller::takeoff, this);
         m_serviceLand = nh.advertiseService("land", &Controller::land, this);
@@ -103,10 +103,10 @@ private:
     {
         m_goal = *msg;
     }
-    void goalvelChanged(
-        const geometry_msgs::Twist::ConstPtr& msg)
+    void camerasChanged(
+        const geometry_msgs::PoseStamped::ConstPtr& msg)
     {
-        m_goalvel = *msg;
+        m_cameras = *msg;
     }
     void goalaccChanged(
         const geometry_msgs::Twist::ConstPtr& msg)
@@ -243,66 +243,99 @@ private:
                 return;
             }
 
-            geometry_msgs::PoseStamped targetWorld;
-            targetWorld.header.stamp = transform.stamp_;
-            targetWorld.header.frame_id = m_worldFrame;
-            targetWorld.pose = m_goal.pose;
 
-            tf::Quaternion q_target(
-                targetWorld.pose.orientation.x,
-                targetWorld.pose.orientation.y,
-                targetWorld.pose.orientation.z,
-                targetWorld.pose.orientation.w
+            float x_d = m_goal.pose.position.x ;
+            float y_d = m_goal.pose.position.y ;
+            float z_d = m_goal.pose.position.z ;
+
+            tf::Quaternion q_desired(
+                m_goal.pose.orientation.x,
+                m_goal.pose.orientation.y,
+                m_goal.pose.orientation.z,
+                m_goal.pose.orientation.w
             );
             double roll_d, pitch_d, yaw_d;
-            tf::Matrix3x3(q_target).getRPY(roll_d, pitch_d, yaw_d);
+            tf::Matrix3x3(q_desired).getRPY(roll_d, pitch_d, yaw_d);
 
-            geometry_msgs::PoseStamped targetDrone;
-            try {
-                m_listener.transformPose(m_frame, targetWorld, targetDrone);
-            } catch (tf::TransformException& ex) {
-                ROS_ERROR("%s", ex.what());
-                return;
-            }
+
+            float x = m_cameras.pose.position.x ;
+            float y = m_cameras.pose.position.y ;
+            float z = m_cameras.pose.position.z ;
 
             tf::Quaternion q_target_drone(
-                targetDrone.pose.orientation.x,
-                targetDrone.pose.orientation.y,
-                targetDrone.pose.orientation.z,
-                targetDrone.pose.orientation.w
+                m_cameras.pose.orientation.x,
+                m_cameras.pose.orientation.y,
+                m_cameras.pose.orientation.z,
+                m_cameras.pose.orientation.w
             );
             double roll, pitch, yaw;
             tf::Matrix3x3(q_target_drone).getRPY(roll, pitch, yaw);
 
-            float NUXS = (m_pidNUX.update(0.0, targetDrone.pose.position.x)) + m_goalacc.linear.x;
-            float NUYS = (m_pidNUY.update(0.0, targetDrone.pose.position.y)) + m_goalacc.linear.y;
-            float NUZS = (m_pidNUZ.update(0.0, targetDrone.pose.position.z)) + m_goalacc.linear.z;
+            float accx =  (m_goalacc.linear.x + 9.81f)* 0.001;
+            float accy =  (m_goalacc.linear.y + 9.81f) * 0.001;
+            float accz =  (m_goalacc.linear.z + 9.81f) * 0.001;
+
+
+            // geometry_msgs::PoseStamped targetWorld;
+            // targetWorld.header.stamp = transform.stamp_;
+            // targetWorld.header.frame_id = m_worldFrame;
+            // targetWorld.pose = m_goal.pose;
+
+            // tf::Quaternion q_target(
+            //     targetWorld.pose.orientation.x,
+            //     targetWorld.pose.orientation.y,
+            //     targetWorld.pose.orientation.z,
+            //     targetWorld.pose.orientation.w
+            // );
+            // double roll_d, pitch_d, yaw_d;
+            // tf::Matrix3x3(q_target).getRPY(roll_d, pitch_d, yaw_d);
+
+            // geometry_msgs::PoseStamped targetDrone;
+            // try {
+            //     m_listener.transformPose(m_frame, targetWorld, targetDrone);
+            // } catch (tf::TransformException& ex) {
+            //     ROS_ERROR("%s", ex.what());
+            //     return;
+            // }
+
+            // tf::Quaternion q_target_drone(
+            //     targetDrone.pose.orientation.x,
+            //     targetDrone.pose.orientation.y,
+            //     targetDrone.pose.orientation.z,
+            //     targetDrone.pose.orientation.w
+            // );
+            // double roll, pitch, yaw;
+            // tf::Matrix3x3(q_target_drone).getRPY(roll, pitch, yaw);
+
+            float NUXS = (m_pidNUX.update(x, x_d) + accx);
+            float NUYS = (m_pidNUY.update(y, y_d) + accy);
+            float NUZS = (m_pidNUZ.update(z, z_d) + accz);
 
             float m = 0.032f;
 
-            float u = sqrtf(powf(NUXS, 2.0f) + powf(NUYS, 2.0f) + powf((NUZS + 9.81f), 2.0f)) * m * 1.1;
-            float limiu = 0;
-            float limsu = 4;
-            u = std::max(std::min(u, limsu), limiu);
+            float u = sqrtf(powf(NUXS, 2.0f) + powf(NUYS, 2.0f) + powf(NUZS, 2.0f)) * m;
+            // float limiu = 0;
+            // float limsu = 4;
+            // u = std::max(std::min(u, limsu), limiu);
             float phi = asin((NUXS * sin(yaw_d) - NUYS * cos(yaw_d))*( m / u )) ;
-            float theta = atan((NUXS * cos(yaw_d) + NUYS * sin(yaw_d)) / (NUZS + 9.81));
+            float theta = atan((NUXS * cos(yaw_d) + NUYS * sin(yaw_d)) / NUZS);
 
             float u_rpm = calculate_rpm(u);
-            float lims = 60000;
-            float limi = 10000;
-            u_rpm = std::max(std::min(u_rpm, lims), limi);
+            // float lims = 58000;
+            // float limi = 10000;
+            // u_rpm = std::max(std::min(u_rpm, lims), limi);
 
-            // if (m_height < 0.06)
-            // {
-            //     geometry_msgs::Twist msg;
-            //     msg.linear.x = 0;
-            //     msg.linear.y = 0;
-            //     msg.linear.z = u_rpm;
-            //     msg.angular.z = 0;
-            //     m_pubNav.publish(msg);
-            // }
-            // else
-            // { 
+            if (m_height < 0.06)
+            {
+                geometry_msgs::Twist msg;
+                msg.linear.x = 0;
+                msg.linear.y = 0;
+                msg.linear.z = u_rpm;
+                msg.angular.z = 0;
+                m_pubNav.publish(msg);
+            }
+            else
+            { 
                 float tol = 9;
                 geometry_msgs::Twist msg;
                 msg.linear.x = std::max(std::min(rad2deg(theta), tol), -tol);
@@ -310,7 +343,7 @@ private:
                 msg.linear.z = u_rpm;
                 msg.angular.z = m_pidYaw.update(0.0, yaw);
                 m_pubNav.publish(msg);
-            // }
+            }
 
             std_msgs::Float32 msg_u;
             msg_u.data = u*0.1;
@@ -352,7 +385,7 @@ private:
     PID m_pidYaw;
     State m_state;
     geometry_msgs::PoseStamped m_goal;
-    geometry_msgs::Twist m_goalvel;
+    geometry_msgs::PoseStamped m_cameras;
     geometry_msgs::Twist m_goalacc;
     ros::Subscriber m_subscribeGoal;
     ros::Subscriber m_subscribeGoalVel;
@@ -375,7 +408,7 @@ int main(int argc, char **argv)
   std::string frame;
   n.getParam("frame", frame);
   double frequency;
-  n.param("frequency", frequency, 10.0);
+  n.param("frequency", frequency, 50.0);
 
   Controller controller(worldFrame, frame, n);
   controller.run(frequency);

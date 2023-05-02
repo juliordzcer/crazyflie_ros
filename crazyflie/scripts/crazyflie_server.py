@@ -221,9 +221,9 @@ class CrazyflieROS:
         roll    = self._cmdVel.linear.y + self.roll_trim
         pitch   = self._cmdVel.linear.x + self.pitch_trim
         yawrate = self._cmdVel.angular.z
-        thrust  = min(max(0, int(self._cmdVel.linear.z)), 60000)
+        thrust  = min(max(0, int(self._cmdVel.linear.z)), 59000)
         #print(roll, pitch, yawrate, thrust)
-        self._cf.commander.send_setpoint(roll, pitch, yawrate, thrust)
+        self._cf.commander.send_setpoint(roll, pitch, 0, thrust)
 
     def _cmdVelChanged(self, data):
         self._cmdVel = data

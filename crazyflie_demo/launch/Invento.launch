@@ -33,6 +33,9 @@
       <param name="frame" value="$(arg frame)" />
     </node>
 
+    <node name="external" pkg="crazyflie_demo" type="external_position.py" output="screen"> 
+    </node>
+
     <node name="pose" pkg="crazyflie_demo" type="publish_pose.py" output="screen">
       <param name="name" value="goal" />
       <param name="rate" value="10" />
