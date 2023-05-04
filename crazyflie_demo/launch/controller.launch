@@ -17,10 +17,10 @@
       <arg name="tf_prefix" value="crazyflie" />
     </include>
 
-
     <node name="extpose" pkg="crazyflie_demo" type="publish_external_position.py" output="screen"> 
       <param name="topic" value="vrpn_client_node/crazyflie/pose" />
     </node>
+  
 
     <node pkg="vrpn_client_ros" type="vrpn_client_node" name="vrpn_client_node" output="screen">
     <rosparam subst_value="true">
@@ -35,18 +35,6 @@
     </rosparam>
     </node>
 
-
-<!-- 
-    <node name="crazyflie_ctrl" pkg="crazyflie_controller" type="controller.py">
-      <param name="frame" value="$(frame)" />
-    </node>
-
-    <node name="crazyflie_demo" pkg="crazyflie_demo" type="demo1.py">
-      <param name="frame" value="$(frame)" />
-    </node> -->
   </group>
-
-  <!-- run vicon bridge -->
-  <!-- <include file="$(find vicon_bridge)/launch/vicon.launch"/> -->
 
 </launch>
