@@ -7,7 +7,89 @@
 #include <cmath>
 #include <vector>
 
-#include "pid.hpp"
+// #include "pid.hpp"
+
+#pragma once
+
+#include <ros/ros.h>
+
+class PID
+{
+public:
+    PID(
+        float kp,
+        float kd,
+        float ki,
+        float minOutput,
+        float maxOutput,
+        float integratorMin,
+        float integratorMax,
+        const std::string& name)
+        : m_kp(kp)
+        , m_kd(kd)
+        , m_ki(ki)
+        , m_minOutput(minOutput)
+        , m_maxOutput(maxOutput)
+        , m_integratorMin(integratorMin)
+        , m_integratorMax(integratorMax)
+        , m_integral(0)
+        , m_previousError(0)
+        , m_previousTime(ros::Time::now())
+    {
+    }
+
+    void reset()
+    {
+        m_integral = 0;
+        m_previousError = 0;
+        m_previousTime = ros::Time::now();
+    }
+
+    void setIntegral(float integral)
+    {
+        m_integral = integral;
+    }
+
+    float ki() const
+    {
+        return m_ki;
+    }
+
+    float update(float value, float targetValue)
+    {
+        ros::Time time = ros::Time::now();
+        float dt = time.toSec() - m_previousTime.toSec();
+        float error = targetValue - value;
+        m_integral += error * dt;
+        m_integral = std::max(std::min(m_integral, m_integratorMax), m_integratorMin);
+        float p = m_kp * error;
+        float d = 0;
+        if (dt > 0)
+        {
+            d = m_kd * (error - m_previousError) / dt;
+        }
+        float i = m_ki * m_integral;
+        float output = p + d + i;
+        m_previousError = error;
+        m_previousTime = time;
+        return std::max(std::min(output, m_maxOutput), m_minOutput);
+    }
+
+
+
+private:
+    float m_kp;
+    float m_kd;
+    float m_ki;
+    float m_minOutput;
+    float m_maxOutput;
+    float m_integratorMin;
+    float m_integratorMax;
+    float m_integral;
+    float m_previousError;
+    ros::Time m_previousTime;
+};
+
 
 double get(
     const ros::NodeHandle& n,
@@ -271,9 +353,9 @@ private:
             double roll, pitch, yaw;
             tf::Matrix3x3(q_target_drone).getRPY(roll, pitch, yaw);
 
-            float accx =  (m_goalacc.linear.x + 9.81)* 0.001;
-            float accy =  (m_goalacc.linear.y + 9.81) * 0.001;
-            float accz =  (m_goalacc.linear.z + 9.81) * 0.001;
+            float xdpp =  m_goalacc.linear.x;
+            float ydpp =  m_goalacc.linear.y;
+            float zdpp =  m_goalacc.linear.z;
 
 
             // geometry_msgs::PoseStamped targetWorld;
@@ -307,18 +389,19 @@ private:
             // double roll, pitch, yaw;
             // tf::Matrix3x3(q_target_drone).getRPY(roll, pitch, yaw);
 
-            float NUXS = (m_pidNUX.update(x, x_d) + accx);
-            float NUYS = (m_pidNUY.update(y, y_d) + accy);
-            float NUZS = (m_pidNUZ.update(z, z_d) + accz);
+            float NUXS = m_pidNUX.update(x, x_d) + xdpp;
+            float NUYS = m_pidNUY.update(y, y_d) + ydpp;
+            float NUZS = m_pidNUZ.update(z, z_d) + zdpp;
+            
 
             float m = 0.032;
 
-            float u = sqrtf(powf(NUXS, 2.0) + powf(NUYS, 2.0) + powf(NUZS, 2.0)) * m;
-            // float limiu = 0;
-            // float limsu = 4;
-            // u = std::max(std::min(u, limsu), limiu);
+            float u = sqrtf(powf(NUXS, 2.0) + powf(NUYS, 2.0) + powf((NUZS+ 9.81), 2.0)) * m;
+            float limiu = 0;
+            float limsu = 4;
+            u = std::max(std::min(u, limsu), limiu);
             float phi = asin((NUXS * sin(yaw_d) - NUYS * cos(yaw_d))*( m / u )) ;
-            float theta = atan((NUXS * cos(yaw_d) + NUYS * sin(yaw_d)) / NUZS);
+            float theta = atan((NUXS * cos(yaw_d) + NUYS * sin(yaw_d)) / (NUZS + 9.81));
 
             float u_rpm = calculate_rpm(u);
             // float lims = 58000;
@@ -341,7 +424,7 @@ private:
                 msg.linear.x = std::max(std::min(rad2deg(theta), tol), -tol);
                 msg.linear.y = std::max(std::min(rad2deg(phi), tol), -tol);
                 msg.linear.z = u_rpm;
-                msg.angular.z = m_pidYaw.update(yaw, yaw_d);
+                msg.angular.z = 0;// m_pidYaw.update(yaw, yaw_d);
                 m_pubNav.publish(msg);
             // }
 
