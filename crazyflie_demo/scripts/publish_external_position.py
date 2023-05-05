@@ -3,7 +3,7 @@
 import rospy
 import math as m
 from geometry_msgs.msg import PoseStamped
-from crazyflie_driver.srv import UpdateParams
+from crazyflie.srv import UpdateParams
 import tf.transformations as t
 
 class ExternalPosition:
@@ -38,11 +38,7 @@ class ExternalPosition:
             rospy.set_param("locSrv/extPosStdDev", 1e-3)
             # rospy.set_param("locSrv/extQuatStdDev", 0.5e-1)
             self.update_params(["locSrv/extPosStdDev"])
-
-
-
             
-
 
     def PubPosition(self):
         Position = PoseStamped()
@@ -61,6 +57,68 @@ if __name__ == '__main__':
     while not rospy.is_shutdown():
         ext_pos.PubPosition()
         rate.sleep()
+
+# #!/usr/bin/env python3
+
+# import rospy
+# import tf
+# from geometry_msgs.msg import PointStamped, TransformStamped, PoseStamped #PoseStamped added to support vrpn_client
+# from crazyflie.srv import *
+
+# def onNewTransform(pose):
+#     global msg
+#     global pub
+#     global firstTransform
+
+#     if firstTransform:
+#         # initialize kalman filter
+#         rospy.set_param("kalman/initialX", pose.pose.position.x)
+#         rospy.set_param("kalman/initialY", pose.pose.position.y)
+#         rospy.set_param("kalman/initialZ", pose.pose.position.z)
+#         update_params(["kalman/initialX", "kalman/initialY", "kalman/initialZ"])
+
+#         rospy.set_param("kalman/resetEstimation", 1)
+#         rospy.sleep(2) 
+#         update_params(["kalman/resetEstimation"]) 
+
+#         rospy.set_param("locSrv/extPosStdDev", 1e-3)
+#         update_params(["locSrv/extPosStdDev"])
+
+#         firstTransform = False
+
+#     else:
+#         msg.header.frame_id = pose.header.frame_id
+#         msg.header.stamp = pose.header.stamp
+#         msg.header.seq += 1
+#         msg.point.x = pose.pose.position.x
+#         msg.point.y = pose.pose.position.y
+#         msg.point.z = pose.pose.position.z
+#         pub.publish(msg)
+
+
+# if __name__ == '__main__':
+#     rospy.init_node('publish_external_position_vrpn', anonymous=True)
+#     rospy.sleep(12)
+#     topic = rospy.get_param("~topic", "vrpn_client_node/crazyflie/pose")
+
+#     rospy.wait_for_service('update_params')
+#     rospy.loginfo("found update_params service")
+#     update_params = rospy.ServiceProxy('update_params', UpdateParams)
+
+#     firstTransform = True
+
+#     msg = PointStamped()
+#     msg.header.seq = 0
+#     msg.header.stamp = rospy.Time.now()
+
+#     pub = rospy.Publisher("external_position", PointStamped, queue_size=1)
+#     rospy.Subscriber(topic, PoseStamped, onNewTransform)
+
+#     rospy.spin()
+
+
+
+
 
 
 

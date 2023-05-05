@@ -17,7 +17,7 @@
       <arg name="tf_prefix" value="crazyflie" />
     </include>
 
-    <node name="extpose" pkg="crazyflie_demo" type="publish_external_position.py" output="screen"> 
+    <!-- <node name="extpose" pkg="crazyflie_demo" type="publish_external_position.py" output="screen"> 
       <param name="topic" value="vrpn_client_node/crazyflie/pose" />
     </node>
   
@@ -33,7 +33,7 @@
       broadcast_tf: true
       refresh_tracker_frequency: 1.0
     </rosparam>
-    </node>
+    </node> -->
 
   </group>
 

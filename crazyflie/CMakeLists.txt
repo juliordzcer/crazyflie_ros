@@ -4,7 +4,7 @@ project(crazyflie)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS message_generation std_msgs tf)
+find_package(catkin REQUIRED COMPONENTS message_generation std_msgs tf geometry_msgs)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -40,17 +40,21 @@ find_package(catkin REQUIRED COMPONENTS message_generation std_msgs tf)
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
-#   Message1.msg
-#   Message2.msg
-# )
-
+add_message_files(
+  FILES
+  Hover.msg
+  Position.msg
+  Follower.msg
+)
 ## Generate services in the 'srv' folder
 add_service_files(
   FILES
   AddCrazyflie.srv
   UpdateParams.srv
+  Takeoff.srv
+  Land.srv
+  Stop.srv
+  GoTo.srv
 )
 
 ## Generate actions in the 'action' folder
@@ -64,6 +68,7 @@ add_service_files(
 generate_messages(
   DEPENDENCIES
    std_msgs
+   geometry_msgs
 )
 
 ###################################
