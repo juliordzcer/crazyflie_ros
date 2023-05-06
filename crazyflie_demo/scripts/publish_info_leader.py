@@ -62,7 +62,7 @@ if __name__ == '__main__':
     gamma_publisher = GammaPublisher()
 
     # Mantener el nodo en ejecución
-    rate = rospy.Rate(100)
+    rate = rospy.Rate(50)
     while not rospy.is_shutdown():
         gamma_publisher.publish_gamma()
         rate.sleep()

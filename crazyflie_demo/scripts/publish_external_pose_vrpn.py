@@ -18,16 +18,19 @@ def onNewTransform(pose):
         update_params(["kalman/initialX", "kalman/initialY", "kalman/initialZ"])
 
         rospy.set_param("kalman/resetEstimation", 1)
-        update_params(["kalman/resetEstimation"]) 
+        rospy.set_param("locSrv/extPosStdDev", 1e-3)
+        rospy.set_param("locSrv/extQuatStdDev", 0.5e-1)
+
+        update_params(["kalman/resetEstimation", "locSrv/extPosStdDev", "locSrv/extQuatStdDev"]) 
         firstTransform = False
 
     else:
         msg.header.frame_id = pose.header.frame_id
         msg.header.stamp = pose.header.stamp
         msg.header.seq += 1
-        msg.point.x = pose.pose.position.x
-        msg.point.y = pose.pose.position.y
-        msg.point.z = pose.pose.position.z
+        msg.pose.position = pose.pose.position
+        msg.pose.orientation = pose.pose.orientation
+
         pub.publish(msg)
 
 
@@ -41,11 +44,11 @@ if __name__ == '__main__':
 
     firstTransform = True
 
-    msg = PointStamped()
+    msg = PoseStamped()
     msg.header.seq = 0
     msg.header.stamp = rospy.Time.now()
 
-    pub = rospy.Publisher("external_position", PointStamped, queue_size=1)
+    pub = rospy.Publisher("external_pose", PoseStamped, queue_size=1)
     rospy.Subscriber(topic, PoseStamped, onNewTransform)
 
     rospy.spin()

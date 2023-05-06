@@ -9,9 +9,9 @@ class FollowerNode():
         rospy.init_node('follower_node', anonymous=True)
 
         # Obtiene los parámetros de formación
-        self.formation_x = rospy.get_param('~formation_x', 1)
-        self.formation_y = rospy.get_param('~formation_y', 0.1)
-        self.formation_z = rospy.get_param('~formation_z', 0.0)
+        self.formation_x = rospy.get_param('~formation_x', 0.5)
+        self.formation_y = rospy.get_param('~formation_y', 0.0)
+        self.formation_z = rospy.get_param('~formation_z', 0.1)
         self.formation_yaw = rospy.get_param('~formation_yaw', 0.0)
 
         # Crea el publisher para el objetivo de pose

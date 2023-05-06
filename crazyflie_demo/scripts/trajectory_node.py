@@ -48,13 +48,12 @@ def trajectory_circle():
         w = np.pi/9.
         p = 15
 
-        x = r * (np.arctan(p) + np.arctan(t - p)) * np.cos(w * t) #- 0.5
+        x = r * (np.arctan(p) + np.arctan(t - p)) * np.cos(w * t) - 0.25
         y = r * (np.arctan(p) + np.arctan(t - p)) * np.sin(w * t)
-        z = (h/2) * (1 + np.tanh(t-7.5)) + 0.1
+        z = (h/2) * (1 + np.tanh(t-7.5)) 
         yaw = 0
 
-            # Publicar posicion actual
-            
+        # Publicar posicion actual 
         pose.pose.position.x = x
         pose.pose.position.y = y
         pose.pose.position.z = z
@@ -65,20 +64,7 @@ def trajectory_circle():
         pose.pose.orientation.w = quaternion[3]
         pub_pose.publish(pose)
 
-        #     # Calcular velocidad
-        # dx = -r * (np.arctan(p) + np.arctan(t - p)) * w * np.sin(w * t)
-        # dy = r * (np.arctan(p) + np.arctan(t - p)) * w * np.cos(w * t)
-        # dz = (h/2) * np.tanh(t-7.5) * (1 - np.tanh(t-7.5))
-        # d_yaw = 0
-
-        #     # Publicar velocidad
-        # vel.linear.x = dx
-        # vel.linear.y = dy
-        # vel.linear.z = dz
-        # vel.angular.z = d_yaw
-        # pub_vel.publish(vel)
-
-            # Publicar aceleracion
+        # Publicar aceleracion
         ax = -r * (np.arctan(p) + np.arctan(t - p)) * w**2 * np.cos(w * t)
         ay = -r * (np.arctan(p) + np.arctan(t - p)) * w**2 * np.sin(w * t)
         az = (h/2) * np.tanh(t-7.5) * (1 - np.tanh(t-7.5)) * (1 - 2*np.tanh(t-7.5))
@@ -101,7 +87,6 @@ if __name__ == '__main__':
     rospy.init_node('trajectory_circle', anonymous=True)
     
     pub_pose = rospy.Publisher('goal', PoseStamped, queue_size=1)
-    # pub_vel = rospy.Publisher('goalvel', Twist, queue_size=1)
     pub_acc = rospy.Publisher('goalacc', Twist, queue_size=1)   
 
     joy_sub = rospy.Subscriber('joy', Joy, joy_callback)
