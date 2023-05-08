@@ -234,45 +234,35 @@ private:
 
                 // intentional fall-thru
                 case Automatic: {
+
                 tf::StampedTransform transform;
-                try {
-                    m_listener.lookupTransform(m_worldFrame, m_frame, ros::Time(0), transform);
-                    m_height = transform.getOrigin().z(); // Actualizar la altura
-                } catch (tf::TransformException& ex) {
-                    ROS_ERROR("%s", ex.what());
-                    return;
-                }
+                m_listener.lookupTransform(m_worldFrame, m_frame, ros::Time(0), transform);
 
                 geometry_msgs::PoseStamped targetWorld;
                 targetWorld.header.stamp = transform.stamp_;
                 targetWorld.header.frame_id = m_worldFrame;
                 targetWorld.pose = m_goal.pose;
 
-                tf::Quaternion q_target(
-                    targetWorld.pose.orientation.x,
-                    targetWorld.pose.orientation.y,
-                    targetWorld.pose.orientation.z,
-                    targetWorld.pose.orientation.w
-                );
-                double roll_d, pitch_d, yaw_d;
-                tf::Matrix3x3(q_target).getRPY(roll_d, pitch_d, yaw_d);
-
                 geometry_msgs::PoseStamped targetDrone;
-                try {
-                    m_listener.transformPose(m_frame, targetWorld, targetDrone);
-                } catch (tf::TransformException& ex) {
-                    ROS_ERROR("%s", ex.what());
-                    return;
-                }
+                m_listener.transformPose(m_frame, targetWorld, targetDrone);
 
-                tf::Quaternion q_target_drone(
-                    targetDrone.pose.orientation.x,
-                    targetDrone.pose.orientation.y,
-                    targetDrone.pose.orientation.z,
-                    targetDrone.pose.orientation.w
-                );
-                double roll, pitch, yaw;
-                tf::Matrix3x3(q_target_drone).getRPY(roll, pitch, yaw);
+                tfScalar roll, pitch, yaw;
+                tf::Matrix3x3(
+                    tf::Quaternion(
+                        targetDrone.pose.orientation.x,
+                        targetDrone.pose.orientation.y,
+                        targetDrone.pose.orientation.z,
+                        targetDrone.pose.orientation.w
+                    )).getRPY(roll, pitch, yaw);
+
+                tfScalar roll_d, pitch_d, yaw_d;
+                tf::Matrix3x3(
+                    tf::Quaternion(
+                        m_goal.pose.orientation.x,
+                        m_goal.pose.orientation.y,
+                        m_goal.pose.orientation.z,
+                        m_goal.pose.orientation.w
+                    )).getRPY(roll_d, pitch_d, yaw_d);
 
                 float NUXS = (m_pidNUX.update(0.0, targetDrone.pose.position.x)) + m_gamma.linear.x;
                 float NUYS = (m_pidNUY.update(0.0, targetDrone.pose.position.y)) + m_gamma.linear.y;
@@ -286,12 +276,12 @@ private:
                 float theta = atan((NUXS * cos(yaw_d) + NUYS * sin(yaw_d)) / (NUZS + 9.81));
 
     
-                    geometry_msgs::Twist msg;
-                    msg.linear.x = std::max(std::min(rad2deg(theta), 10.0f), -10.0f);
-                    msg.linear.y = std::max(std::min(rad2deg(phi), 10.0f), -10.0f);
-                    msg.linear.z = u_rpm;
-                    msg.angular.z = m_pidYaw.update(0.0, yaw);
-                    m_pubNav.publish(msg);
+                geometry_msgs::Twist msg;
+                msg.linear.x = std::max(std::min(rad2deg(theta), 10.0f), -10.0f);
+                msg.linear.y = std::max(std::min(rad2deg(phi), 10.0f), -10.0f);
+                msg.linear.z = u_rpm;
+                msg.angular.z = 0; //m_pidYaw.update(0.0, yaw);
+                m_pubNav.publish(msg);
                 m_thrust = u_rpm;
 
 

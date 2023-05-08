@@ -13,7 +13,6 @@ class AttitudeGamma:
         self.pitch = 0
         self.yaw = 0
         self.thrust = 0
-        # self.accd = rospy.Subscriber('goalacc', Twist, self.acc_d_callback)
         self.pose_sub = rospy.Subscriber('pose', PoseStamped, self.pose_callback)
         self.thrust_sub = rospy.Subscriber('leader_u', Float32, self.thrust_callback)
         self.yaw_sub = rospy.Subscriber('vrpn_client_node/crazyflie/pose', PoseStamped, self.yaw_callback)

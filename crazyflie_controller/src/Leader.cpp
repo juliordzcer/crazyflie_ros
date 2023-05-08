@@ -275,7 +275,7 @@ private:
                 float theta = atan((NUXS * cos(yaw_d) + NUYS * sin(yaw_d)) / (NUZS + 9.81));
                 
                 std_msgs::Float32 msg_u;
-                msg_u.data = u;
+                msg_u.data = u*.1;
                 m_pubLu.publish(msg_u);
 
             
@@ -283,7 +283,7 @@ private:
                 msg.linear.x = std::max(std::min(rad2deg(theta), 10.0f), -10.0f);
                 msg.linear.y = std::max(std::min(rad2deg(phi), 10.0f), -10.0f);
                 msg.linear.z = u_rpm;
-                msg.angular.z = m_pidYaw.update(0.0, yaw);
+                msg.angular.z = 0;//m_pidYaw.update(0.0, yaw);
                 m_pubNav.publish(msg);
 
             }
