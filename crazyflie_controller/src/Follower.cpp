@@ -193,123 +193,99 @@ private:
         {
         case TakingOff:
             {
-                tf::StampedTransform transform;
-                m_listener.lookupTransform(m_worldFrame, m_frame, ros::Time(0), transform);
-                if (transform.getOrigin().z() > m_startZ + 0.05 || m_thrust > 15000)
-                {
-                    pidReset();
-                    m_state = Automatic;
-                    m_thrust = 0;
+                    tf::StampedTransform transform;
+                    m_listener.lookupTransform(m_worldFrame, m_frame, ros::Time(0), transform);
+                    if (transform.getOrigin().z() > m_startZ + 0.05 || m_thrust > 15000)
+                    {
+                        pidReset();
+                        m_state = Automatic;
+                        m_thrust = 0;
+                    }
+                    else
+                    {
+                        m_thrust += 10000 * dt;
+                        geometry_msgs::Twist msg;
+                        msg.linear.z = m_thrust;
+                        m_pubNav.publish(msg);
+                    }
+
                 }
-                else
+                break;
+
+                case Landing:
                 {
-                    m_thrust += 10000 * dt;
+                    m_thrust = 45000;
+
                     geometry_msgs::Twist msg;
                     msg.linear.z = m_thrust;
                     m_pubNav.publish(msg);
+
+                    tf::StampedTransform transform;
+                    m_listener.lookupTransform(m_worldFrame, m_frame, ros::Time(0), transform);
+                    if (transform.getOrigin().z() <= m_startZ + 0.05)
+                    {
+                        m_state = Idle;
+                        geometry_msgs::Twist msg;
+                        m_pubNav.publish(msg);
+                    }
                 }
+                break;
 
-            }
-            break;
 
-            case Landing:
-            {
-                m_thrust = 52000;
-
-                geometry_msgs::Twist msg;
-                msg.linear.z = m_thrust;
-                m_pubNav.publish(msg);
+                // intentional fall-thru
+                case Automatic: {
 
                 tf::StampedTransform transform;
                 m_listener.lookupTransform(m_worldFrame, m_frame, ros::Time(0), transform);
-                if (transform.getOrigin().z() <= m_startZ + 0.05)
-                {
-                    m_state = Idle;
-                    geometry_msgs::Twist msg;
-                    m_pubNav.publish(msg);
-                }
-            }
-            break;
 
+                geometry_msgs::PoseStamped targetWorld;
+                targetWorld.header.stamp = transform.stamp_;
+                targetWorld.header.frame_id = m_worldFrame;
+                targetWorld.pose = m_goal.pose;
 
-            // intentional fall-thru
-            case Automatic: {
-            tf::StampedTransform transform;
-            try {
-                m_listener.lookupTransform(m_worldFrame, m_frame, ros::Time(0), transform);
-                m_height = transform.getOrigin().z(); // Actualizar la altura
-            } catch (tf::TransformException& ex) {
-                ROS_ERROR("%s", ex.what());
-                return;
-            }
-
-            geometry_msgs::PoseStamped targetWorld;
-            targetWorld.header.stamp = transform.stamp_;
-            targetWorld.header.frame_id = m_worldFrame;
-            targetWorld.pose = m_goal.pose;
-
-            tf::Quaternion q_target(
-                targetWorld.pose.orientation.x,
-                targetWorld.pose.orientation.y,
-                targetWorld.pose.orientation.z,
-                targetWorld.pose.orientation.w
-            );
-            double roll_d, pitch_d, yaw_d;
-            tf::Matrix3x3(q_target).getRPY(roll_d, pitch_d, yaw_d);
-
-            geometry_msgs::PoseStamped targetDrone;
-            try {
+                geometry_msgs::PoseStamped targetDrone;
                 m_listener.transformPose(m_frame, targetWorld, targetDrone);
-            } catch (tf::TransformException& ex) {
-                ROS_ERROR("%s", ex.what());
-                return;
-            }
 
-            tf::Quaternion q_target_drone(
-                targetDrone.pose.orientation.x,
-                targetDrone.pose.orientation.y,
-                targetDrone.pose.orientation.z,
-                targetDrone.pose.orientation.w
-            );
-            double roll, pitch, yaw;
-            tf::Matrix3x3(q_target_drone).getRPY(roll, pitch, yaw);
+                tfScalar roll, pitch, yaw;
+                tf::Matrix3x3(
+                    tf::Quaternion(
+                        targetDrone.pose.orientation.x,
+                        targetDrone.pose.orientation.y,
+                        targetDrone.pose.orientation.z,
+                        targetDrone.pose.orientation.w
+                    )).getRPY(roll, pitch, yaw);
 
-            float NUXS = (m_pidNUX.update(0.0, targetDrone.pose.position.x)) + m_gamma.linear.x;
-            float NUYS = (m_pidNUY.update(0.0, targetDrone.pose.position.y)) + m_gamma.linear.y;
-            float NUZS = (m_pidNUZ.update(0.0, targetDrone.pose.position.z)) + m_gamma.linear.z;
+                tfScalar roll_d, pitch_d, yaw_d;
+                tf::Matrix3x3(
+                    tf::Quaternion(
+                        m_goal.pose.orientation.x,
+                        m_goal.pose.orientation.y,
+                        m_goal.pose.orientation.z,
+                        m_goal.pose.orientation.w
+                    )).getRPY(roll_d, pitch_d, yaw_d);
 
-            float m = 0.032;
-            float u = sqrt(pow(NUXS, 2) + pow(NUYS, 2) + pow((NUZS + 9.81), 2)) * m;
-            u = std::max(std::min(u, 4.2f), 0.0f);
-            float u_rpm = std::max(std::min(calculate_rpm(u), 60000.0f), 10000.0f);
-            
-            float phi = asin((NUXS * sin(yaw_d) - NUYS * cos(yaw_d))*( m / u )) ;
-            float theta = atan((NUXS * cos(yaw_d) + NUYS * sin(yaw_d)) / (NUZS + 9.81));
+                float NUXS = (m_pidNUX.update(0.0, targetDrone.pose.position.x)) + m_gamma.linear.x;
+                float NUYS = (m_pidNUY.update(0.0, targetDrone.pose.position.y)) + m_gamma.linear.y;
+                float NUZS = (m_pidNUZ.update(0.0, targetDrone.pose.position.z)) + m_gamma.linear.z;
 
-            // if (m_height < 0.07)
-            // {
-            //     geometry_msgs::Twist msg;
-            //     msg.linear.x = 0;
-            //     msg.linear.y = 0;
-            //     msg.linear.z = u_rpm;
-            //     msg.angular.z = 0;
-            //     m_pubNav.publish(msg);
-            // }
-            // else
-            // { 
-                float tol = 9.0f;
+                float m = 0.032;
+                float u = sqrt(pow(NUXS, 2) + pow(NUYS, 2) + pow((NUZS + 9.81), 2)) * m;
+                float u_rpm = std::max(std::min(calculate_rpm(u), 60000.0f), 10000.0f);
+                
+                float phi = asin((NUXS * sin(yaw_d) - NUYS * cos(yaw_d))*( m / u )) ;
+                float theta = atan((NUXS * cos(yaw_d) + NUYS * sin(yaw_d)) / (NUZS + 9.81));
+
+    
                 geometry_msgs::Twist msg;
-                msg.linear.x = std::max(std::min(rad2deg(theta), tol), -tol);
-                msg.linear.y = std::max(std::min(rad2deg(phi), tol), -tol);
+                msg.linear.x = std::max(std::min(rad2deg(theta), 10.0f), -10.0f);
+                msg.linear.y = std::max(std::min(rad2deg(phi), 10.0f), -10.0f);
                 msg.linear.z = u_rpm;
-                msg.angular.z = m_pidYaw.update(0.0, yaw);
+                msg.angular.z = 0; //m_pidYaw.update(0.0, yaw);
                 m_pubNav.publish(msg);
-            // }
-            
-            m_thrust = u_rpm;
+                m_thrust = u_rpm;
 
 
-        }
+            }
             break;
         case Idle:
             {
