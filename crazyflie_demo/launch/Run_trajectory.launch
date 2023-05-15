@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <launch>
   <arg name="joy_dev" default="/dev/input/js0" />
-  <arg name="uri" default="radio://2/80/2M/E7E7E7E701" /> 
+  <!-- <arg name="uri" default="radio://2/80/2M/E7E7E7E701" />  -->
   <!-- <arg name="uri" default="radio://0/90/2M/E7E7E7E702" />  -->
-  <!-- <arg name="uri" default="radio://0/70/2M/E7E7E7E703" />  -->
+  <arg name="uri" default="radio://0/70/2M/E7E7E7E703" /> 
   <arg name="frame" default="crazyflie" /> <!--For OptiTrack users: frame name should match the Rigid-body name on Motive-->
   <arg name="ip" default="192.168.2.10" /> <!--Adjust this parameter-->
   <arg name="port" default="3883" />
@@ -27,6 +27,9 @@
 
     <node name="gamma" pkg="crazyflie_demo" type="publish_gamma.py" output="screen">
     </node>    
+
+    <node name="filter" pkg="crazyflie_demo" type="filter.py" output="screen">
+    </node>
 
     <node name="joystick_controller" pkg="crazyflie_demo" type="controller.py" output="screen">
       <param name="use_crazyflie_controller" value="True" />

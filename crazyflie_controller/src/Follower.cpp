@@ -268,7 +268,7 @@ private:
                 float NUYS = (m_pidNUY.update(0.0, targetDrone.pose.position.y)) + m_gamma.linear.y;
                 float NUZS = (m_pidNUZ.update(0.0, targetDrone.pose.position.z)) + m_gamma.linear.z;
 
-                float m = 0.032;
+                float m = 0.027;
                 float u = sqrt(pow(NUXS, 2) + pow(NUYS, 2) + pow((NUZS + 9.81), 2)) * m;
                 float u_rpm = std::max(std::min(calculate_rpm(u), 60000.0f), 10000.0f);
                 
@@ -280,7 +280,7 @@ private:
                 msg.linear.x = std::max(std::min(rad2deg(theta), 10.0f), -10.0f);
                 msg.linear.y = std::max(std::min(rad2deg(phi), 10.0f), -10.0f);
                 msg.linear.z = u_rpm;
-                msg.angular.z = 0; //m_pidYaw.update(0.0, yaw);
+                msg.angular.z = m_pidYaw.update(0.0, yaw);
                 m_pubNav.publish(msg);
                 m_thrust = u_rpm;
 

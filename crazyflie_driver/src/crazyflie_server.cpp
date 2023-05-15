@@ -610,7 +610,7 @@ void cmdPositionSetpoint(
             {"stateEstimate", "x"},
             {"stateEstimate", "y"},
             {"stateEstimate", "z"},
-            {"stateEstimate", "quat"}
+            {"stateEstimateZ", "quat"}
           }, cb));
         logBlockPose->start(1); // 10ms
       }
