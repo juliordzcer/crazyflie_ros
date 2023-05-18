@@ -3,6 +3,7 @@
 #include <ros/ros.h>
 #include <tf/transform_listener.h>
 #include <std_srvs/Empty.h>
+#include <std_msgs/Bool.h>
 #include <geometry_msgs/Twist.h>
 
 #include <cmath>
@@ -29,6 +30,7 @@ public:
         : m_worldFrame(worldFrame)
         , m_frame(frame)
         , m_pubNav()
+        , bool_pub()
         , m_listener()
         , m_pidNUX(
             get(n, "PIDs/NUX/kp"),
@@ -81,6 +83,7 @@ public:
     {
         ros::NodeHandle nh;
         m_listener.waitForTransform(m_worldFrame, m_frame, ros::Time(0), ros::Duration(10.0)); 
+        bool_pub = nh.advertise<std_msgs::Bool>("boolean_topic", 10);
         m_pubNav = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1);
         m_subscribeGoal = nh.subscribe("goal", 1, &Controller::goalChanged, this);
         m_subscribeGamma = nh.subscribe("info_leader", 1, &Controller::gammaChanged, this);
@@ -193,15 +196,18 @@ private:
         {
         case TakingOff:
             {
-                    tf::StampedTransform transform;
-                    m_listener.lookupTransform(m_worldFrame, m_frame, ros::Time(0), transform);
-                    if (transform.getOrigin().z() > m_startZ + 0.05 || m_thrust > 15000)
+                tf::StampedTransform transform;
+                std_msgs::Bool msg;
+                msg.data = true; 
+                bool_pub.publish(msg);
+                m_listener.lookupTransform(m_worldFrame, m_frame, ros::Time(0), transform);
+                if (transform.getOrigin().z() > m_startZ + 0.05 || m_thrust > 15000)
                     {
                         pidReset();
                         m_state = Automatic;
                         m_thrust = 0;
                     }
-                    else
+                else
                     {
                         m_thrust += 10000 * dt;
                         geometry_msgs::Twist msg;
@@ -214,7 +220,7 @@ private:
 
                 case Landing:
                 {
-                    m_thrust = 45000;
+                    m_thrust = 38000;
 
                     geometry_msgs::Twist msg;
                     msg.linear.z = m_thrust;
@@ -237,7 +243,12 @@ private:
 
                 tf::StampedTransform transform;
                 m_listener.lookupTransform(m_worldFrame, m_frame, ros::Time(0), transform);
-
+                if (transform.getOrigin().z() >= 0.15)
+                {
+                    std_msgs::Bool msg;
+                    msg.data = false; 
+                    bool_pub.publish(msg);
+                }
                 geometry_msgs::PoseStamped targetWorld;
                 targetWorld.header.stamp = transform.stamp_;
                 targetWorld.header.frame_id = m_worldFrame;
@@ -268,7 +279,7 @@ private:
                 float NUYS = (m_pidNUY.update(0.0, targetDrone.pose.position.y)) + m_gamma.linear.y;
                 float NUZS = (m_pidNUZ.update(0.0, targetDrone.pose.position.z)) + m_gamma.linear.z;
 
-                float m = 0.027;
+                float m = 0.032;
                 float u = sqrt(pow(NUXS, 2) + pow(NUYS, 2) + pow((NUZS + 9.81), 2)) * m;
                 float u_rpm = std::max(std::min(calculate_rpm(u), 60000.0f), 10000.0f);
                 
@@ -291,6 +302,7 @@ private:
             {
                 geometry_msgs::Twist msg;
                 m_pubNav.publish(msg);
+                
             }
             break;
         }
@@ -309,6 +321,7 @@ private:
 private:
     std::string m_worldFrame;
     std::string m_frame;
+    ros::Publisher bool_pub;
     ros::Publisher m_pubNav;
     tf::TransformListener m_listener;
     PID m_pidNUX;

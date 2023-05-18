@@ -20,17 +20,17 @@ def joy_callback(joy_msg):
     if joy_msg.buttons[5] == 1 and not button_pressed:
         rospy.loginfo('Trayectoria iniciada')
         button_pressed = True
-        r = 0.16
-        h = 0.4
+        r = radio  #0.16
+        h = altura #0.4
         t = 0.0
-    elif joy_msg.buttons[5] == 1 and button_pressed:
+    elif joy_msg.buttons[10] == 1 and button_pressed:
         rospy.loginfo('Trayectoria reiniciada')
         r = 0.0
         h = 0.0
         t = 0.0
         button_pressed = False
-    elif not joy_msg.buttons[5] == 1:
-        button_pressed = False
+    # elif not joy_msg.buttons[5] == 1:
+    #     button_pressed = False
 
 
 
@@ -48,9 +48,9 @@ def trajectory_circle():
         w = np.pi/9.
         p = 15
 
-        x = r * (np.arctan(p) + np.arctan(t - p)) * np.cos(w * t) - 0.25
-        y = r * (np.arctan(p) + np.arctan(t - p)) * np.sin(w * t)
-        z = (h/2) * (1 + np.tanh(t-7.5)) 
+        x = r * (np.arctan(p) + np.arctan(t - p)) * np.cos(w * t) + xi
+        y = r * (np.arctan(p) + np.arctan(t - p)) * np.sin(w * t) + yi
+        z = (h/2) * (1 + np.tanh(t-7.5)) + zi
         yaw = 0
 
         # Publicar posicion actual 
@@ -85,6 +85,14 @@ def trajectory_circle():
 if __name__ == '__main__':
 
     rospy.init_node('trajectory_circle', anonymous=True)
+
+    # Obtener los parámetros xi, yi y zi
+    xi = rospy.get_param("~xi", 0.0)
+    yi = rospy.get_param("~yi", 0.0)
+    zi = rospy.get_param("~zi", 0.0)
+
+    altura = rospy.get_param("~h", 0.0)
+    radio = rospy.get_param("~r", 0.0)
     
     pub_pose = rospy.Publisher('goal', PoseStamped, queue_size=1)
     pub_acc = rospy.Publisher('goalacc', Twist, queue_size=1)   

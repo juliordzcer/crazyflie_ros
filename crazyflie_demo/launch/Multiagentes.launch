@@ -5,7 +5,36 @@
   <arg name="uri1" default="radio://0/80/2M/E7E7E7E701" />
   <arg name="uri2" default="radio://1/70/2M/E7E7E7E703" /> 
 
-  <!-- <arg name="uri2" default="radio://1/90/2M/E7E7E7E702" />  -->
+<!-- 
+  Seleccione el controlador de orientacion:
+
+  1.- PID (Bitcraze)
+  5.- Sliding Mode Control
+  6.- Backstepping
+  7.- Twisting Continuo
+  8.- Super Twisting Algoritm
+  9.- Nonsingular Terminal Sliding Mode Control
+  10.- Singular Terminal Sliding Mode Control
+  11.- PID (Newtons)
+    -->
+  <arg name="n1" default="7" /> <!-- Leader -->
+  <arg name="n2" default="7" /> <!-- Follower -->
+
+
+  <!-- Posiciones iniciales lider -->
+  <arg name="xi" default="-0.25" />
+  <arg name="yi" default="0.0" />
+  <arg name="zi" default="0.0" />
+
+  <!-- Vector de formacion -->
+  <arg name="xf" default="0.5" />
+  <arg name="yf" default="0.0" />
+  <arg name="zf" default="0.02" />
+  
+  <!-- Parametros de la trayectoria deseada -->
+  <arg name="r" default="0.16" />
+  <arg name="h" default="0.4" />
+
 
   <arg name="frame1" default="crazyflie1" /> 
   <arg name="frame2" default="crazyflie2" /> 
@@ -31,12 +60,21 @@
     <node name="joystick_controller" pkg="crazyflie_demo" type="controller.py" output="screen">
       <param name="use_crazyflie_controller" value="True" />
     </node>
+    
+    <node name="selc" pkg="crazyflie_demo" type="select_controller.py" output="screen">
+        <param name="n" value="$(arg n1)" />
+    </node>
 
     <include file="$(find crazyflie_controller)/launch/Leader.launch">
       <arg name="frame" value="$(arg frame1)" />
     </include>
 
     <node name="pose" pkg="crazyflie_demo" type="trajectory_node.py" output="screen">
+        <param name="xi" value="$(arg xi)" />
+        <param name="yi" value="$(arg yi)" />
+        <param name="zi" value="$(arg zi)" />
+        <param name="h" value="$(arg h)" />
+        <param name="r" value="$(arg r)" />
     </node>
 
     <node pkg="vrpn_client_ros" type="vrpn_client_node" name="vrpn_client_node" output="screen">
@@ -75,7 +113,14 @@
         <arg name="frame" value="$(arg frame2)" />
     </include>
 
+    <node name="selc" pkg="crazyflie_demo" type="select_controller.py" output="screen">
+        <param name="n" value="$(arg n2)" />
+    </node>
+
     <node name="pose" pkg="crazyflie_demo" type="trayectory_follower_node.py" output="screen">
+        <param name="xf" value="$(arg xf)" />
+        <param name="yf" value="$(arg yf)" />
+        <param name="zf" value="$(arg zf)" />
     </node>
 
     <node pkg="vrpn_client_ros" type="vrpn_client_node" name="vrpn_client_node" output="screen">

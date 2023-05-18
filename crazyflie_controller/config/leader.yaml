@@ -18,7 +18,7 @@ PIDs:
   NUZ:
     kp: 75.0
     kd: 30.0
-    ki: 35.00
+    ki: 38.00
     minOutput: -300.0
     maxOutput: 300.0
     integratorMin: -10

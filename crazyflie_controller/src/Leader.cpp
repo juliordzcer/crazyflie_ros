@@ -3,6 +3,8 @@
 #include <std_srvs/Empty.h>
 #include <geometry_msgs/Twist.h>
 #include <std_msgs/Float32.h>
+#include <std_msgs/Bool.h>
+
 
 #include "pid.hpp"
 #include <ros/ros.h>
@@ -16,70 +18,6 @@ double get(
     return value;
 }
 
-class LowPassFilter {
-public:
-  LowPassFilter(float alpha) : alpha_(alpha), prev_output_(0), prev_input_(0), initialized_(false) {}
-
-  float filter(float input) {
-    float output;
-    if (!initialized_) {
-      output = input;
-      initialized_ = true;
-    } else {
-      output = alpha_ * input + (1 - alpha_) * prev_output_ + alpha_ * (input - prev_input_);
-    }
-    prev_output_ = output;
-    prev_input_ = input;
-    return output;
-  }
-
-private:
-  float alpha_;
-  float prev_output_;
-  float prev_input_;
-  bool initialized_;
-};
-
-// class LowPassFilter {
-//   public:
-//     LowPassFilter(float frequency_cutoff, float damping_ratio) : 
-//         frequency_cutoff_(frequency_cutoff), damping_ratio_(damping_ratio), 
-//         initialized_(false), input_prev_(0), input_prev2_(0), output_prev_(0), output_prev2_(0) {
-//       float omega = 2 * M_PI * frequency_cutoff;
-//       float alpha = sin(omega) / (2 * damping_ratio);
-//       float beta = cos(omega);
-      
-//       b0_ = (1 - beta) / 2;
-//       b1_ = 1 - beta;
-//       b2_ = (1 - beta) / 2;
-//       a1_ = -2 * alpha * beta;
-//       a2_ = alpha * alpha;
-//     }
-    
-//     float filter(float input) {
-//       if (!initialized_) {
-//         input_prev_ = input;
-//         initialized_ = true;
-//       }
-      
-//       float output = b0_ * input + b1_ * input_prev_ + b2_ * input_prev2_ - a1_ * output_prev_ - a2_ * output_prev2_;
-      
-//       input_prev2_ = input_prev_;
-//       input_prev_ = input;
-//       output_prev2_ = output_prev_;
-//       output_prev_ = output;
-      
-//       return output;
-//     }
-    
-//   private:
-//     float frequency_cutoff_, damping_ratio_;
-//     bool initialized_;
-//     float input_prev_, input_prev2_, output_prev_, output_prev2_;
-//     float b0_, b1_, b2_, a1_, a2_;
-// };
-
-
 class Controller
 {
 public:
@@ -92,6 +30,7 @@ public:
         , m_frame(frame)
         , m_pubNav()
         , m_pubLu()
+        , bool_pub()
         , m_listener()
         , m_pidNUX(
             get(n, "PIDs/NUX/kp"),
@@ -134,7 +73,6 @@ public:
         , m_cameras()
         , m_goalacc()
         , m_subscribeGoal()
-        , m_subscribeGoalVel()
         , m_subscribeGoalAcc()
         , m_serviceTakeoff()
         , m_serviceLand()
@@ -145,9 +83,9 @@ public:
         ros::NodeHandle nh;
         m_listener.waitForTransform(m_worldFrame, m_frame, ros::Time(0), ros::Duration(10.0)); 
         m_pubNav = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1);
+        bool_pub = nh.advertise<std_msgs::Bool>("boolean_topic", 10);
         m_pubLu = nh.advertise<std_msgs::Float32>("leader_u", 1);
         m_subscribeGoal = nh.subscribe("goal", 1, &Controller::goalChanged, this);
-        m_subscribeGoalVel = nh.subscribe("vrpn_client_node/crazyflie/pose", 1, &Controller::camerasChanged, this);
         m_subscribeGoalAcc = nh.subscribe("goalacc", 1, &Controller::goalaccChanged, this);
         m_serviceTakeoff = nh.advertiseService("takeoff", &Controller::takeoff, this);
         m_serviceLand = nh.advertiseService("land", &Controller::land, this);
@@ -182,6 +120,7 @@ private:
         std_srvs::Empty::Request& req,
         std_srvs::Empty::Response& res)
     {
+        
         ROS_INFO("Takeoff requested!");
         m_state = TakingOff;
 
@@ -256,6 +195,9 @@ private:
         case TakingOff:
             {
                 tf::StampedTransform transform;
+                std_msgs::Bool msg;
+                msg.data = true; 
+                bool_pub.publish(msg);
                 m_listener.lookupTransform(m_worldFrame, m_frame, ros::Time(0), transform);
                 if (transform.getOrigin().z() > m_startZ + 0.05 || m_thrust > 18000)
                 {
@@ -276,7 +218,7 @@ private:
 
             case Landing:
             {
-                m_thrust = 40000;
+                m_thrust = 38000;
 
                 geometry_msgs::Twist msg;
                 msg.linear.z = m_thrust;
@@ -300,7 +242,12 @@ private:
 
                 tf::StampedTransform transform;
                 m_listener.lookupTransform(m_worldFrame, m_frame, ros::Time(0), transform);
-
+                if (transform.getOrigin().z() >= 0.15)
+                {
+                    std_msgs::Bool msg;
+                    msg.data = false; 
+                    bool_pub.publish(msg);
+                }
                 geometry_msgs::PoseStamped targetWorld;
                 targetWorld.header.stamp = transform.stamp_;
                 targetWorld.header.frame_id = m_worldFrame;
@@ -331,19 +278,11 @@ private:
                 float NUXS = (m_pidNUX.update(0.0, targetDrone.pose.position.x)) + m_goalacc.linear.x;
                 float NUYS = (m_pidNUY.update(0.0, targetDrone.pose.position.y)) + m_goalacc.linear.y;
                 float NUZS = (m_pidNUZ.update(0.0, targetDrone.pose.position.z)) + m_goalacc.linear.z;
-                
-                U_filt = new LowPassFilter(0.1f);
-                PHI_filt = new LowPassFilter(0.1f);
-                THETA_filt = new LowPassFilter(0.1f);
 
-                float m = 0.027;
+                float m = 0.032;
                 float u = sqrt(pow(NUXS, 2) + pow(NUYS, 2) + pow((NUZS + 9.81), 2)) * m;
                 float phi = asin((NUXS * sin(yaw_d) - NUYS * cos(yaw_d))*( m / u )) ;
                 float theta = atan((NUXS * cos(yaw_d) + NUYS * sin(yaw_d)) / (NUZS + 9.81));      
-
-                // u = U_filt->filter(u);
-                // phi = PHI_filt->filter(phi);
-                // theta = THETA_filt->filter(theta);
 
                 float u_rpm = std::max(std::min(calculate_rpm(u), 60000.0f), 10000.0f);
 
@@ -358,13 +297,13 @@ private:
                 msg.linear.z = u_rpm;
                 msg.angular.z = m_pidYaw.update(0.0, yaw);
                 m_pubNav.publish(msg);
-
             }
             break;
         case Idle:
             {
                 geometry_msgs::Twist msg;
                 m_pubNav.publish(msg);
+                
             }
             break;
         }
@@ -381,13 +320,10 @@ private:
     };
 
 private:
-    LowPassFilter* U_filt;
-    LowPassFilter* PHI_filt;
-    LowPassFilter* THETA_filt;
-
     std::string m_worldFrame;
     std::string m_frame;
     ros::Publisher m_pubNav;
+    ros::Publisher bool_pub;
     ros::Publisher m_pubLu;
     tf::TransformListener m_listener;
     PID m_pidNUX;
@@ -399,7 +335,6 @@ private:
     geometry_msgs::PoseStamped m_cameras;
     geometry_msgs::Twist m_goalacc;
     ros::Subscriber m_subscribeGoal;
-    ros::Subscriber m_subscribeGoalVel;
     ros::Subscriber m_subscribeGoalAcc;
     ros::ServiceServer m_serviceTakeoff;
     ros::ServiceServer m_serviceLand;

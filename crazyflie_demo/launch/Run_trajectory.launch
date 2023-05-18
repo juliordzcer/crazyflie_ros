@@ -8,8 +8,28 @@
   <arg name="ip" default="192.168.2.10" /> <!--Adjust this parameter-->
   <arg name="port" default="3883" />
 
+<!-- 
+  Seleccione el controlador de orientacion:
 
+  1.- PID (Bitcraze)
+  5.- Sliding Mode Control
+  6.- Backstepping
+  7.- Twisting Continuo
+  8.- Super Twisting Algoritm
+  9.- Nonsingular Terminal Sliding Mode Control
+  10.- Singular Terminal Sliding Mode Control
+  11.- PID (Newtons)
+    -->
+  <arg name="n" default="5" />
 
+  <!-- Posiciones iniciales -->
+  <arg name="xi" default="0.0" />
+  <arg name="yi" default="0.0" />
+  <arg name="zi" default="0.0" />
+  
+  <!-- Parametros de la trayectoria deseada -->
+  <arg name="r" default="0.16" />
+  <arg name="h" default="0.6" />
 
 
   <include file="$(find crazyflie_driver)/launch/crazyflie_server.launch">
@@ -28,9 +48,6 @@
     <node name="gamma" pkg="crazyflie_demo" type="publish_gamma.py" output="screen">
     </node>    
 
-    <node name="filter" pkg="crazyflie_demo" type="filter.py" output="screen">
-    </node>
-
     <node name="joystick_controller" pkg="crazyflie_demo" type="controller.py" output="screen">
       <param name="use_crazyflie_controller" value="True" />
     </node>
@@ -40,9 +57,16 @@
     </include>
 
     <node name="pose" pkg="crazyflie_demo" type="trajectory_node.py" output="screen">
+        <param name="xi" value="$(arg xi)" />
+        <param name="yi" value="$(arg yi)" />
+        <param name="zi" value="$(arg zi)" />
+        <param name="h" value="$(arg h)" />
+        <param name="r" value="$(arg r)" />
     </node>
 
-
+    <node name="selc" pkg="crazyflie_demo" type="select_controller.py" output="screen">
+        <param name="n" value="$(arg n)" />
+    </node>
 
     <!--Run vrpn client-->
     <!--For OptiTrack users: make sure you edit vrpn_client_ros.cpp file to adjust axes transformation-->
