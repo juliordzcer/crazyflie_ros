@@ -3,6 +3,8 @@
 #include <std_srvs/Empty.h>
 #include <geometry_msgs/Twist.h>
 #include <std_msgs/Float32.h>
+#include <std_msgs/Bool.h>
+
 
 #include "pid.hpp"
 #include <ros/ros.h>
@@ -28,6 +30,7 @@ public:
         , m_frame(frame)
         , m_pubNav()
         , m_pubLu()
+        , bool_pub()
         , m_listener()
         , m_pidNUX(
             get(n, "PIDs/NUX/kp"),
@@ -70,7 +73,6 @@ public:
         , m_cameras()
         , m_goalacc()
         , m_subscribeGoal()
-        , m_subscribeGoalVel()
         , m_subscribeGoalAcc()
         , m_serviceTakeoff()
         , m_serviceLand()
@@ -81,9 +83,9 @@ public:
         ros::NodeHandle nh;
         m_listener.waitForTransform(m_worldFrame, m_frame, ros::Time(0), ros::Duration(10.0)); 
         m_pubNav = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1);
+        bool_pub = nh.advertise<std_msgs::Bool>("boolean_topic", 10);
         m_pubLu = nh.advertise<std_msgs::Float32>("leader_u", 1);
         m_subscribeGoal = nh.subscribe("goal", 1, &Controller::goalChanged, this);
-        m_subscribeGoalVel = nh.subscribe("vrpn_client_node/crazyflie/pose", 1, &Controller::camerasChanged, this);
         m_subscribeGoalAcc = nh.subscribe("goalacc", 1, &Controller::goalaccChanged, this);
         m_serviceTakeoff = nh.advertiseService("takeoff", &Controller::takeoff, this);
         m_serviceLand = nh.advertiseService("land", &Controller::land, this);
@@ -118,6 +120,7 @@ private:
         std_srvs::Empty::Request& req,
         std_srvs::Empty::Response& res)
     {
+        
         ROS_INFO("Takeoff requested!");
         m_state = TakingOff;
 
@@ -192,6 +195,9 @@ private:
         case TakingOff:
             {
                 tf::StampedTransform transform;
+                std_msgs::Bool msg;
+                msg.data = true; 
+                bool_pub.publish(msg);
                 m_listener.lookupTransform(m_worldFrame, m_frame, ros::Time(0), transform);
                 if (transform.getOrigin().z() > m_startZ + 0.05 || m_thrust > 18000)
                 {
@@ -212,7 +218,7 @@ private:
 
             case Landing:
             {
-                m_thrust = 45000;
+                m_thrust = 38000;
 
                 geometry_msgs::Twist msg;
                 msg.linear.z = m_thrust;
@@ -236,7 +242,12 @@ private:
 
                 tf::StampedTransform transform;
                 m_listener.lookupTransform(m_worldFrame, m_frame, ros::Time(0), transform);
-
+                if (transform.getOrigin().z() >= 0.15)
+                {
+                    std_msgs::Bool msg;
+                    msg.data = false; 
+                    bool_pub.publish(msg);
+                }
                 geometry_msgs::PoseStamped targetWorld;
                 targetWorld.header.stamp = transform.stamp_;
                 targetWorld.header.frame_id = m_worldFrame;
@@ -270,10 +281,11 @@ private:
 
                 float m = 0.032;
                 float u = sqrt(pow(NUXS, 2) + pow(NUYS, 2) + pow((NUZS + 9.81), 2)) * m;
-                float u_rpm = std::max(std::min(calculate_rpm(u), 60000.0f), 10000.0f);
                 float phi = asin((NUXS * sin(yaw_d) - NUYS * cos(yaw_d))*( m / u )) ;
-                float theta = atan((NUXS * cos(yaw_d) + NUYS * sin(yaw_d)) / (NUZS + 9.81));
-                
+                float theta = atan((NUXS * cos(yaw_d) + NUYS * sin(yaw_d)) / (NUZS + 9.81));      
+
+                float u_rpm = std::max(std::min(calculate_rpm(u), 60000.0f), 10000.0f);
+
                 std_msgs::Float32 msg_u;
                 msg_u.data = u*.1;
                 m_pubLu.publish(msg_u);
@@ -283,15 +295,15 @@ private:
                 msg.linear.x = std::max(std::min(rad2deg(theta), 10.0f), -10.0f);
                 msg.linear.y = std::max(std::min(rad2deg(phi), 10.0f), -10.0f);
                 msg.linear.z = u_rpm;
-                msg.angular.z = 0;//m_pidYaw.update(0.0, yaw);
+                msg.angular.z = m_pidYaw.update(0.0, yaw);
                 m_pubNav.publish(msg);
-
             }
             break;
         case Idle:
             {
                 geometry_msgs::Twist msg;
                 m_pubNav.publish(msg);
+                
             }
             break;
         }
@@ -311,6 +323,7 @@ private:
     std::string m_worldFrame;
     std::string m_frame;
     ros::Publisher m_pubNav;
+    ros::Publisher bool_pub;
     ros::Publisher m_pubLu;
     tf::TransformListener m_listener;
     PID m_pidNUX;
@@ -322,7 +335,6 @@ private:
     geometry_msgs::PoseStamped m_cameras;
     geometry_msgs::Twist m_goalacc;
     ros::Subscriber m_subscribeGoal;
-    ros::Subscriber m_subscribeGoalVel;
     ros::Subscriber m_subscribeGoalAcc;
     ros::ServiceServer m_serviceTakeoff;
     ros::ServiceServer m_serviceLand;
