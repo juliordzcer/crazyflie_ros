@@ -45,10 +45,7 @@
       <param name="dev" value="$(arg joy_dev)" />
     </node>
 
-    <node name="gamma" pkg="crazyflie_demo" type="publish_gamma.py" output="screen">
-    </node>    
-
-    <node name="joystick_controller" pkg="crazyflie_demo" type="controller.py" output="screen">
+    <node name="joystick_controller" pkg="crazyflie_demo" type="joystick.py" output="screen">
       <param name="use_crazyflie_controller" value="True" />
     </node>
 
