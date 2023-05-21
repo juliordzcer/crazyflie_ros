@@ -26,9 +26,10 @@ class GammaPublisher:
         self.pitch = 0
         self.yaw = 0
         self.thrust = 0
-        self.pose_sub = rospy.Subscriber('/crazyflie1/pose', PoseStamped, self.pose_callback)
+        self.pose_sub   = rospy.Subscriber('/crazyflie1/pose', PoseStamped, self.pose_callback)
+        self.yaw_sub    = rospy.Subscriber('/crazyflie1/vrpn_client_node/crazyflie1/pose', PoseStamped, self.yaw_callback)
         self.thrust_sub = rospy.Subscriber('/crazyflie1/leader_u', Float32, self.thrust_callback)
-        self.gamma_pub = rospy.Publisher('/crazyflie2/info_leader', Twist, queue_size=50)
+        self.gamma_pub  = rospy.Publisher('/crazyflie2/info_leader', Twist, queue_size=50)
 
         self.masa = 0.032
 
@@ -39,8 +40,13 @@ class GammaPublisher:
         # Extraer pitch y roll de los ángulos rpy
         self.roll = rpy[0]
         self.pitch = rpy[1]
+
+    def yaw_callback(self, msg):
+        # Extraer el ángulo yaw a partir del mensaje "pose"
+        q = msg.pose.orientation
+        rpy = t.euler_from_quaternion([q.x, q.y, q.z, q.w])
         self.yaw = rpy[2]
-        
+
     def thrust_callback(self, msg):
         # Extraer el empuje del seguidor
         self.thrust = msg.data
@@ -55,6 +61,7 @@ class GammaPublisher:
 
         gamma.linear.x = self.gammax
         gamma.linear.y = self.gammay 
+        # gamma.linear.z = 0
         gamma.linear.z = self.gammaz
         self.gamma_pub.publish(gamma)
 
@@ -64,10 +71,9 @@ if __name__ == '__main__':
     gamma_publisher = GammaPublisher()
 
     # Mantener el nodo en ejecución
-    rate = rospy.Rate(100)
+    rate = rospy.Rate(50)
     while not rospy.is_shutdown():
         gamma_publisher.publish_gamma()
         rate.sleep()
-
 
 
