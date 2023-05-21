@@ -68,26 +68,13 @@ source ~/.bashrc
 
 ## Usage
 
-There are six packages included: crazyflie_cpp, crazyflie_driver, crazyflie_tools, crazyflie_description, crazyflie_controller, and crazyflie_demo.
+There are five packages included: crazyflie, crazyflie_description, crazyflie_controller, crazyflie_demo and vrpn_client_ros.
 Note that the below description might be slightly out-of-date, as we continue merging the Crazyswarm and crazyflie_ros.
 
-### Crazyflie_Cpp
-
-This package contains a cpp library for the Crazyradio and Crazyflie. It can be used independently of ROS.
-
-### Crazyflie_driver
+### Crazyflie
 
 This package contains the driver. In order to support multiple Crazyflies with a single Crazyradio, there is crazyflie_server (communicating with all Crazyflies) and crazyflie_add to dynamically add Crazyflies.
 The server does not communicate to any Crazyflie initially, hence crazyflie_add needs to be used.
-
-### Crazyflie_tools
-
-This package contains tools which are helpful, but not required for normal operation. So far, it just support one tool for scanning for a Crazyflie.
-
-You can find connected Crazyflies using:
-```
-rosrun crazyflie_tools scan
-```
 
 ### Crazyflie_description
 
@@ -95,32 +82,28 @@ This package contains a 3D model of the Crazyflie (1.0). This is for visualizati
 
 ### Crazyflie_controller
 
-This package contains a simple PID controller for hovering or waypoint navigation.
-It can be used with external motion capture systems.
+This package contains the position controller for trajectory tracking.
 
 ### Crazyflie_demo
 
-This package contains a rich set of examples to get quickly started with the Crazyflie.
+This package contains a set of examples to quickly get started with Crazyflie.
 
-For teleoperation using a joystick, use:
+To follow a trajectory using a crazyflie:
 ```
-roslaunch crazyflie_demo teleop_xbox360.launch uri:=radio://0/100/2M
+roslaunch crazyflie_demo Run_trajectory.launch uri:=radius://0/100/2M
 ```
-where the uri specifies the uri of your Crazyflie. You can find valid uris using the scan command in the crazyflie_tools package.
+where uri specifies the uri of your Crazyflie.
 
-For hovering at (0,0,1) using VRPN, use:
+To start the path of two agents:
 ```
-roslaunch crazyflie_demo hover_vrpn.launch
+roslaunch crazyflie_demo Multiagents.launch
 ```
-You can modify the crazyflie uri parameters as well as the VRPN parameters in the launch hover_vrpn.launch file.
-located in the folder crazyflie_demo/launch
+You can modify the crazyflie uri parameters as well as the VRPN parameters in the Multiagent.launch launch file.
+located in the crazyflie_demo/launch folder
 
-For multiple Crazyflies make sure that all Crazyflies have a different address.
-Crazyflies which share a dongle should use the same channel and datarate for best performance.
-The performance degrades with the number of Crazyflies per dongle due to bandwidth limitations, however it was tested successfully to use 3 CFs per Crazyradio.
-
-Please check the launch files in the crazyflie_demo package for other examples, including simple waypoint navigation.
-
+For multiple Crazyflies, make sure all Crazyflies have a different address.
+Crazyflies sharing a dongle should use the same channel and data rate for the best performance.
+Performance degrades with number of Crazyflies per dongle due to bandwidth limitations, however successfully tested to use 3 CF per Crazyradio.
 ### Vrpn_client_ros
 This package contains the code for the external motion capture system, which has been modified to change the frames sent by the Optitrack system.
 To know the position of a rigid body execute the following command
@@ -142,29 +125,3 @@ The launch file supports the following arguments:
 
 See http://wiki.bitcraze.se/projects:crazyflie:userguide:tips_and_tricks for details on how to obtain good trim values.
 
-### Subscribers
-
-#### cmd_vel
-
-Similar to the hector_quadrotor, package the fields are used as following:
-* linear.y: roll [e.g. -10 to 10 degrees]
-* linear.x: pitch [e.g. -10 to 10 degrees]
-* angular.z: yawrate [e.g. -200 to 200 degrees/second]
-* linear.z: thrust [10000 to 60000 (mapped to PWM output)]
-
-### Publishers
-
-#### imu
-* sensor_msgs/IMU
-* contains the sensor readings of gyroscope and accelerometer
-* The covariance matrices are set to unknown
-* orientation is not set (this could be done by the magnetometer readings in the future.)
-* update: 10ms (time between crazyflie and ROS not synchronized!)
-* can be viewed in rviz
-
-## Notes
-
-* The dynamic_reconfigure package (http://wiki.ros.org/dynamic_reconfigure/) seems like a good fit to map the parameters, however it has severe limitations:
-  * Changed-Callback does not include which parameter(s) were changed. There is only a notion of a level which is a simple bitmask. This would cause that on any parameter change we would need to update all parameters on the Crazyflie.
-  * Parameters are statically generated. There are hacks to add parameters at runtime, however those might not work with future versions of dynamic_reconfigure.
-  * Groups not fully supported (https://github.com/ros-visualization/rqt_common_plugins/issues/162; This seems to be closed now, however the Indigo binary packages did not pick up the fixes yet).
