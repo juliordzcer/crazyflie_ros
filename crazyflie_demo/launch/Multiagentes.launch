@@ -117,7 +117,7 @@
         <param name="n" value="$(arg n2)" />
     </node>
 
-    <node name="pose" pkg="crazyflie_demo" type="trayectory_follower_node.py" output="screen">
+    <node name="pose" pkg="crazyflie_demo" type="trajectory_follower_node.py" output="screen">
         <param name="xf" value="$(arg xf)" />
         <param name="yf" value="$(arg yf)" />
         <param name="zf" value="$(arg zf)" />
