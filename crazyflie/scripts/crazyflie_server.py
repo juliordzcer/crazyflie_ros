@@ -8,11 +8,16 @@ from crazyflie.msg import *
 
 import numpy as np
 
+import time
+
 # Importando las librerias de python de bitcraze.
 import cflib
 import cflib.crtp
 from cflib.crazyflie import Crazyflie
 from cflib.crazyflie.log import LogConfig
+from cflib.utils.power_switch import PowerSwitch
+
+
 from threading import Thread
 
 
@@ -44,7 +49,6 @@ class CrazyflieROS:
         self._pubPose = rospy.Publisher(tf_prefix + "/pose", Twist, queue_size=10)
 
         self._state = CrazyflieROS.Disconnected
-
         # Services
         rospy.Service(tf_prefix + "/update_params", UpdateParams, self._update_params)
         rospy.Service(tf_prefix + "/emergency", Empty, self._emergency)
@@ -66,6 +70,9 @@ class CrazyflieROS:
 
         rospy.loginfo("Connected to %s" % link_uri)
         self._state = CrazyflieROS.Connected
+
+        self._cf.console.receivedChar.add_callback(self._console_callback)
+
 
 
         if self.enable_logging_pose:
@@ -110,6 +117,13 @@ class CrazyflieROS:
                     self._cf.param.request_param_update(cf_param)
 
 
+    def _console_callback(self, text: str):
+        '''A callback to run when we get console text from Crazyflie'''
+        # We do not add newlines to the text received, we get them from the
+        # Crazyflie at appropriate places.
+        print(text, end='')
+
+
     def _connection_failed(self, link_uri, msg):
         rospy.logfatal("Connection to %s failed: %s" % (link_uri, msg))
         self._cf.close_link()
@@ -122,6 +136,7 @@ class CrazyflieROS:
     def _disconnected(self, link_uri):
         rospy.logfatal("Disconnected from %s" % link_uri)
         self._state = CrazyflieROS.Disconnected
+
 
     def _link_quality_updated(self, percentage):
         if percentage < 80:

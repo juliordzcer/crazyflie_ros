@@ -20,7 +20,7 @@
   10.- Singular Terminal Sliding Mode Control
   11.- PID (Newtons)
     -->
-  <arg name="n" default="5" />
+  <arg name="n" default="7" />
 
   <!-- Posiciones iniciales -->
   <arg name="xi" default="0.0" />
@@ -32,20 +32,21 @@
   <arg name="h" default="0.6" />
 
 
-  <include file="$(find crazyflie_driver)/launch/crazyflie_server.launch">
+  <include file="$(find crazyflie)/launch/crazyflie_server.launch">
   </include>
    <group ns="crazyflie">
 
-    <node pkg="crazyflie_driver" type="crazyflie_add" name="crazyflie_add" output="screen">
-      <param name="uri" value="$(arg uri)" />
-      <param name="tf_prefix" value="crazyflie" />
-    </node>
+    <include file="$(find crazyflie)/launch/crazyflie_add.launch">
+      <arg name="uri" value="$(arg uri)" />
+      <arg name="tf_prefix" value="crazyflie" />
+    </include>
+
 
     <node name="joy" pkg="joy" type="joy_node" output="screen">
       <param name="dev" value="$(arg joy_dev)" />
     </node>
 
-    <node name="joystick_controller" pkg="crazyflie_demo" type="joystick.py" output="screen">
+    <node name="joystick_controller" pkg="crazyflie_demo" type="Joystick.py" output="screen">
       <param name="use_crazyflie_controller" value="True" />
     </node>
 

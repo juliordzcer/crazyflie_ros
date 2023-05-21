@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 
 import rospy
-from crazyflie_driver.srv import UpdateParams
+from crazyflie.srv import UpdateParams
 from std_srvs.srv import Empty
 from std_msgs.msg import Bool
 
 class BooleanSubscriber:
     def __init__(self):
+        rospy.sleep(10)
         rospy.init_node("controllerselect")
         rospy.Subscriber("boolean_topic", Bool, self.callback)
         rospy.wait_for_service('update_params')
@@ -17,7 +18,8 @@ class BooleanSubscriber:
 
     def callback(self, data):
         if data.data and not self.info_enviada:  # Si el valor recibido es True y la información no ha sido enviada
-            rospy.set_param("stabilizer/controller", 1)
+            n = rospy.get_param("~n", 1)
+            rospy.set_param("stabilizer/controller", n)
             self._update_params(["stabilizer/controller"])
             self.info_enviada = True  # Actualizar la bandera indicando que la información ha sido enviada
         elif not data.data and not self.servicio_utilizado:  # Si el valor recibido es False y el servicio no se ha utilizado
