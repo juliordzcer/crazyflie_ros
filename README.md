@@ -15,7 +15,6 @@ https://github.com/ros-drivers/vrpn_client_ros
 
 ## Crazyflie ros
 
-
 ROS stack for Bitcraze Crazyflie (http://www.bitcraze.se/), with the following features:
 
 * Support for Crazyflie 1.0 and Crazyflie 2.0 (using stock firmware)
@@ -27,6 +26,55 @@ ROS stack for Bitcraze Crazyflie (http://www.bitcraze.se/), with the following f
 A tutorial (for a slightly older version) is available in W. Hönig and N. Ayanian. "Flying Multiple UAVs Using ROS", Chapter in Robot Operating System (ROS): The Complete Reference (Volume 2), Springer, 2017. (see http://act.usc.edu/publications.html for a free pre-print).
 
 ## Requirements
+
+### Installing ROS 
+#### Setup your sources.list
+
+Setup your computer to accept software from packages.ros.org.
+```
+sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
+```
+#### Set up your keys
+```
+sudo apt install curl -y
+```
+```
+curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | sudo apt-key add -
+```
+#### Installation
+First, make sure your Debian package index is up-to-date:
+```
+sudo apt-get update
+```
+now you can install Desktop-Full Install: (Recommended) : Everything in Desktop plus 2D/3D simulators and 2D/3D perception packages
+```
+sudo apt install ros-noetic-desktop-full
+```
+#### Environment setup
+```
+echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
+source ~/.bashrc
+```
+#### Dependencies for building packages
+Up to now you have installed what you need to run the core ROS packages. To create and manage your own ROS workspaces, there are various tools and requirements that are distributed separately. For example, rosinstall is a frequently used command-line tool that enables you to easily download many source trees for ROS packages with one command.
+
+To install this tool and other dependencies for building ROS packages, run:
+
+```
+sudo apt install python3-rosdep python3-rosinstall python3-rosinstall-generator python3-wstool build-essential
+```
+##### Initialize rosdep
+Before you can use many ROS tools, you will need to initialize rosdep. rosdep enables you to easily install system dependencies for source you want to compile and is required to run some core components in ROS. If you have not yet installed rosdep, do so as follows.
+```
+sudo apt install python3-rosdep
+```
+With the following, you can initialize rosdep.
+```
+sudo rosdep init
+rosdep update
+```
+
+### Install dependencies.
 To be able to execute the programs it is necessary to install the following dependencies, executing the following commands in the console
 ```
 sudo apt-get install ros-noetic-vrpn-client-ros
