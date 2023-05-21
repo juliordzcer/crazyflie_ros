@@ -23,7 +23,6 @@ ROS stack for Bitcraze Crazyflie (http://www.bitcraze.se/), with the following f
 * Supports ROS parameters to reconfigure crazyflie parameters
 * Support for using multiple Crazyflies with a single Crazyradio
 * Includes external controller for waypoint navigation (if motion capture system is available)
-* No dependency to the Bitcraze SDK (Driver and Controller written in C++)
 
 A tutorial (for a slightly older version) is available in W. Hönig and N. Ayanian. "Flying Multiple UAVs Using ROS", Chapter in Robot Operating System (ROS): The Complete Reference (Volume 2), Springer, 2017. (see http://act.usc.edu/publications.html for a free pre-print).
 
