@@ -45,18 +45,18 @@ def trajectory_circle():
         pose.header.frame_id = "world"
         global r,h,t,rt
         rate = rospy.Rate(rt) # rt Hz
-        w = np.pi/9.
+        w = np.pi/7.
         p = 15
-
-        x = r * (np.arctan(p) + np.arctan(t - p)) * np.cos(w * t) + xi
-        y = r * (np.arctan(p) + np.arctan(t - p)) * np.sin(w * t) + yi
-        z = (h) + zi
-        yaw = 0
 
         # x = r * (np.arctan(p) + np.arctan(t - p)) * np.cos(w * t) + xi
         # y = r * (np.arctan(p) + np.arctan(t - p)) * np.sin(w * t) + yi
-        # z = (h/2) * (1 + np.tanh(t-7.5)) + zi
+        # z = (h) + zi
         # yaw = 0
+
+        x = r * (np.arctan(p) + np.arctan(t - p)) * np.cos(w * t) + xi
+        y = r * (np.arctan(p) + np.arctan(t - p)) * np.sin(w * t) + yi
+        z = (h/2) * (1 + np.tanh(t-7.5)) + zi
+        yaw = 0
 
         # Publicar posicion actual 
         pose.pose.position.x = x

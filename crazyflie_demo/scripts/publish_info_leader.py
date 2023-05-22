@@ -26,7 +26,7 @@ class GammaPublisher:
         self.pitch = 0
         self.yaw = 0
         self.thrust = 0
-        self.pose_sub   = rospy.Subscriber('/crazyflie1/pose', PoseStamped, self.pose_callback)
+        self.pose_sub   = rospy.Subscriber('/crazyflie1/pose', Twist, self.pose_callback)
         self.yaw_sub    = rospy.Subscriber('/crazyflie1/vrpn_client_node/crazyflie1/pose', PoseStamped, self.yaw_callback)
         self.thrust_sub = rospy.Subscriber('/crazyflie1/leader_u', Float32, self.thrust_callback)
         self.gamma_pub  = rospy.Publisher('/crazyflie2/info_leader', Twist, queue_size=50)
@@ -34,12 +34,8 @@ class GammaPublisher:
         self.masa = 0.032
 
     def pose_callback(self, msg):
-        # Extraer los ángulos de rotación rpy a partir del mensaje "pose"
-        q = msg.pose.orientation
-        rpy = t.euler_from_quaternion([q.x, q.y, q.z, q.w])
-        # Extraer pitch y roll de los ángulos rpy
-        self.roll = rpy[0]
-        self.pitch = rpy[1]
+        self.roll = msg.angular.x
+        self.pitch = msg.angular.y
 
     def yaw_callback(self, msg):
         # Extraer el ángulo yaw a partir del mensaje "pose"

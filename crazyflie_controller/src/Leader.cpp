@@ -242,7 +242,7 @@ private:
 
                 tf::StampedTransform transform;
                 m_listener.lookupTransform(m_worldFrame, m_frame, ros::Time(0), transform);
-                if (transform.getOrigin().z() >= 0.01)
+                if (transform.getOrigin().z() >= 0.1)
                 {
                     std_msgs::Bool msg;
                     msg.data = false; 

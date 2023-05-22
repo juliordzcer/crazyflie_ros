@@ -47,6 +47,7 @@ class CrazyflieROS:
         self._subCmdPosition = rospy.Subscriber(tf_prefix + "/cmd_position", Position, self._cmd_position_Changed)
         self._subCmdFollower = rospy.Subscriber(tf_prefix + "/cmd_follower", Follower, self._cmd_follower_Changed)
         self._pubPose = rospy.Publisher(tf_prefix + "/pose", Twist, queue_size=10)
+        self._pubSignals = rospy.Publisher(tf_prefix + "/signals", Twist, queue_size=10)
 
         self._state = CrazyflieROS.Disconnected
         # Services
@@ -73,6 +74,30 @@ class CrazyflieROS:
 
         self._cf.console.receivedChar.add_callback(self._console_callback)
 
+
+        if self.enable_logging_pose:
+            self._lg_signals = LogConfig(name="Signals", period_in_ms=10)
+
+            # Posicion 
+            self._lg_signals.add_variable("signals.tau_phi", "float")
+            self._lg_signals.add_variable("signals.tau_theta", "float")
+            self._lg_signals.add_variable("signals.tau_psi", "float")
+            
+            try:
+                self._cf.log.add_config(self._lg_signals)
+                # This callback will receive the data
+                self._lg_signals.data_received_cb.add_callback(self._log_data_Signal)
+                # This callback will be called on errors
+                self._lg_signals.error_cb.add_callback(self._log_error)
+                # Start the logging
+                self._lg_signals.start()
+            except KeyError as e:
+                rospy.logwarn('Could not start log configuration,'
+                    '{} not found in TOC'.format(str(e)))
+
+                print()
+            except AttributeError:
+                rospy.logfatal("Could not add logconfig since some variables are not in TOC")
 
 
         if self.enable_logging_pose:
@@ -145,6 +170,13 @@ class CrazyflieROS:
     def _log_error(self, logconf, msg):
         rospy.logfatal("Error when logging %s: %s" % (logconf.name, msg))
 
+    def _log_data_Signal(self, timestamp, data, logconf):
+        msg = Twist()
+        msg.linear.x = data["signals.tau_phi"]
+        msg.linear.y = data["signals.tau_theta"]
+        msg.linear.z = data["signals.tau_psi"]
+
+        self._pubSignals.publish(msg)
 
     def _log_data_Pose(self, timestamp, data, logconf):
         msg = Twist()

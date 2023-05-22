@@ -18,8 +18,7 @@ class BooleanSubscriber:
 
     def callback(self, data):
         if data.data and not self.info_enviada:  # Si el valor recibido es True y la información no ha sido enviada
-            n = rospy.get_param("~n", 1)
-            rospy.set_param("stabilizer/controller", n)
+            rospy.set_param("stabilizer/controller", 1)
             self._update_params(["stabilizer/controller"])
             self.info_enviada = True  # Actualizar la bandera indicando que la información ha sido enviada
         elif not data.data and not self.servicio_utilizado:  # Si el valor recibido es False y el servicio no se ha utilizado
