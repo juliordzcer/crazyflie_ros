@@ -42,10 +42,6 @@ class CrazyflieROS:
 
         # Publishers.
         self._subCmdVel = rospy.Subscriber(tf_prefix + "/cmd_vel", Twist, self._cmdVelChanged)
-        self._subExtPose = rospy.Subscriber(tf_prefix + "/ExtPose", PoseStamped, self._ExtPoseChanged)
-        self._subCmdHover = rospy.Subscriber(tf_prefix + "/cmd_hover", Hover, self._cmd_hover_Changed)
-        self._subCmdPosition = rospy.Subscriber(tf_prefix + "/cmd_position", Position, self._cmd_position_Changed)
-        self._subCmdFollower = rospy.Subscriber(tf_prefix + "/cmd_follower", Follower, self._cmd_follower_Changed)
         self._pubPose = rospy.Publisher(tf_prefix + "/pose", Twist, queue_size=10)
         self._pubSignals = rospy.Publisher(tf_prefix + "/signals", Twist, queue_size=10)
 
@@ -53,10 +49,6 @@ class CrazyflieROS:
         # Services
         rospy.Service(tf_prefix + "/update_params", UpdateParams, self._update_params)
         rospy.Service(tf_prefix + "/emergency", Empty, self._emergency)
-        rospy.Service(tf_prefix + "/takeoff", Takeoff, self._takeoff)
-        rospy.Service(tf_prefix + "/land", Land, self._land)
-        rospy.Service(tf_prefix + "/stop", Stop, self._stop)
-        rospy.Service(tf_prefix + "/go_to", GoTo, self._goTo)
 
         self._isEmergency = False
 
@@ -204,34 +196,6 @@ class CrazyflieROS:
             #if rospy.has_param(ros_param):
             self._cf.param.set_value(cf_param, str(rospy.get_param(ros_param)))
         return UpdateParamsResponse()
-    
-    def _takeoff(self, req):
-        rospy.loginfo("Takeoff requested")
-        height = req.height
-        duration = req.duration.to_sec()
-        self._cf.high_level_commander.takeoff(height, duration)
-        return TakeoffResponse()  
-    
-    def _land(self, req):
-        rospy.loginfo(self.tf_prefix + "Land requested")
-        height = req.height
-        duration = req.duration.to_sec()
-        self._cf.high_level_commander.land(height, duration)
-        return LandResponse()
-    
-    def _stop(self):
-        rospy.loginfo(self.tf_prefix + "Stop requested")
-        self._cf.high_level_commander.stop()
-        return StopResponse()
-
-    def _goTo(self, req):
-        rospy.loginfo(self._tf_prefix + " GoTo requested")
-        goal = req.goal
-        yaw = req.yaw
-        duration = req.duration.to_sec()
-        relative = req.relative
-        self._cf.high_level_commander.go_to(goal.x, goal.y, goal.z, yaw, duration, relative)
-        return GoToResponse() 
 
     def _emergency(self, req):
         rospy.logfatal("Emergency requested!")
@@ -245,42 +209,6 @@ class CrazyflieROS:
         yawrate = msg.angular.z
         thrust  = min(max(0, int(msg.linear.z)), 60000)
         self._cf.commander.send_setpoint(roll, pitch, yawrate, thrust)
-
-    def _ExtPoseChanged(self, msg):
-        x = msg.pose.position.x
-        y = msg.pose.position.y
-        z = msg.pose.position.z
-        quat = msg.pose.orientation
-        if isnan(quat.x):
-            self._cf.extpos.send_extpos(x, y, z)
-        else:
-            self._cf.extpos.send_extpose(x, y, z, quat.x, quat.y, quat.z, quat.w)
-
-    def _cmd_hover_Changed(self, msg):
-        vx = msg.vx
-        vy = msg.vy
-        z = msg.z_distance
-        yawrate = msg.yaw_rate
-        self._cf.commander.send_hover_setpoint(vx, vy, yawrate, z)
-
-    def _cmd_position_Changed(self, msg):
-        x = msg.x
-        y = msg.y
-        z = msg.z
-        yaw = msg.yaw
-        self._cf.commander.send_position_setpoint(x, y, z, yaw)
-
-    def _cmd_follower_Changed(self, msg):
-        x = msg.x
-        y = msg.y
-        z = msg.z
-        yaw = msg.yaw
-        u_l = msg.u_l
-        roll_l = msg.roll_l
-        pitch_l = msg.pitch_l
-        yaw_l = msg.yaw_l
-        self._cf.commander.send_follower_setpoint(x, y, z, yaw, u_l, roll_l, pitch_l, yaw_l)
-
 
     def _update(self):
         while not rospy.is_shutdown():
