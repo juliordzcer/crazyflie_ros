@@ -24,12 +24,12 @@
   <!-- Posiciones iniciales lider -->
   <arg name="xi" default="-0.25" />
   <arg name="yi" default="0.0" />
-  <arg name="zi" default="0.0" />
+  <arg name="zi" default="0.15" />
 
   <!-- Vector de formacion -->
   <arg name="xf" default="0.5" />
   <arg name="yf" default="0.0" />
-  <arg name="zf" default="0.02" />
+  <arg name="zf" default="0.1" />
   
   <!-- Parametros de la trayectoria deseada -->
   <arg name="r" default="0.16" />

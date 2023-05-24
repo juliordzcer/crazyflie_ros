@@ -32,7 +32,7 @@ int main(int argc, char **argv)
   n.param("use_ros_time", use_ros_time, true);
   n.param("enable_logging_imu", enable_logging_imu, false); //true
   n.param("enable_logging_temperature", enable_logging_temperature, false); //true
-  n.param("enable_logging_magnetic_field", enable_logging_magnetic_field, false);//true
+  n.param("enable_logging_magnetic_field", enable_logging_magnetic_field, true);//true
   n.param("enable_logging_pressure", enable_logging_pressure, false);//true
   n.param("enable_logging_battery", enable_logging_battery, false); //true
   n.param("enable_logging_pose", enable_logging_pose, true);
