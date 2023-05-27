@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <launch>
   <arg name="joy_dev" default="/dev/input/js0" />
-  <arg name="uri" default="radio://1/80/2M/E7E7E7E701" /> 
+  <!-- <arg name="uri" default="radio://1/80/2M/E7E7E7E701" />  -->
   <!-- <arg name="uri" default="radio://0/90/2M/E7E7E7E702" />  -->
-  <!-- <arg name="uri" default="radio://0/70/2M/E7E7E7E703" />  -->
-  <arg name="frame" default="crazyflie" /> <!--For OptiTrack users: frame name should match the Rigid-body name on Motive-->
+  <arg name="uri" default="radio://0/70/2M/E7E7E7E703" /> 
+  <arg name="frame" default="crazyflie1" /> <!--For OptiTrack users: frame name should match the Rigid-body name on Motive-->
   <arg name="ip" default="192.168.2.10" /> <!--Adjust this parameter-->
   <arg name="port" default="3883" />
 
@@ -20,25 +20,25 @@
   10.- Singular Terminal Sliding Mode Control
   11.- PID (Newtons)
     -->
-  <arg name="n" default="10" />
+  <arg name="n" default="9" />
 
   <!-- Posiciones iniciales -->
   <arg name="xi" default="0.0" />
   <arg name="yi" default="0.0" />
-  <arg name="zi" default="0.15" />
+  <arg name="zi" default="0.05" />
   
   <!-- Parametros de la trayectoria deseada -->
-  <arg name="r" default="0.16" />
+  <arg name="r" default="0.2" />
   <arg name="h" default="0.4" />
 
 
   <include file="$(find crazyflie_driver)/launch/crazyflie_server.launch">
   </include>
-   <group ns="crazyflie">
+   <group ns="crazyflie1">
 
     <node pkg="crazyflie_driver" type="crazyflie_add" name="crazyflie_add" output="screen">
       <param name="uri" value="$(arg uri)" />
-      <param name="tf_prefix" value="crazyflie" />
+      <param name="tf_prefix" value="crazyflie1" />
     </node>
 
     <node name="joy" pkg="joy" type="joy_node" output="screen">
@@ -84,7 +84,7 @@
   </group>
 
 
-  <param name="robot_description" command="$(find xacro)/xacro $(find crazyflie_description)/urdf/crazyflie2.urdf.xacro" />
-  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find crazyflie_demo)/launch/crazyflie_pos.rviz" required="true" />
+  <!-- <param name="robot_description" command="$(find xacro)/xacro $(find crazyflie_description)/urdf/crazyflie2.urdf.xacro" />
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find crazyflie_demo)/launch/crazyflie_pos.rviz" required="true" /> -->
 
 </launch>

@@ -12,8 +12,8 @@
   <include file="$(find crazyflie_driver)/launch/crazyflie_server.launch">
   </include>
 
-  <node name="info" pkg="crazyflie_demo" type="publish_info_leader.py" output="screen" />
-  
+  <!-- <node name="info" pkg="crazyflie_demo" type="publish_info_leader.py" output="screen" />
+   -->
   <group ns="crazyflie1">
 
     <node pkg="crazyflie_driver" type="crazyflie_add" name="crazyflie_add" output="screen">
@@ -21,11 +21,14 @@
       <param name="tf_prefix" value="crazyflie1" />
     </node>
     
-    <node name="pose" pkg="crazyflie_demo" type="publish_external_position_vrpn.py" output="screen"> 
-      <param name="topic" value="/crazyflie1/vrpn_client_node/crazyflie1/pose" />
+    <node name="thrust" pkg="crazyflie_demo" type="thrust.py" output="screen"> 
     </node>
 
-    <node pkg="vrpn_client_ros" type="vrpn_client_node" name="vrpn_client_node" output="screen">
+    <!-- <node name="pose" pkg="crazyflie_demo" type="publish_external_position_vrpn.py" output="screen"> 
+      <param name="topic" value="/crazyflie1/vrpn_client_node/crazyflie1/pose" />
+    </node> -->
+
+    <!-- <node pkg="vrpn_client_ros" type="vrpn_client_node" name="vrpn_client_node" output="screen">
       <rosparam subst_value="true">
         server: $(arg ip)
         port: $(arg port)
@@ -36,7 +39,7 @@
         broadcast_tf: true
         refresh_tracker_frequency: 1.0
       </rosparam>
-    </node>
+    </node> -->
 
   </group>
 

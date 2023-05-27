@@ -196,9 +196,9 @@ private:
   } __attribute__((packed));
 
   struct logPose {
-    float x;
-    float y;
-    float z;
+    int16_t x;
+    int16_t y;
+    int16_t z;
     int32_t quatCompressed;
   } __attribute__((packed));
 
@@ -580,7 +580,7 @@ void cmdPositionSetpoint(
             {"gyro", "y"},
             {"gyro", "z"},
           }, cb));
-        logBlockImu->start(1); // 10ms
+        logBlockImu->start(10); // 10ms
       }
 
       if (   m_enable_logging_temperature
@@ -607,9 +607,9 @@ void cmdPositionSetpoint(
 
         logBlockPose.reset(new LogBlock<logPose>(
           &m_cf,{
-            {"stateEstimate", "x"},
-            {"stateEstimate", "y"},
-            {"stateEstimate", "z"},
+            {"signals", "tau_phi"},
+            {"signals", "tau_theta"},
+            {"signals", "tau_psi"},
             {"stateEstimateZ", "quat"}
           }, cb));
         logBlockPose->start(1); // 10ms
@@ -981,13 +981,6 @@ public:
 
     ros::ServiceServer serviceAdd = n.advertiseService("add_crazyflie", &CrazyflieServer::add_crazyflie, this);
     ros::ServiceServer serviceRemove = n.advertiseService("remove_crazyflie", &CrazyflieServer::remove_crazyflie, this);
-
-    // // High-level API
-    // ros::ServiceServer serviceTakeoff = n.advertiseService("takeoff", &CrazyflieServer::takeoff, this);
-    // ros::ServiceServer serviceLand = n.advertiseService("land", &CrazyflieROS::land, this);
-    // ros::ServiceServer serviceStop = n.advertiseService("stop", &CrazyflieROS::stop, this);
-    // ros::ServiceServer serviceGoTo = n.advertiseService("go_to", &CrazyflieROS::goTo, this);
-    // ros::ServiceServer startTrajectory = n.advertiseService("start_trajectory", &CrazyflieROS::startTrajectory, this);
 
     while(ros::ok()) {
       // Execute any ROS related functions now

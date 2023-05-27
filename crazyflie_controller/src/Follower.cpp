@@ -83,7 +83,7 @@ public:
     {
         ros::NodeHandle nh;
         m_listener.waitForTransform(m_worldFrame, m_frame, ros::Time(0), ros::Duration(10.0)); 
-        bool_pub = nh.advertise<std_msgs::Bool>("boolean_topic", 10);
+        bool_pub = nh.advertise<std_msgs::Bool>("boolean_topic", 1);
         m_pubNav = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1);
         m_subscribeGoal = nh.subscribe("goal", 1, &Controller::goalChanged, this);
         m_subscribeGamma = nh.subscribe("info_leader", 1, &Controller::gammaChanged, this);
@@ -243,7 +243,7 @@ private:
 
                 tf::StampedTransform transform;
                 m_listener.lookupTransform(m_worldFrame, m_frame, ros::Time(0), transform);
-                if (transform.getOrigin().z() >= 0.15)
+                if (transform.getOrigin().z() >= 0.1)
                 {
                     std_msgs::Bool msg;
                     msg.data = false; 

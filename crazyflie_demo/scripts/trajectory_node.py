@@ -8,36 +8,46 @@ import tf
 r = 0.0
 h = 0.0
 t = 0.0
-
 rt = 100
+gr = 0
 
-button_pressed = bool
-
+button_pressed = False
+start_time = rospy.Time()
 
 def joy_callback(joy_msg):
-    
-    global r,h,t, button_pressed
-    if joy_msg.buttons[5] == 1 and not button_pressed:
+    global r, h, t, button_pressed, gr, start_time
+
+    if joy_msg.buttons[2] == 1 and not button_pressed:
         rospy.loginfo('Trayectoria iniciada')
         button_pressed = True
-        r = radio  #0.16
-        h = altura #0.4
+        r = radio  # 0.16
+        h = altura  # 0.4
         t = 0.0
+        gr = 10
+        start_time = rospy.Time.now()  # Store the starting time
     elif joy_msg.buttons[10] == 1 and button_pressed:
         rospy.loginfo('Trayectoria reiniciada')
         r = 0.0
         h = 0.0
         t = 0.0
+        gr = 0
         button_pressed = False
-    # elif not joy_msg.buttons[5] == 1:
-    #     button_pressed = False
-
-
+        start_time = rospy.Time()  # Reset the starting time
 
 def trajectory_circle():
-    
-    
+    rospy.sleep(1)  # Wait 1 second before starting the trajectory
+
     while not rospy.is_shutdown():
+        current_time = rospy.Time.now()
+
+        if not start_time.is_zero():
+            elapsed_time = (current_time - start_time).to_sec()
+            # rospy.loginfo('Tiempo: '+str(elapsed_time))
+            if elapsed_time >= 60:
+                acc.angular.x = 0
+                pub_acc.publish(acc)
+                break
+
         pose = PoseStamped()
         # vel = Twist()
         acc = Twist()
@@ -45,12 +55,12 @@ def trajectory_circle():
         pose.header.frame_id = "world"
         global r,h,t,rt
         rate = rospy.Rate(rt) # rt Hz
-        w = np.pi/15.
+        w = np.pi/6.
         p = 15
 
         x = r * (np.arctan(p) + np.arctan(t - p)) * np.cos(w * t) + xi
         y = r * (np.arctan(p) + np.arctan(t - p)) * np.sin(w * t) + yi
-        z = (h/2) * (1 + np.tanh(t-7.5)) + zi
+        z = (h/2) * (1 + np.tanh(t-3.5)) + zi
         yaw = 0
 
         # Publicar posicion actual 
@@ -67,7 +77,7 @@ def trajectory_circle():
         # Publicar aceleracion
         ax = -r * (np.arctan(p) + np.arctan(t - p)) * w**2 * np.cos(w * t)
         ay = -r * (np.arctan(p) + np.arctan(t - p)) * w**2 * np.sin(w * t)
-        az = (h/2) * np.tanh(t-7.5) * (1 - np.tanh(t-7.5)) * (1 - 2*np.tanh(t-7.5))
+        az = (h/2) * np.tanh(t-3.5) * (1 - np.tanh(t-3.5)) * (1 - 2*np.tanh(t-3.5))
         a_yaw = 0
 
             # Publicar aceleracion
@@ -75,9 +85,8 @@ def trajectory_circle():
         acc.linear.y = ay
         acc.linear.z = az
         acc.angular.z = a_yaw
-        pub_acc.publish(acc)
-
-            
+        acc.angular.x = gr
+        pub_acc.publish(acc)  
             # Actualizar el tiempo
         t += 0.01
         rate.sleep()
@@ -85,7 +94,6 @@ def trajectory_circle():
 if __name__ == '__main__':
 
     rospy.init_node('trajectory_circle', anonymous=True)
-
     # Obtener los parámetros xi, yi y zi
     xi = rospy.get_param("~xi", 0.0)
     yi = rospy.get_param("~yi", 0.0)
@@ -100,7 +108,4 @@ if __name__ == '__main__':
     joy_sub = rospy.Subscriber('joy', Joy, joy_callback)
     
     trajectory_circle() 
-    
-    
     rospy.spin()
-

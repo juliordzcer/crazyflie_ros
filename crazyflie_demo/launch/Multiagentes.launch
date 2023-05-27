@@ -2,8 +2,8 @@
 <launch>
   <arg name="joy_dev" default="/dev/input/js0" />
 
-  <arg name="uri1" default="radio://0/80/2M/E7E7E7E701" />
-  <arg name="uri2" default="radio://1/70/2M/E7E7E7E703" /> 
+  <arg name="uri2" default="radio://0/80/2M/E7E7E7E701" />
+  <arg name="uri1" default="radio://1/70/2M/E7E7E7E703" /> 
 
 <!-- 
   Seleccione el controlador de orientacion:
@@ -24,7 +24,7 @@
   <!-- Posiciones iniciales lider -->
   <arg name="xi" default="-0.25" />
   <arg name="yi" default="0.0" />
-  <arg name="zi" default="0.15" />
+  <arg name="zi" default="0.05" />
 
   <!-- Vector de formacion -->
   <arg name="xf" default="0.5" />
@@ -139,7 +139,7 @@
     <node pkg="tf" type="static_transform_publisher" name="baselink_broadcaster" args="0 0 0 0 0 0 1 $(arg frame2) /crazyflie/base_link 100" />
     </group>
 
-  <param name="robot_description" command="$(find xacro)/xacro $(find crazyflie_description)/urdf/crazyflie2.urdf.xacro" />
-  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find crazyflie_demo)/launch/crazyflie_pos_multi.rviz" required="true" />
+  <!-- <param name="robot_description" command="$(find xacro)/xacro $(find crazyflie_description)/urdf/crazyflie2.urdf.xacro" />
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find crazyflie_demo)/launch/crazyflie_pos_multi.rviz" required="true" /> -->
 
 </launch>
