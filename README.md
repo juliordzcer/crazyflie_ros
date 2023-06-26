@@ -14,6 +14,8 @@ https://github.com/ros-drivers/vrpn_client_ros
 
 
 ## Crazyflie ros
+Make sure you have installed the installation steps from the following repository.
+`https://github.com/juliordzcer/crazyflie-firmware/blob/tec/README.md`
 
 
 ROS stack for Bitcraze Crazyflie (http://www.bitcraze.se/), with the following features:
@@ -28,6 +30,44 @@ ROS stack for Bitcraze Crazyflie (http://www.bitcraze.se/), with the following f
 A tutorial (for a slightly older version) is available in W. Hönig and N. Ayanian. "Flying Multiple UAVs Using ROS", Chapter in Robot Operating System (ROS): The Complete Reference (Volume 2), Springer, 2017. (see http://act.usc.edu/publications.html for a free pre-print).
 
 ## Requirements
+### Ros Noetic
+#### Setup your sources.list
+```
+sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
+```
+#### Set up your keys
+```
+sudo apt install curl # if you haven't already installed curl
+```
+```
+curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | sudo apt-key add -
+```
+#### Installation
+```
+sudo apt update
+```
+```
+sudo apt install ros-noetic-desktop-full
+```
+#### Environment setup
+```
+echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
+source ~/.bashrc
+```
+#### Dependencies for building packages
+```
+sudo apt install python3-rosdep python3-rosinstall python3-rosinstall-generator python3-wstool build-essential
+```
+##### Initialize rosdep
+```
+sudo apt install python3-rosdep
+```
+```
+sudo rosdep init
+rosdep update
+```
+
+
 To be able to execute the programs it is necessary to install the following dependencies, executing the following commands in the console
 ```
 sudo apt-get update
