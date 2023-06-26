@@ -15,7 +15,7 @@ https://github.com/ros-drivers/vrpn_client_ros
 
 ## Crazyflie ros
 Make sure you have installed the installation steps from the following repository.
-`https://github.com/juliordzcer/crazyflie-firmware/blob/tec/README.md`
+https://github.com/juliordzcer/crazyflie-firmware/blob/tec/README.md
 
 
 ROS stack for Bitcraze Crazyflie (http://www.bitcraze.se/), with the following features:
