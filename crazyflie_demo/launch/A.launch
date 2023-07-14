@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="uri" default="radio://0/80/2M/E7E7E7E701" /> 
+  <!-- <arg name="uri" default="radio://0/90/2M/E7E7E7E702" />  -->
+  <!-- <arg name="uri" default="radio://0/70/250K/E7E7E7E703" />  -->
+  <arg name="frame" default="crazyflie" /> 
+
+
+  <include file="$(find crazyflie)/launch/crazyflie_server.launch">
+  </include>
+
+  <group ns="crazyflie">
+    <include file="$(find crazyflie)/launch/crazyflie_add.launch">
+      <arg name="uri" value="$(arg uri)" />
+      <arg name="tf_prefix" value="crazyflie" />
+    </include>
+    
+    <node name="guardar_datos" pkg="crazyflie_demo" type="GD.py" output="screen"/>
+
+
+    <!-- <node pkg="rosbag" type="record" name="grabacion" output="screen" args="-O /home/julio/Imu.bag /crazyflie/pose" /> -->
+
+
+  </group>
+
+</launch>
