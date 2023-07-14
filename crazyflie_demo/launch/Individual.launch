@@ -12,6 +12,9 @@
   Seleccione el controlador de orientacion:
 
   1.- PID (Bitcraze)
+  2.- Mellinger (Bitcraze)
+  3.- INDI (Bitcraze)
+  4.- Brescanccini (Bitcraze)
   5.- Sliding Mode Control
   6.- Backstepping
   7.- Twisting Continuo
@@ -20,6 +23,7 @@
   10.- Singular Terminal Sliding Mode Control
   11.- PID (Newtons)
     -->
+    
   <arg name="n" default="9" />
 
   <!-- Posiciones iniciales -->
