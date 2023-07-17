@@ -134,7 +134,7 @@ This package contains a set of examples to quickly get started with Crazyflie.
 
 To follow a trajectory using a crazyflie:
 ```
-roslaunch crazyflie_demo Run_trajectory.launch uri:=radius://0/100/2M
+roslaunch crazyflie_demo Run_trajectory.launch uri:=radio://0/100/2M
 ```
 where uri specifies the uri of your Crazyflie.
 
