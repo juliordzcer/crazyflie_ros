@@ -176,14 +176,12 @@ private:
     }
 
     float calculate_rpm(float  thrust_newtons) {
-
-    float thrust_gramos = thrust_newtons / 0.00980665f;
-    float a = 1.0942e-07f;
-    float b = -2.1059e-04f;
-    float c = 1.5417e-01f;
-    float discriminante = powf(b, 2.0f) - 4.0f * a * (c - fabsf(thrust_gramos));
+    float a = 2.130295e-11f;
+    float b = 1.032633e-6f;
+    float c = 5.484560e-4f;
+    float discriminante = powf(b, 2.0f) - 4.0f * a * (c - fabsf(thrust_newtons));
     
-    return (-b + sqrtf(discriminante)) / (2.0f * a) * sign(thrust_gramos);
+    return (-b + sqrtf(discriminante)) / (2.0f * a) * sign(thrust_newtons);
     }
 
     void iteration(const ros::TimerEvent& e)
@@ -284,10 +282,10 @@ private:
                 float phi = asin((NUXS * sin(yaw_d) - NUYS * cos(yaw_d))*( m / u )) ;
                 float theta = atan((NUXS * cos(yaw_d) + NUYS * sin(yaw_d)) / (NUZS + 9.81));      
 
-                float u_rpm = std::max(std::min(calculate_rpm(u), 60000.0f), 10000.0f);
+                float u_rpm = std::max(std::min(calculate_rpm(u)*0.4f, 60000.0f), 10000.0f);
 
                 std_msgs::Float32 msg_u;
-                msg_u.data = u*.1;
+                msg_u.data = u;
                 m_pubLu.publish(msg_u);
 
             
@@ -354,7 +352,7 @@ int main(int argc, char **argv)
   std::string frame;
   n.getParam("frame", frame);
   double frequency;
-  n.param("frequency", frequency, 50.0);
+  n.param("frequency", frequency, 30.0);
 
   Controller controller(worldFrame, frame, n);
   controller.run(frequency);

@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <launch>
   <arg name="joy_dev" default="/dev/input/js0" />
-  <!-- <arg name="uri" default="radio://1/80/2M/E7E7E7E701" />  -->
+  <arg name="uri" default="radio://0/80/2M/E7E7E7E701" /> 
   <!-- <arg name="uri" default="radio://0/90/2M/E7E7E7E702" />  -->
-  <arg name="uri" default="radio://0/70/2M/E7E7E7E703" /> 
+  <!-- <arg name="uri" default="radio://0/70/2M/E7E7E7E703" />  -->
   <arg name="frame" default="crazyflie1" /> <!--For OptiTrack users: frame name should match the Rigid-body name on Motive-->
   <arg name="ip" default="192.168.2.10" /> <!--Adjust this parameter-->
   <arg name="port" default="3883" />
@@ -29,12 +29,16 @@
   <!-- Posiciones iniciales -->
   <arg name="xi" default="0.0" />
   <arg name="yi" default="0.0" />
-  <arg name="zi" default="0.05" />
+  <arg name="zi" default="0.0" />
   
   <!-- Parametros de la trayectoria deseada -->
   <arg name="r" default="0.2" />
-  <arg name="h" default="0.4" />
+  <arg name="h" default="0.6" />
 
+
+  <node name="guardar_datos" pkg="crazyflie_demo" type="GD.py" output="screen">
+      <param name="n" value="$(arg n)" />
+  </node>
 
   <include file="$(find crazyflie_driver)/launch/crazyflie_server.launch">
   </include>

@@ -2,8 +2,9 @@
 <launch>
   <arg name="joy_dev" default="/dev/input/js0" />
 
-  <arg name="uri2" default="radio://0/80/2M/E7E7E7E701" />
-  <arg name="uri1" default="radio://1/70/2M/E7E7E7E703" /> 
+  <arg name="uri1" default="radio://0/80/2M/E7E7E7E701" />
+  <arg name="uri2" default="radio://1/90/2M/E7E7E7E702" /> 
+  <!-- <arg name="uri1" default="radio://1/70/2M/E7E7E7E703" />  -->
 
 <!-- 
   Seleccione el controlador de orientacion:
@@ -20,27 +21,34 @@
   10.- Singular Terminal Sliding Mode Control
   11.- PID (Newtons)
     -->
-  <arg name="n1" default="7" /> <!-- Leader -->
-  <arg name="n2" default="7" /> <!-- Follower -->
+  <arg name="n1" default="1" /> 
+  <arg name="n2" default="1" /> 
+  <!-- <arg name="n3" default="1" />  -->
 
 
-  <!-- Posiciones iniciales lider -->
-  <arg name="xi" default="-0.25" />
-  <arg name="yi" default="0.0" />
-  <arg name="zi" default="0.05" />
+  <!-- Formaciones -->
+  <arg name="xi1" default="-0.2" />
+  <arg name="yi1" default="0.0" />
+  <arg name="zi1" default="0.0" />
 
-  <!-- Vector de formacion -->
-  <arg name="xf" default="0.5" />
-  <arg name="yf" default="0.0" />
-  <arg name="zf" default="0.1" />
+  <!-- Formaciones -->
+  <arg name="xi2" default="0.2" />
+  <arg name="yi2" default="0.0" />
+  <arg name="zi2" default="0.0" />
+<!-- 
+  <arg name="xi3" default="0.0" />
+  <arg name="yi3" default="0.2" />
+  <arg name="zi3" default="0.0" /> -->
   
   <!-- Parametros de la trayectoria deseada -->
-  <arg name="r" default="0.16" />
-  <arg name="h" default="0.4" />
+  <arg name="r" default="0.15" />
+  <arg name="h" default="0.5" />
 
 
   <arg name="frame1" default="crazyflie1" /> 
   <arg name="frame2" default="crazyflie2" /> 
+  <!-- <arg name="frame3" default="crazyflie3" />  -->
+
 
   <arg name="ip" default="192.168.2.10" /> 
   <arg name="port" default="3883" />
@@ -48,6 +56,12 @@
   <include file="$(find crazyflie_driver)/launch/crazyflie_server.launch" />
   
   <node name="info" pkg="crazyflie_demo" type="publish_info_leader.py" output="screen" />
+
+
+  <node name="guardar_datos" pkg="crazyflie_demo" type="GDLD.py" output="screen">
+      <param name="n1" value="$(arg n1)" />
+      <param name="n2" value="$(arg n2)" />
+  </node>
 
   <group ns="crazyflie1">
 
@@ -73,9 +87,9 @@
     </include>
 
     <node name="pose" pkg="crazyflie_demo" type="trajectory_node.py" output="screen">
-        <param name="xi" value="$(arg xi)" />
-        <param name="yi" value="$(arg yi)" />
-        <param name="zi" value="$(arg zi)" />
+        <param name="xi" value="$(arg xi1)" />
+        <param name="yi" value="$(arg yi1)" />
+        <param name="zi" value="$(arg zi1)" />
         <param name="h" value="$(arg h)" />
         <param name="r" value="$(arg r)" />
     </node>
@@ -93,41 +107,43 @@
       </rosparam>
     </node>
 
-    <node pkg="tf" type="static_transform_publisher" name="baselink_broadcaster" args="0 0 0 0 0 0 1 $(arg frame1) /crazyflie/base_link 100" />
-  </group>
+      <node pkg="tf" type="static_transform_publisher" name="baselink_broadcaster" args="0 0 0 0 0 0 1 $(arg frame1) /crazyflie/base_link 100" />
+    </group>
 
 
     <group ns="crazyflie2">
 
     <node pkg="crazyflie_driver" type="crazyflie_add" name="crazyflie_add" output="screen">
-        <param name="uri" value="$(arg uri2)" />
-        <param name="tf_prefix" value="crazyflie2" />
+      <param name="uri" value="$(arg uri2)" />
+      <param name="tf_prefix" value="crazyflie2" />
     </node>
 
     <node name="joy" pkg="joy" type="joy_node" output="screen">
-        <param name="dev" value="$(arg joy_dev)" />
+      <param name="dev" value="$(arg joy_dev)" />
     </node>
 
     <node name="joystick_controller" pkg="crazyflie_demo" type="controller.py" output="screen">
-        <param name="use_crazyflie_controller" value="True" />
+      <param name="use_crazyflie_controller" value="True" />
     </node>
-
-    <include file="$(find crazyflie_controller)/launch/Follower.launch">
-        <arg name="frame" value="$(arg frame2)" />
-    </include>
-
+    
     <node name="selc" pkg="crazyflie_demo" type="select_controller.py" output="screen">
         <param name="n" value="$(arg n2)" />
     </node>
 
-    <node name="pose" pkg="crazyflie_demo" type="trayectory_follower_node.py" output="screen">
-        <param name="xf" value="$(arg xf)" />
-        <param name="yf" value="$(arg yf)" />
-        <param name="zf" value="$(arg zf)" />
+    <include file="$(find crazyflie_controller)/launch/Leader.launch">
+      <arg name="frame" value="$(arg frame2)" />
+    </include>
+
+    <node name="pose" pkg="crazyflie_demo" type="trajectory_node.py" output="screen">
+        <param name="xi" value="$(arg xi2)" />
+        <param name="yi" value="$(arg yi2)" />
+        <param name="zi" value="$(arg zi2)" />
+        <param name="h" value="$(arg h)" />
+        <param name="r" value="$(arg r)" />
     </node>
 
     <node pkg="vrpn_client_ros" type="vrpn_client_node" name="vrpn_client_node" output="screen">
-        <rosparam subst_value="true">
+      <rosparam subst_value="true">
         server: $(arg ip)
         port: $(arg port)
         update_frequency: 100.0
@@ -136,11 +152,61 @@
         use_server_time: false
         broadcast_tf: true
         refresh_tracker_frequency: 1.0
-        </rosparam>
+      </rosparam>
     </node>
 
     <node pkg="tf" type="static_transform_publisher" name="baselink_broadcaster" args="0 0 0 0 0 0 1 $(arg frame2) /crazyflie/base_link 100" />
+  </group>
+
+
+  <!-- <group ns="crazyflie3">
+
+    <node pkg="crazyflie_driver" type="crazyflie_add" name="crazyflie_add" output="screen">
+      <param name="uri" value="$(arg uri3)" />
+      <param name="tf_prefix" value="crazyflie3" />
+    </node>
+
+    <node name="joy" pkg="joy" type="joy_node" output="screen">
+      <param name="dev" value="$(arg joy_dev)" />
+    </node>
+
+    <node name="joystick_controller" pkg="crazyflie_demo" type="controller.py" output="screen">
+      <param name="use_crazyflie_controller" value="True" />
+    </node>
+    
+    <node name="selc" pkg="crazyflie_demo" type="select_controller.py" output="screen">
+        <param name="n" value="$(arg n3)" />
+    </node>
+
+    <include file="$(find crazyflie_controller)/launch/Leader.launch">
+      <arg name="frame" value="$(arg frame3)" />
+    </include>
+
+    <node name="pose" pkg="crazyflie_demo" type="trajectory_node.py" output="screen">
+        <param name="xi" value="$(arg xi3)" />
+        <param name="yi" value="$(arg yi3)" />
+        <param name="zi" value="$(arg zi3)" />
+        <param name="h" value="$(arg h)" />
+        <param name="r" value="$(arg r)" />
+    </node>
+
+    <node pkg="vrpn_client_ros" type="vrpn_client_node" name="vrpn_client_node" output="screen">
+      <rosparam subst_value="true">
+        server: $(arg ip)
+        port: $(arg port)
+        update_frequency: 100.0
+        frame_id: world
+        child_frame_id: $(arg frame3)
+        use_server_time: false
+        broadcast_tf: true
+        refresh_tracker_frequency: 1.0
+      </rosparam>
+    </node>
+
+      <node pkg="tf" type="static_transform_publisher" name="baselink_broadcaster" args="0 0 0 0 0 0 1 $(arg frame3) /crazyflie/base_link 100" />
     </group>
+ -->
+
 
   <!-- <param name="robot_description" command="$(find xacro)/xacro $(find crazyflie_description)/urdf/crazyflie2.urdf.xacro" />
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find crazyflie_demo)/launch/crazyflie_pos_multi.rviz" required="true" /> -->
