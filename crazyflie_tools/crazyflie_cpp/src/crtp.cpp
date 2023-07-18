@@ -64,6 +64,26 @@ void quatdecompress(uint32_t comp, float q[4])
 	q[i_largest] = sqrtf(1.0f - sum_squares);
 }
 
+crtpFullSetpointRequest::crtpFullSetpointRequest(
+  float x, float y, float z,
+  float vx, float vy, float vz,
+  float ax, float ay, float az)
+  : header(0x07, 0), type(8)
+{
+	float s = 1000.0;
+	this->x = s * x;
+	this->y = s * y;
+	this->z = s * z;
+	this->vx = s * vx;
+	this->vy = s * vy;
+	this->vz = s * vz;
+	this->ax = s * ax;
+	this->ay = s * ay;
+	this->az = s * az;
+}
+
+
+
 crtpFullStateSetpointRequest::crtpFullStateSetpointRequest(
   float x, float y, float z,
   float vx, float vy, float vz,

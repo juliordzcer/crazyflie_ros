@@ -176,14 +176,12 @@ private:
     }
 
     float calculate_rpm(float  thrust_newtons) {
-
-    float thrust_gramos = thrust_newtons / 0.00980665f;
-    float a = 1.0942e-07f;
-    float b = -2.1059e-04f;
-    float c = 1.5417e-01f;
-    float discriminante = powf(b, 2.0f) - 4.0f * a * (c - fabsf(thrust_gramos));
+    float a = 2.130295e-11f;
+    float b = 1.032633e-6f;
+    float c = 5.484560e-4f;
+    float discriminante = powf(b, 2.0f) - 4.0f * a * (c - fabsf(thrust_newtons));
     
-    return (-b + sqrtf(discriminante)) / (2.0f * a) * sign(thrust_gramos);
+    return (-b + sqrtf(discriminante)) / (2.0f * a) * sign(thrust_newtons)*0.4f;
     }
 
     void iteration(const ros::TimerEvent& e)
@@ -354,7 +352,7 @@ int main(int argc, char **argv)
   std::string frame;
   n.getParam("frame", frame);
   double frequency;
-  n.param("frequency", frequency, 50.0);
+  n.param("frequency", frequency, 25.0);
 
   Controller controller(worldFrame, frame, n);
   controller.run(frequency);

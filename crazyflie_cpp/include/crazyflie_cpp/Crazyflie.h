@@ -130,6 +130,11 @@ public:
     float yawrate,
     uint16_t thrust);
 
+  void sendFullSetpoint(
+    float x, float y, float z,
+    float vx, float vy, float vz,
+    float ax, float ay, float az);  
+
   void sendFullStateSetpoint(
     float x, float y, float z,
     float vx, float vy, float vz,

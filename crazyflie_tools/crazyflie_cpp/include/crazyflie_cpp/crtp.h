@@ -1062,6 +1062,26 @@ struct crtpFullStateSetpointRequest
 } __attribute__((packed));
 CHECKSIZE(crtpFullStateSetpointRequest)
 
+struct crtpFullSetpointRequest
+{
+  crtpFullSetpointRequest(
+    float x, float y, float z,
+    float vx, float vy, float vz,
+    float ax, float ay, float az);
+  const crtp header;
+  uint8_t type;
+  int16_t x;
+  int16_t y;
+  int16_t z;
+  int16_t vx;
+  int16_t vy;
+  int16_t vz;
+  int16_t ax;
+  int16_t ay;
+  int16_t az;
+} __attribute__((packed));
+CHECKSIZE(crtpFullSetpointRequest)
+
 struct crtpVelocityWorldSetpointRequest
 {
   crtpVelocityWorldSetpointRequest(

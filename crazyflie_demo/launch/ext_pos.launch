@@ -7,8 +7,13 @@
   <arg name="frame" default="crazyflie1" /> <!--For OptiTrack users: frame name should match the Rigid-body name on Motive-->
   <arg name="ip" default="192.168.2.10" /> <!--Adjust this parameter-->
   <arg name="port" default="3883" />
+  <!-- Posiciones iniciales -->
+  <arg name="xi" default="0.0" />
+  <arg name="yi" default="0.0" />
+  <arg name="zi" default="0.05" />
 
-<!-- 
+
+  <!-- 
   Seleccione el controlador de orientacion:
 
   1.- PID (Bitcraze)
@@ -26,51 +31,43 @@
     
   <arg name="n" default="9" />
 
-  <!-- Posiciones iniciales -->
-  <arg name="xi" default="0.0" />
-  <arg name="yi" default="0.0" />
-  <arg name="zi" default="0.05" />
   
   <!-- Parametros de la trayectoria deseada -->
   <arg name="r" default="0.2" />
   <arg name="h" default="0.4" />
 
-
   <include file="$(find crazyflie_driver)/launch/crazyflie_server.launch">
   </include>
-   <group ns="crazyflie1">
 
+  <group ns="crazyflie1">
     <node pkg="crazyflie_driver" type="crazyflie_add" name="crazyflie_add" output="screen">
       <param name="uri" value="$(arg uri)" />
       <param name="tf_prefix" value="crazyflie1" />
+      <rosparam>
+        genericLogTopics: ["log1"]
+        genericLogTopicFrequencies: [100]
+        genericLogTopic_log1_Variables: ["kalman.stateX", "kalman.stateY", "kalman.stateZ"]
+      </rosparam>
     </node>
-
     <node name="joy" pkg="joy" type="joy_node" output="screen">
       <param name="dev" value="$(arg joy_dev)" />
     </node>
-
-    <node name="joystick_controller" pkg="crazyflie_demo" type="controller.py" output="screen">
-      <param name="use_crazyflie_controller" value="True" />
-    </node>
-
-    <include file="$(find crazyflie_controller)/launch/Leader.launch">
-      <arg name="frame" value="$(arg frame)" />
-    </include>
-
-    <node name="pose" pkg="crazyflie_demo" type="trajectory_node.py" output="screen">
+    <node name="pose" pkg="crazyflie_demo" type="setpoint.py" output="screen">
         <param name="xi" value="$(arg xi)" />
         <param name="yi" value="$(arg yi)" />
         <param name="zi" value="$(arg zi)" />
         <param name="h" value="$(arg h)" />
         <param name="r" value="$(arg r)" />
     </node>
-
-    <node name="selc" pkg="crazyflie_demo" type="select_controller.py" output="screen">
-        <param name="n" value="$(arg n)" />
+    <node name="joystick_controller" pkg="crazyflie_demo" type="control.py" output="screen">
+      <param name="use_crazyflie_controller" value="True" />
     </node>
+    <node name="pose1" pkg="crazyflie_demo" type="vrpn.py" output="screen"> 
+      <param name="topic" value="vrpn_client_node/crazyflie1/pose" />
+      <param name="n" value="$(arg n)" />
 
-    <!--Run vrpn client-->
-    <!--For OptiTrack users: make sure you edit vrpn_client_ros.cpp file to adjust axes transformation-->
+    </node>
+    
     <node pkg="vrpn_client_ros" type="vrpn_client_node" name="vrpn_client_node" output="screen">
     <rosparam subst_value="true">
       server: $(arg ip)
@@ -84,11 +81,5 @@
     </rosparam>
     </node>
 
-    <node pkg="tf" type="static_transform_publisher" name="baselink_broadcaster" args="0 0 0 0 0 0 1 $(arg frame) /crazyflie/base_link 100" />
   </group>
-
-
-  <!-- <param name="robot_description" command="$(find xacro)/xacro $(find crazyflie_description)/urdf/crazyflie2.urdf.xacro" />
-  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find crazyflie_demo)/launch/crazyflie_pos.rviz" required="true" /> -->
-
 </launch>
