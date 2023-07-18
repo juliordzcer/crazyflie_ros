@@ -17,6 +17,7 @@
 #include "crazyflie_driver/LogBlock.h"
 #include "crazyflie_driver/GenericLogData.h"
 #include "crazyflie_driver/FullState.h"
+#include "crazyflie_driver/Full.h"
 #include "crazyflie_driver/Hover.h"
 #include "crazyflie_driver/Stop.h"
 #include "crazyflie_driver/Position.h"
@@ -131,6 +132,7 @@ public:
     , m_serviceNotifySetpointsStop()
     , m_subscribeCmdVel()
     , m_subscribeCmdFullState()
+    , m_subscribeCmdFull()
     , m_subscribeCmdVelocityWorld()
     , m_subscribeCmdHover()
     , m_subscribeCmdStop()
@@ -389,6 +391,33 @@ void cmdPositionSetpoint(
     }
   }
 
+
+  void cmdFullSetpoint(
+    const crazyflie_driver::Full::ConstPtr& msg)
+  {
+    //ROS_INFO("got a full state setpoint");
+    if (!m_isEmergency) {
+      float x = msg->twist1.linear.x;
+      float y = msg->twist1.linear.y;
+      float z = msg->twist1.linear.z;
+      float vx = msg->twist1.angular.x;
+      float vy = msg->twist1.angular.y;
+      float vz = msg->twist1.angular.z;
+      float ax = msg->twist2.linear.x;
+      float ay = msg->twist2.linear.y;
+      float az = msg->twist2.linear.z;
+      float psi = msg->twist2.angular.x;
+      m_cf.sendFullSetpoint(
+        x, y, z,
+        vx, vy, vz,
+        ax, ay, az,
+        psi);
+      m_sentSetpoint = true;
+      //ROS_INFO("set a full setpoint");
+    }
+  }
+
+
   void cmdFullStateSetpoint(
     const crazyflie_driver::FullState::ConstPtr& msg)
   {
@@ -463,6 +492,7 @@ void cmdPositionSetpoint(
 
     m_subscribeCmdVel = n.subscribe(m_tf_prefix + "/cmd_vel", 1, &CrazyflieROS::cmdVelChanged, this);
     m_subscribeCmdFullState = n.subscribe(m_tf_prefix + "/cmd_full_state", 1, &CrazyflieROS::cmdFullStateSetpoint, this);
+    m_subscribeCmdFull = n.subscribe(m_tf_prefix + "/cmd_full", 1, &CrazyflieROS::cmdFullSetpoint, this);
     m_subscribeCmdVelocityWorld = n.subscribe(m_tf_prefix+"/cmd_velocity_world", 1, &CrazyflieROS::cmdVelocityWorldSetpoint, this);
     m_subscribeExternalPosition = n.subscribe(m_tf_prefix + "/external_position", 1, &CrazyflieROS::positionMeasurementChanged, this);
     m_subscribeExternalPose = n.subscribe(m_tf_prefix + "/external_pose", 1, &CrazyflieROS::poseMeasurementChanged, this);
@@ -610,7 +640,7 @@ void cmdPositionSetpoint(
             {"signals", "tau_phi"},
             {"signals", "tau_theta"},
             {"signals", "tau_psi"},
-            {"stateEstimateZ", "quat"}
+            {"Signals", "SC"}
           }, cb));
         logBlockPose->start(1); // 10ms
       }
@@ -943,6 +973,7 @@ private:
 
   ros::Subscriber m_subscribeCmdVel;
   ros::Subscriber m_subscribeCmdFullState;
+  ros::Subscriber m_subscribeCmdFull;
   ros::Subscriber m_subscribeCmdHover;
   ros::Subscriber m_subscribeCmdStop;
   ros::Subscriber m_subscribeCmdPosition;

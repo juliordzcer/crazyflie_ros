@@ -217,12 +217,14 @@ void Crazyflie::sendHoverSetpoint(
 void Crazyflie::sendFullSetpoint(
     float x, float y, float z,
     float vx, float vy, float vz,
-    float ax, float ay, float az)
+    float ax, float ay, float az,
+    float psi)
 {
   crtpFullSetpointRequest request(
     x, y, z,
     vx, vy, vz,
-    ax, ay, az);
+    ax, ay, az,
+    psi);
   sendPacket(request);
 }
 

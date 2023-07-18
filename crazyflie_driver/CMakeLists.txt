@@ -51,6 +51,7 @@ add_message_files(
   LogBlock.msg
   GenericLogData.msg
   FullState.msg
+  Full.msg
   VelocityWorld.msg
   TrajectoryPolynomialPiece.msg
   crtpPacket.msg

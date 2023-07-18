@@ -2,9 +2,8 @@
 
 import rospy
 import tf
-from geometry_msgs.msg import PointStamped, TransformStamped, PoseStamped  # PoseStamped added to support vrpn_client
-from crazyflie_driver.srv import UpdateParams
-
+from geometry_msgs.msg import PoseStamped, TransformStamped
+from crazyflie_driver.srv import UpdateParams, Takeoff, Land
 
 class PublishExternalPosition:
     def __init__(self):
@@ -17,11 +16,7 @@ class PublishExternalPosition:
 
         self.firstTransform = True
 
-        self.msg = PointStamped()
-        self.msg.header.seq = 0
-        self.msg.header.stamp = rospy.Time.now()
-
-        self.pub = rospy.Publisher("external_position", PointStamped, queue_size=1)
+        self.pub = rospy.Publisher("external_pose", PoseStamped, queue_size=1)
         rospy.Subscriber(self.topic, PoseStamped, self.onNewTransform)
 
     def onNewTransform(self, pose):
@@ -35,21 +30,24 @@ class PublishExternalPosition:
             rospy.set_param("kalman/resetEstimation", 1)
             self.update_params(["kalman/resetEstimation"])
 
-            
             self.firstTransform = False
-
         else:
-            self.msg.header.frame_id = pose.header.frame_id
-            self.msg.header.stamp = pose.header.stamp
+            self.msg = PoseStamped()
+            self.msg.header.seq = 0
+            self.msg.header.stamp = rospy.Time.now()
             self.msg.header.seq += 1
-            self.msg.point.x = pose.pose.position.x
-            self.msg.point.y = pose.pose.position.y
-            self.msg.point.z = pose.pose.position.z
+            self.msg.pose.position.x = pose.pose.position.x
+            self.msg.pose.position.y = pose.pose.position.y
+            self.msg.pose.position.z = pose.pose.position.z
+            self.msg.pose.orientation.x = pose.pose.orientation.x
+            self.msg.pose.orientation.y = pose.pose.orientation.y
+            self.msg.pose.orientation.z = pose.pose.orientation.z
+            self.msg.pose.orientation.w = pose.pose.orientation.w
+
             self.pub.publish(self.msg)
 
     def run(self):
         rospy.spin()
-
 
 if __name__ == '__main__':
     external_position = PublishExternalPosition()

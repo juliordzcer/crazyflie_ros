@@ -1,0 +1,158 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="joy_dev" default="/dev/input/js0" />
+  <arg name="uri1" default="radio://0/80/2M/E7E7E7E701" />
+  <arg name="uri2" default="radio://1/90/2M/E7E7E7E702" /> 
+  <arg name="uri3" default="radio://2/70/2M/E7E7E7E703" /> 
+
+  <arg name="frame" default="crazyflie1" /> <!--For OptiTrack users: frame name should match the Rigid-body name on Motive-->
+  <arg name="ip" default="192.168.2.10" /> <!--Adjust this parameter-->
+  <arg name="port" default="3883" />
+
+
+  <!-- Formacion -->
+  <arg name="xi1" default="-0.2" />
+  <arg name="yi1" default="0.0" />
+  <arg name="zi1" default="0.0" />
+
+  <arg name="xi2" default="0.2" />
+  <arg name="yi2" default="0.0" />
+  <arg name="zi2" default="0.0" />
+
+  <!-- <arg name="xi3" default="0.0" />
+  <arg name="yi3" default="0.2" />
+  <arg name="zi3" default="0.0" /> -->
+
+  <!-- 
+  Seleccione el controlador de orientacion:
+
+  1.- PID (Bitcraze)
+  2.- Mellinger (Bitcraze)
+  3.- INDI (Bitcraze)
+  4.- Brescanccini (Bitcraze)
+  5.- Sliding Mode Control
+  6.- Backstepping
+  7.- Twisting Continuo
+  8.- Super Twisting Algoritm
+  9.- Nonsingular Terminal Sliding Mode Control
+  10.- Singular Terminal Sliding Mode Control
+  11.- PID (Newtons)
+    -->
+    
+  <arg name="n" default="9" />
+
+  
+  <!-- Parametros de la trayectoria deseada -->
+  <arg name="r" default="0.12" />
+  <arg name="h" default="0.5" />
+
+  <include file="$(find crazyflie_driver)/launch/crazyflie_server.launch">
+  </include>
+
+  <node pkg="vrpn_client_ros" type="vrpn_client_node" name="vrpn_client_node" output="screen">
+  <rosparam subst_value="true">
+    server: $(arg ip)
+    port: $(arg port)
+    update_frequency: 100.0
+    frame_id: world
+    child_frame_id: $(arg frame)
+    use_server_time: false
+    broadcast_tf: true
+    refresh_tracker_frequency: 1.0
+  </rosparam>
+  </node>
+
+
+  <group ns="crazyflie1">
+    <node pkg="crazyflie_driver" type="crazyflie_add" name="crazyflie_add" output="screen">
+      <param name="uri" value="$(arg uri1)" />
+      <param name="tf_prefix" value="crazyflie1" />
+      <rosparam>
+        genericLogTopics: ["log1"]
+        genericLogTopicFrequencies: [100]
+        genericLogTopic_log1_Variables: ["kalman.stateX", "kalman.stateY", "kalman.stateZ"]
+      </rosparam>
+    </node>
+    <node name="joy" pkg="joy" type="joy_node" output="screen">
+      <param name="dev" value="$(arg joy_dev)" />
+    </node>
+    <node name="pose" pkg="crazyflie_demo" type="setpoint.py" output="screen">
+        <param name="xi" value="$(arg xi1)" />
+        <param name="yi" value="$(arg yi1)" />
+        <param name="zi" value="$(arg zi1)" />
+        <param name="h" value="$(arg h)" />
+        <param name="r" value="$(arg r)" />
+    </node>
+    <node name="joystick_controller" pkg="crazyflie_demo" type="control.py" output="screen">
+      <param name="use_crazyflie_controller" value="True" />
+    </node>
+    <node name="pose1" pkg="crazyflie_demo" type="vrpn.py" output="screen"> 
+      <param name="topic" value="/vrpn_client_node/crazyflie1/pose" />
+      <param name="n" value="$(arg n)" />
+    </node>
+  </group>
+
+
+  <group ns="crazyflie2">
+    <node pkg="crazyflie_driver" type="crazyflie_add" name="crazyflie_add" output="screen">
+      <param name="uri" value="$(arg uri2)" />
+      <param name="tf_prefix" value="crazyflie2" />
+      <rosparam>
+        genericLogTopics: ["log1"]
+        genericLogTopicFrequencies: [100]
+        genericLogTopic_log1_Variables: ["kalman.stateX", "kalman.stateY", "kalman.stateZ"]
+      </rosparam>
+    </node>
+    <node name="joy" pkg="joy" type="joy_node" output="screen">
+      <param name="dev" value="$(arg joy_dev)" />
+    </node>
+    <node name="pose" pkg="crazyflie_demo" type="setpoint.py" output="screen">
+        <param name="xi" value="$(arg xi2)" />
+        <param name="yi" value="$(arg yi2)" />
+        <param name="zi" value="$(arg zi2)" />
+        <param name="h" value="$(arg h)" />
+        <param name="r" value="$(arg r)" />
+    </node>
+    <node name="joystick_controller" pkg="crazyflie_demo" type="control.py" output="screen">
+      <param name="use_crazyflie_controller" value="True" />
+    </node>
+    <node name="pose1" pkg="crazyflie_demo" type="vrpn.py" output="screen"> 
+      <param name="topic" value="/vrpn_client_node/crazyflie2/pose" />
+      <param name="n" value="$(arg n)" />
+    </node>
+  </group>
+
+
+
+  <!-- <group ns="crazyflie3">
+    <node pkg="crazyflie_driver" type="crazyflie_add" name="crazyflie_add" output="screen">
+      <param name="uri" value="$(arg uri3)" />
+      <param name="tf_prefix" value="crazyflie3" />
+      <rosparam>
+        genericLogTopics: ["log1"]
+        genericLogTopicFrequencies: [100]
+        genericLogTopic_log1_Variables: ["kalman.stateX", "kalman.stateY", "kalman.stateZ"]
+      </rosparam>
+    </node>
+    <node name="joy" pkg="joy" type="joy_node" output="screen">
+      <param name="dev" value="$(arg joy_dev)" />
+    </node>
+    <node name="pose" pkg="crazyflie_demo" type="setpoint.py" output="screen">
+        <param name="xi" value="$(arg xi3)" />
+        <param name="yi" value="$(arg yi3)" />
+        <param name="zi" value="$(arg zi3)" />
+        <param name="h" value="$(arg h)" />
+        <param name="r" value="$(arg r)" />
+    </node>
+    <node name="joystick_controller" pkg="crazyflie_demo" type="control.py" output="screen">
+      <param name="use_crazyflie_controller" value="True" />
+    </node>
+    <node name="pose1" pkg="crazyflie_demo" type="vrpn.py" output="screen"> 
+      <param name="topic" value="/vrpn_client_node/crazyflie3/pose" />
+      <param name="n" value="$(arg n)" />
+    </node>
+  </group> -->
+  
+
+
+</launch>

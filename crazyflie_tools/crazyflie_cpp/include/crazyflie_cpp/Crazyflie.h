@@ -133,7 +133,8 @@ public:
   void sendFullSetpoint(
     float x, float y, float z,
     float vx, float vy, float vz,
-    float ax, float ay, float az);  
+    float ax, float ay, float az,
+    float psi);  
 
   void sendFullStateSetpoint(
     float x, float y, float z,

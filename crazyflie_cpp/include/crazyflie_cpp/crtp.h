@@ -1067,7 +1067,8 @@ struct crtpFullSetpointRequest
   crtpFullSetpointRequest(
     float x, float y, float z,
     float vx, float vy, float vz,
-    float ax, float ay, float az);
+    float ax, float ay, float az,
+    float psi);
   const crtp header;
   uint8_t type;
   int16_t x;
@@ -1079,6 +1080,7 @@ struct crtpFullSetpointRequest
   int16_t ax;
   int16_t ay;
   int16_t az;
+  int16_t psi;
 } __attribute__((packed));
 CHECKSIZE(crtpFullSetpointRequest)
 

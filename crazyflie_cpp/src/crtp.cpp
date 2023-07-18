@@ -67,8 +67,9 @@ void quatdecompress(uint32_t comp, float q[4])
 crtpFullSetpointRequest::crtpFullSetpointRequest(
   float x, float y, float z,
   float vx, float vy, float vz,
-  float ax, float ay, float az)
-  : header(0x07, 0), type(8)
+  float ax, float ay, float az,
+  float psi)
+  : header(0x07, 0), type(9)
 {
 	float s = 1000.0;
 	this->x = s * x;
@@ -80,6 +81,7 @@ crtpFullSetpointRequest::crtpFullSetpointRequest(
 	this->ax = s * ax;
 	this->ay = s * ay;
 	this->az = s * az;
+	this->ax = s * psi;
 }
 
 

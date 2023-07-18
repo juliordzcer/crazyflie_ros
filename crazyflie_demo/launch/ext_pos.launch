@@ -10,7 +10,7 @@
   <!-- Posiciones iniciales -->
   <arg name="xi" default="0.0" />
   <arg name="yi" default="0.0" />
-  <arg name="zi" default="0.05" />
+  <arg name="zi" default="0.0" />
 
 
   <!-- 
@@ -43,11 +43,6 @@
     <node pkg="crazyflie_driver" type="crazyflie_add" name="crazyflie_add" output="screen">
       <param name="uri" value="$(arg uri)" />
       <param name="tf_prefix" value="crazyflie1" />
-      <rosparam>
-        genericLogTopics: ["log1"]
-        genericLogTopicFrequencies: [100]
-        genericLogTopic_log1_Variables: ["kalman.stateX", "kalman.stateY", "kalman.stateZ"]
-      </rosparam>
     </node>
     <node name="joy" pkg="joy" type="joy_node" output="screen">
       <param name="dev" value="$(arg joy_dev)" />
