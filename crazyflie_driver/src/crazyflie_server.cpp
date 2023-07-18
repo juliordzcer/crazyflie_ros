@@ -640,7 +640,7 @@ void cmdPositionSetpoint(
             {"signals", "tau_phi"},
             {"signals", "tau_theta"},
             {"signals", "tau_psi"},
-            {"Signals", "SC"}
+            {"signals", "SC"}
           }, cb));
         logBlockPose->start(1); // 10ms
       }
