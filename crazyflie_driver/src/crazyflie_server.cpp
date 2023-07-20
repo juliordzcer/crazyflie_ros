@@ -7,21 +7,15 @@
 #include "crazyflie_driver/NotifySetpointsStop.h"
 #include "crazyflie_driver/RemoveCrazyflie.h"
 #include "crazyflie_driver/SetGroupMask.h"
-#include "crazyflie_driver/StartTrajectory.h"
 #include "crazyflie_driver/Stop.h"
 #include "crazyflie_driver/Takeoff.h"
 #include "crazyflie_driver/UpdateParams.h"
-#include "crazyflie_driver/UploadTrajectory.h"
 #include "crazyflie_driver/sendPacket.h"
 
 #include "crazyflie_driver/LogBlock.h"
-#include "crazyflie_driver/GenericLogData.h"
-#include "crazyflie_driver/FullState.h"
 #include "crazyflie_driver/Full.h"
-#include "crazyflie_driver/Hover.h"
 #include "crazyflie_driver/Stop.h"
 #include "crazyflie_driver/Position.h"
-#include "crazyflie_driver/VelocityWorld.h"
 #include "crazyflie_driver/crtpPacket.h"
 #include "crazyflie_cpp/Crazyradio.h"
 #include "crazyflie_cpp/crtp.h"
@@ -30,9 +24,6 @@
 #include "geometry_msgs/Twist.h"
 #include "geometry_msgs/PointStamped.h"
 #include "geometry_msgs/PoseStamped.h"
-#include "sensor_msgs/Imu.h"
-#include "sensor_msgs/Temperature.h"
-#include "sensor_msgs/MagneticField.h"
 #include "std_msgs/Float32.h"
 
 //#include <regex>
@@ -94,11 +85,6 @@ public:
     bool enable_parameters,
     std::vector<crazyflie_driver::LogBlock>& log_blocks,
     bool use_ros_time,
-    bool enable_logging_imu,
-    bool enable_logging_temperature,
-    bool enable_logging_magnetic_field,
-    bool enable_logging_pressure,
-    bool enable_logging_battery,
     bool enable_logging_pose,
     bool enable_logging_packets)
     : m_tf_prefix(tf_prefix)
@@ -111,13 +97,7 @@ public:
     , m_pitch_trim(pitch_trim)
     , m_enableLogging(enable_logging)
     , m_enableParameters(enable_parameters)
-    , m_logBlocks(log_blocks)
     , m_use_ros_time(use_ros_time)
-    , m_enable_logging_imu(enable_logging_imu)
-    , m_enable_logging_temperature(enable_logging_temperature)
-    , m_enable_logging_magnetic_field(enable_logging_magnetic_field)
-    , m_enable_logging_pressure(enable_logging_pressure)
-    , m_enable_logging_battery(enable_logging_battery)
     , m_enable_logging_pose(enable_logging_pose)
     , m_enable_logging_packets(enable_logging_packets)
     , m_serviceEmergency()
@@ -127,22 +107,12 @@ public:
     , m_serviceLand()
     , m_serviceStop()
     , m_serviceGoTo()
-    , m_serviceUploadTrajectory()
-    , m_serviceStartTrajectory()
     , m_serviceNotifySetpointsStop()
     , m_subscribeCmdVel()
-    , m_subscribeCmdFullState()
     , m_subscribeCmdFull()
-    , m_subscribeCmdVelocityWorld()
-    , m_subscribeCmdHover()
     , m_subscribeCmdStop()
     , m_subscribeCmdPosition()
     , m_subscribeExternalPosition()
-    , m_pubImu()
-    , m_pubTemp()
-    , m_pubMag()
-    , m_pubPressure()
-    , m_pubBattery()
     , m_pubRssi()
     , m_sentSetpoint(false)
     , m_sentExternalPosition(false)
@@ -179,29 +149,18 @@ public:
   }
 
 private:
-  struct logImu {
-    float acc_x;
-    float acc_y;
-    float acc_z;
-    float gyro_x;
-    float gyro_y;
-    float gyro_z;
-  } __attribute__((packed));
-
-  struct log2 {
-    float mag_x;
-    float mag_y;
-    float mag_z;
-    float baro_temp;
-    float baro_pressure;
-    float pm_vbat;
-  } __attribute__((packed));
-
   struct logPose {
     int16_t x;
     int16_t y;
     int16_t z;
     int32_t quatCompressed;
+  } __attribute__((packed));
+
+  struct logSignals {
+    float x;
+    float y;
+    float z;
+    float u;
   } __attribute__((packed));
 
 private:
@@ -221,22 +180,6 @@ private:
       U value;
       ros::param::get(ros_param, value);
       m_cf.setParam<T>(id, (T)value);
-  }
-
-void cmdHoverSetpoint(
-    const crazyflie_driver::Hover::ConstPtr& msg)
-  {
-     //ROS_INFO("got a hover setpoint");
-    if (!m_isEmergency) {
-      float vx = msg->vx;
-      float vy = msg->vy;
-      float yawRate = msg->yawrate;
-      float zDistance = msg->zDistance;
-
-      m_cf.sendHoverSetpoint(vx, vy, yawRate, zDistance);
-      m_sentSetpoint = true;
-      //ROS_INFO("set a hover setpoint");
-    }
   }
 
 void cmdStop(
@@ -418,57 +361,6 @@ void cmdPositionSetpoint(
   }
 
 
-  void cmdFullStateSetpoint(
-    const crazyflie_driver::FullState::ConstPtr& msg)
-  {
-    //ROS_INFO("got a full state setpoint");
-    if (!m_isEmergency) {
-      float x = msg->pose.position.x;
-      float y = msg->pose.position.y;
-      float z = msg->pose.position.z;
-      float vx = msg->twist.linear.x;
-      float vy = msg->twist.linear.y;
-      float vz = msg->twist.linear.z;
-      float ax = msg->acc.x;
-      float ay = msg->acc.y;
-      float az = msg->acc.z;
-
-      float qx = msg->pose.orientation.x;
-      float qy = msg->pose.orientation.y;
-      float qz = msg->pose.orientation.z;
-      float qw = msg->pose.orientation.w;
-      float rollRate = msg->twist.angular.x;
-      float pitchRate = msg->twist.angular.y;
-      float yawRate = msg->twist.angular.z;
-
-      m_cf.sendFullStateSetpoint(
-        x, y, z,
-        vx, vy, vz,
-        ax, ay, az,
-        qx, qy, qz, qw,
-        rollRate, pitchRate, yawRate);
-      m_sentSetpoint = true;
-      //ROS_INFO("set a full state setpoint");
-    }
-  }
-
-  void cmdVelocityWorldSetpoint(
-    const crazyflie_driver::VelocityWorld::ConstPtr& msg)
-  {
-    //ROS_INFO("got a velocity world setpoint");
-    if (!m_isEmergency) {
-      float x = msg->vel.x;
-      float y = msg->vel.y;
-      float z = msg->vel.z;
-      float yawRate = msg->yawRate;
-
-      m_cf.sendVelocityWorldSetpoint(
-        x, y, z, yawRate);
-      m_sentSetpoint = true;
-      //ROS_INFO("set a velocity world setpoint");
-    }
-  }
-
   void positionMeasurementChanged(
     const geometry_msgs::PointStamped::ConstPtr& msg)
   {
@@ -491,13 +383,10 @@ void cmdPositionSetpoint(
     n.setCallbackQueue(&m_callback_queue);
 
     m_subscribeCmdVel = n.subscribe(m_tf_prefix + "/cmd_vel", 1, &CrazyflieROS::cmdVelChanged, this);
-    m_subscribeCmdFullState = n.subscribe(m_tf_prefix + "/cmd_full_state", 1, &CrazyflieROS::cmdFullStateSetpoint, this);
     m_subscribeCmdFull = n.subscribe(m_tf_prefix + "/cmd_full", 1, &CrazyflieROS::cmdFullSetpoint, this);
-    m_subscribeCmdVelocityWorld = n.subscribe(m_tf_prefix+"/cmd_velocity_world", 1, &CrazyflieROS::cmdVelocityWorldSetpoint, this);
     m_subscribeExternalPosition = n.subscribe(m_tf_prefix + "/external_position", 1, &CrazyflieROS::positionMeasurementChanged, this);
     m_subscribeExternalPose = n.subscribe(m_tf_prefix + "/external_pose", 1, &CrazyflieROS::poseMeasurementChanged, this);
     m_serviceEmergency = n.advertiseService(m_tf_prefix + "/emergency", &CrazyflieROS::emergency, this);
-    m_subscribeCmdHover = n.subscribe(m_tf_prefix + "/cmd_hover", 1, &CrazyflieROS::cmdHoverSetpoint, this);
     m_subscribeCmdStop = n.subscribe(m_tf_prefix + "/cmd_stop", 1, &CrazyflieROS::cmdStop, this);
     m_subscribeCmdPosition = n.subscribe(m_tf_prefix + "/cmd_position", 1, &CrazyflieROS::cmdPositionSetpoint, this);
 
@@ -507,39 +396,20 @@ void cmdPositionSetpoint(
     m_serviceLand = n.advertiseService(m_tf_prefix + "/land", &CrazyflieROS::land, this);
     m_serviceStop = n.advertiseService(m_tf_prefix + "/stop", &CrazyflieROS::stop, this);
     m_serviceGoTo = n.advertiseService(m_tf_prefix + "/go_to", &CrazyflieROS::goTo, this);
-    m_serviceUploadTrajectory = n.advertiseService(m_tf_prefix + "/upload_trajectory", &CrazyflieROS::uploadTrajectory, this);
-    m_serviceStartTrajectory = n.advertiseService(m_tf_prefix + "/start_trajectory", &CrazyflieROS::startTrajectory, this);
     m_serviceNotifySetpointsStop = n.advertiseService(m_tf_prefix + "/notify_setpoints_stop", &CrazyflieROS::notifySetpointsStop, this);
 
-    if (m_enable_logging_imu) {
-      m_pubImu = n.advertise<sensor_msgs::Imu>(m_tf_prefix + "/imu", 10);
-    }
-    if (m_enable_logging_temperature) {
-      m_pubTemp = n.advertise<sensor_msgs::Temperature>(m_tf_prefix + "/temperature", 10);
-    }
-    if (m_enable_logging_magnetic_field) {
-      m_pubMag = n.advertise<sensor_msgs::MagneticField>(m_tf_prefix + "/magnetic_field", 10);
-    }
-    if (m_enable_logging_pressure) {
-      m_pubPressure = n.advertise<std_msgs::Float32>(m_tf_prefix + "/pressure", 10);
-    }
-    if (m_enable_logging_battery) {
-      m_pubBattery = n.advertise<std_msgs::Float32>(m_tf_prefix + "/battery", 10);
-    }
+
+
     if (m_enable_logging_pose) {
       m_pubPose = n.advertise<geometry_msgs::PoseStamped>(m_tf_prefix + "/pose", 10);
     }
+    m_pubSignals = n.advertise<geometry_msgs::Twist>(m_tf_prefix + "/sc", 10);
     if (m_enable_logging_packets) {
       m_pubPackets = n.advertise<crazyflie_driver::crtpPacket>(m_tf_prefix + "/packets", 10);
       std::function<void(const ITransport::Ack&)> cb_genericPacket = std::bind(&CrazyflieROS::onGenericPacket, this, std::placeholders::_1);
       m_cf.setGenericPacketCallback(cb_genericPacket);
     }
     m_pubRssi = n.advertise<std_msgs::Float32>(m_tf_prefix + "/rssi", 10);
-
-    for (auto& logBlock : m_logBlocks)
-    {
-      m_pubLogDataGeneric.push_back(n.advertise<crazyflie_driver::GenericLogData>(m_tf_prefix + "/" + logBlock.topic_name, 10));
-    }
 
     m_sendPacketServer = n.advertiseService(m_tf_prefix + "/send_packet"  , &CrazyflieROS::sendPacket, this);
 
@@ -586,10 +456,8 @@ void cmdPositionSetpoint(
       m_serviceUpdateParams = n.advertiseService(m_tf_prefix + "/update_params", &CrazyflieROS::updateParams, this);
     }
 
-    std::unique_ptr<LogBlock<logImu> > logBlockImu;
-    std::unique_ptr<LogBlock<log2> > logBlock2;
     std::unique_ptr<LogBlock<logPose> > logBlockPose;
-    std::vector<std::unique_ptr<LogBlockGeneric> > logBlocksGeneric(m_logBlocks.size());
+    std::unique_ptr<LogBlock<logSignals> > logBlockSignals;
     if (m_enableLogging) {
 
       std::function<void(const crtpPlatformRSSIAck*)> cb_ack = std::bind(&CrazyflieROS::onEmptyAck, this, std::placeholders::_1);
@@ -598,75 +466,31 @@ void cmdPositionSetpoint(
       ROS_INFO_NAMED(m_tf_prefix, "Requesting Logging variables...");
       m_cf.requestLogToc();
 
-      if (m_enable_logging_imu) {
-        std::function<void(uint32_t, logImu*)> cb = std::bind(&CrazyflieROS::onImuData, this, std::placeholders::_1, std::placeholders::_2);
 
-        logBlockImu.reset(new LogBlock<logImu>(
+        std::function<void(uint32_t, logSignals*)> cb = std::bind(&CrazyflieROS::onPoseData1, this, std::placeholders::_1, std::placeholders::_2);
+
+        logBlockSignals.reset(new LogBlock<logSignals>(
           &m_cf,{
-            {"acc", "x"},
-            {"acc", "y"},
-            {"acc", "z"},
-            {"gyro", "x"},
-            {"gyro", "y"},
-            {"gyro", "z"},
+            {"signals_n", "tau_phi"},
+            {"signals_n", "tau_theta"},
+            {"signals_n", "tau_psi"},
+            {"signals_n", "u"}
           }, cb));
-        logBlockImu->start(10); // 10ms
-      }
+        logBlockSignals->start(1); // 10ms
 
-      if (   m_enable_logging_temperature
-          || m_enable_logging_magnetic_field
-          || m_enable_logging_pressure
-          || m_enable_logging_battery)
-      {
-        std::function<void(uint32_t, log2*)> cb2 = std::bind(&CrazyflieROS::onLog2Data, this, std::placeholders::_1, std::placeholders::_2);
-
-        logBlock2.reset(new LogBlock<log2>(
-          &m_cf,{
-            {"mag", "x"},
-            {"mag", "y"},
-            {"mag", "z"},
-            {"baro", "temp"},
-            {"baro", "pressure"},
-            {"pm", "vbat"},
-          }, cb2));
-        logBlock2->start(10); // 100ms
-      }
 
       if (m_enable_logging_pose) {
         std::function<void(uint32_t, logPose*)> cb = std::bind(&CrazyflieROS::onPoseData, this, std::placeholders::_1, std::placeholders::_2);
 
         logBlockPose.reset(new LogBlock<logPose>(
           &m_cf,{
-            {"signals", "tau_phi"},
-            {"signals", "tau_theta"},
-            {"signals", "tau_psi"},
-            {"signals", "SC"}
+            {"stateEstimate", "x"},
+            {"stateEstimate", "y"},
+            {"stateEstimate", "z"},
+            {"stateEstimateZ", "quat"}
           }, cb));
         logBlockPose->start(1); // 10ms
       }
-
-      // custom log blocks
-      size_t i = 0;
-      for (auto& logBlock : m_logBlocks)
-      {
-        std::function<void(uint32_t, std::vector<double>*, void* userData)> cb =
-          std::bind(
-            &CrazyflieROS::onLogCustom,
-            this,
-            std::placeholders::_1,
-            std::placeholders::_2,
-            std::placeholders::_3);
-
-        logBlocksGeneric[i].reset(new LogBlockGeneric(
-          &m_cf,
-          logBlock.variables,
-          (void*)&m_pubLogDataGeneric[i],
-          cb));
-        logBlocksGeneric[i]->start(logBlock.frequency / 10);
-        ++i;
-      }
-
-
     }
 
     ROS_INFO_NAMED(m_tf_prefix, "Requesting memories...");
@@ -703,77 +527,6 @@ void cmdPositionSetpoint(
 
   }
 
-  void onImuData(uint32_t time_in_ms, logImu* data) {
-    if (m_enable_logging_imu) {
-      sensor_msgs::Imu msg;
-      if (m_use_ros_time) {
-        msg.header.stamp = ros::Time::now();
-      } else {
-        msg.header.stamp = ros::Time(time_in_ms / 1000.0);
-      }
-      msg.header.frame_id = m_tf_prefix + "/base_link";
-      msg.orientation_covariance[0] = -1;
-
-      // measured in deg/s; need to convert to rad/s
-      msg.angular_velocity.x = (data->gyro_x);
-      msg.angular_velocity.y = (data->gyro_y);
-      msg.angular_velocity.z = (data->gyro_z);
-
-      // measured in mG; need to convert to m/s^2
-      msg.linear_acceleration.x = data->acc_x * 9.81;
-      msg.linear_acceleration.y = data->acc_y * 9.81;
-      msg.linear_acceleration.z = data->acc_z * 9.81;
-
-      m_pubImu.publish(msg);
-    }
-  }
-
-  void onLog2Data(uint32_t time_in_ms, log2* data) {
-
-    if (m_enable_logging_temperature) {
-      sensor_msgs::Temperature msg;
-      if (m_use_ros_time) {
-        msg.header.stamp = ros::Time::now();
-      } else {
-        msg.header.stamp = ros::Time(time_in_ms / 1000.0);
-      }
-      msg.header.frame_id = m_tf_prefix + "/base_link";
-      // measured in degC
-      msg.temperature = data->baro_temp;
-      m_pubTemp.publish(msg);
-    }
-
-    if (m_enable_logging_magnetic_field) {
-      sensor_msgs::MagneticField msg;
-      if (m_use_ros_time) {
-        msg.header.stamp = ros::Time::now();
-      } else {
-        msg.header.stamp = ros::Time(time_in_ms / 1000.0);
-      }
-      msg.header.frame_id = m_tf_prefix + "/base_link";
-
-      // measured in Tesla
-      msg.magnetic_field.x = data->mag_x;
-      msg.magnetic_field.y = data->mag_y;
-      msg.magnetic_field.z = data->mag_z;
-      m_pubMag.publish(msg);
-    }
-
-    if (m_enable_logging_pressure) {
-      std_msgs::Float32 msg;
-      // hPa (=mbar)
-      msg.data = data->baro_pressure;
-      m_pubPressure.publish(msg);
-    }
-
-    if (m_enable_logging_battery) {
-      std_msgs::Float32 msg;
-      // V
-      msg.data = data->pm_vbat;
-      m_pubBattery.publish(msg);
-    }
-  }
-
   void onPoseData(uint32_t time_in_ms, logPose* data) {
     if (m_enable_logging_pose) {
       geometry_msgs::PoseStamped msg;
@@ -799,20 +552,13 @@ void cmdPositionSetpoint(
     }
   }
 
-  void onLogCustom(uint32_t time_in_ms, std::vector<double>* values, void* userData) {
-
-    ros::Publisher* pub = reinterpret_cast<ros::Publisher*>(userData);
-
-    crazyflie_driver::GenericLogData msg;
-    if (m_use_ros_time) {
-      msg.header.stamp = ros::Time::now();
-    } else {
-      msg.header.stamp = ros::Time(time_in_ms / 1000.0);
-    }
-    msg.header.frame_id = m_tf_prefix + "/base_link";
-    msg.values = *values;
-
-    pub->publish(msg);
+    void onPoseData1(uint32_t time_in_ms, logSignals* data) {
+      geometry_msgs::Twist msg;
+      msg.linear.x = data->x;
+      msg.linear.y = data->y;
+      msg.linear.z = data->z;
+      msg.angular.x = data->u;
+      m_pubSignals.publish(msg);
   }
 
   void onEmptyAck(const crtpPlatformRSSIAck* data) {
@@ -838,7 +584,6 @@ void cmdPositionSetpoint(
       messageBuffer.erase(0, pos+1);
     }
   }
-
   void onGenericPacket(const ITransport::Ack& ack) {
     crazyflie_driver::crtpPacket packet;
     packet.size = ack.size;
@@ -892,44 +637,6 @@ void cmdPositionSetpoint(
     return true;
   }
 
-  bool uploadTrajectory(
-    crazyflie_driver::UploadTrajectory::Request& req,
-    crazyflie_driver::UploadTrajectory::Response& res)
-  {
-    ROS_INFO_NAMED(m_tf_prefix, "UploadTrajectory requested");
-
-    std::vector<Crazyflie::poly4d> pieces(req.pieces.size());
-    for (size_t i = 0; i < pieces.size(); ++i) {
-      if (   req.pieces[i].poly_x.size() != 8
-          || req.pieces[i].poly_y.size() != 8
-          || req.pieces[i].poly_z.size() != 8
-          || req.pieces[i].poly_yaw.size() != 8) {
-        ROS_FATAL_NAMED(m_tf_prefix, "Wrong number of pieces!");
-        return false;
-      }
-      pieces[i].duration = req.pieces[i].duration.toSec();
-      for (size_t j = 0; j < 8; ++j) {
-        pieces[i].p[0][j] = req.pieces[i].poly_x[j];
-        pieces[i].p[1][j] = req.pieces[i].poly_y[j];
-        pieces[i].p[2][j] = req.pieces[i].poly_z[j];
-        pieces[i].p[3][j] = req.pieces[i].poly_yaw[j];
-      }
-    }
-    m_cf.uploadTrajectory(req.trajectoryId, req.pieceOffset, pieces);
-
-    ROS_INFO_NAMED(m_tf_prefix, "Upload completed!");
-    return true;
-  }
-
-  bool startTrajectory(
-    crazyflie_driver::StartTrajectory::Request& req,
-    crazyflie_driver::StartTrajectory::Response& res)
-  {
-    ROS_INFO_NAMED(m_tf_prefix, "StartTrajectory requested");
-    m_cf.startTrajectory(req.trajectoryId, req.timescale, req.reversed, req.relative, req.groupMask);
-    return true;
-  }
-
   bool notifySetpointsStop(
     crazyflie_driver::NotifySetpointsStop::Request& req,
     crazyflie_driver::NotifySetpointsStop::Response& res)
@@ -947,13 +654,7 @@ private:
   float m_pitch_trim;
   bool m_enableLogging;
   bool m_enableParameters;
-  std::vector<crazyflie_driver::LogBlock> m_logBlocks;
   bool m_use_ros_time;
-  bool m_enable_logging_imu;
-  bool m_enable_logging_temperature;
-  bool m_enable_logging_magnetic_field;
-  bool m_enable_logging_pressure;
-  bool m_enable_logging_battery;
   bool m_enable_logging_pose;
   bool m_enable_logging_packets;
 
@@ -967,25 +668,16 @@ private:
   ros::ServiceServer m_serviceLand;
   ros::ServiceServer m_serviceStop;
   ros::ServiceServer m_serviceGoTo;
-  ros::ServiceServer m_serviceUploadTrajectory;
-  ros::ServiceServer m_serviceStartTrajectory;
   ros::ServiceServer m_serviceNotifySetpointsStop;
 
   ros::Subscriber m_subscribeCmdVel;
-  ros::Subscriber m_subscribeCmdFullState;
   ros::Subscriber m_subscribeCmdFull;
-  ros::Subscriber m_subscribeCmdHover;
   ros::Subscriber m_subscribeCmdStop;
   ros::Subscriber m_subscribeCmdPosition;
   ros::Subscriber m_subscribeExternalPosition;
   ros::Subscriber m_subscribeExternalPose;
-  ros::Subscriber m_subscribeCmdVelocityWorld;
-  ros::Publisher m_pubImu;
-  ros::Publisher m_pubTemp;
-  ros::Publisher m_pubMag;
-  ros::Publisher m_pubPressure;
-  ros::Publisher m_pubBattery;
   ros::Publisher m_pubPose;
+  ros::Publisher m_pubSignals;
   ros::Publisher m_pubPackets;
   ros::Publisher m_pubRssi;
   std::vector<ros::Publisher> m_pubLogDataGeneric;
@@ -1051,11 +743,6 @@ private:
       req.enable_parameters,
       req.log_blocks,
       req.use_ros_time,
-      req.enable_logging_imu,
-      req.enable_logging_temperature,
-      req.enable_logging_magnetic_field,
-      req.enable_logging_pressure,
-      req.enable_logging_battery,
       req.enable_logging_pose,
       req.enable_logging_packets);
 
@@ -1088,8 +775,6 @@ private:
 private:
   std::map<std::string, CrazyflieROS*> m_crazyflies;
 };
-
-
 
 
 int main(int argc, char **argv)

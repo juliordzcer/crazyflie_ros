@@ -2,13 +2,9 @@
 #include <tf/transform_listener.h>
 #include <std_srvs/Empty.h>
 #include <geometry_msgs/Twist.h>
-#include <std_msgs/Float32.h>
-#include <std_msgs/Bool.h>
 
 
 #include "pid.hpp"
-#include <ros/ros.h>
-
 
 double get(
     const ros::NodeHandle& n,
@@ -29,36 +25,34 @@ public:
         : m_worldFrame(worldFrame)
         , m_frame(frame)
         , m_pubNav()
-        , m_pubLu()
-        , bool_pub()
         , m_listener()
-        , m_pidNUX(
-            get(n, "PIDs/NUX/kp"),
-            get(n, "PIDs/NUX/kd"),
-            get(n, "PIDs/NUX/ki"),
-            get(n, "PIDs/NUX/minOutput"),
-            get(n, "PIDs/NUX/maxOutput"),
-            get(n, "PIDs/NUX/integratorMin"),
-            get(n, "PIDs/NUX/integratorMax"),
-            "NUx")
-        , m_pidNUY(
-            get(n, "PIDs/NUY/kp"),
-            get(n, "PIDs/NUY/kd"),
-            get(n, "PIDs/NUY/ki"),
-            get(n, "PIDs/NUY/minOutput"),
-            get(n, "PIDs/NUY/maxOutput"),
-            get(n, "PIDs/NUY/integratorMin"),
-            get(n, "PIDs/NUY/integratorMax"),
-            "NUy")
-        , m_pidNUZ(
-            get(n, "PIDs/NUZ/kp"),
-            get(n, "PIDs/NUZ/kd"),
-            get(n, "PIDs/NUZ/ki"),
-            get(n, "PIDs/NUZ/minOutput"),
-            get(n, "PIDs/NUZ/maxOutput"),
-            get(n, "PIDs/NUZ/integratorMin"),
-            get(n, "PIDs/NUZ/integratorMax"),
-            "NUz")
+        , m_pidX(
+            get(n, "PIDs/X/kp"),
+            get(n, "PIDs/X/kd"),
+            get(n, "PIDs/X/ki"),
+            get(n, "PIDs/X/minOutput"),
+            get(n, "PIDs/X/maxOutput"),
+            get(n, "PIDs/X/integratorMin"),
+            get(n, "PIDs/X/integratorMax"),
+            "x")
+        , m_pidY(
+            get(n, "PIDs/Y/kp"),
+            get(n, "PIDs/Y/kd"),
+            get(n, "PIDs/Y/ki"),
+            get(n, "PIDs/Y/minOutput"),
+            get(n, "PIDs/Y/maxOutput"),
+            get(n, "PIDs/Y/integratorMin"),
+            get(n, "PIDs/Y/integratorMax"),
+            "y")
+        , m_pidZ(
+            get(n, "PIDs/Z/kp"),
+            get(n, "PIDs/Z/kd"),
+            get(n, "PIDs/Z/ki"),
+            get(n, "PIDs/Z/minOutput"),
+            get(n, "PIDs/Z/maxOutput"),
+            get(n, "PIDs/Z/integratorMin"),
+            get(n, "PIDs/Z/integratorMax"),
+            "z")
         , m_pidYaw(
             get(n, "PIDs/Yaw/kp"),
             get(n, "PIDs/Yaw/kd"),
@@ -70,23 +64,16 @@ public:
             "yaw")
         , m_state(Idle)
         , m_goal()
-        , m_cameras()
-        , m_goalacc()
         , m_subscribeGoal()
-        , m_subscribeGoalAcc()
         , m_serviceTakeoff()
         , m_serviceLand()
         , m_thrust(0)
-        , m_height(0)
         , m_startZ(0)
     {
         ros::NodeHandle nh;
         m_listener.waitForTransform(m_worldFrame, m_frame, ros::Time(0), ros::Duration(10.0)); 
         m_pubNav = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1);
-        bool_pub = nh.advertise<std_msgs::Bool>("boolean_topic", 1);
-        m_pubLu = nh.advertise<std_msgs::Float32>("leader_u", 1);
         m_subscribeGoal = nh.subscribe("goal", 1, &Controller::goalChanged, this);
-        m_subscribeGoalAcc = nh.subscribe("goalacc", 1, &Controller::goalaccChanged, this);
         m_serviceTakeoff = nh.advertiseService("takeoff", &Controller::takeoff, this);
         m_serviceLand = nh.advertiseService("land", &Controller::land, this);
     }
@@ -104,23 +91,11 @@ private:
     {
         m_goal = *msg;
     }
-    void camerasChanged(
-        const geometry_msgs::PoseStamped::ConstPtr& msg)
-    {
-        m_cameras = *msg;
-    }
-    void goalaccChanged(
-        const geometry_msgs::Twist::ConstPtr& msg)
-    {
-        m_goalacc = *msg;
-    }
-
 
     bool takeoff(
         std_srvs::Empty::Request& req,
         std_srvs::Empty::Response& res)
     {
-        
         ROS_INFO("Takeoff requested!");
         m_state = TakingOff;
 
@@ -151,37 +126,10 @@ private:
 
     void pidReset()
     {
-        m_pidNUX.reset();
-        m_pidNUY.reset();
-        m_pidNUZ.reset();
+        m_pidX.reset();
+        m_pidY.reset();
+        m_pidZ.reset();
         m_pidYaw.reset();
-    }
-
-
-    float rad2deg(float radianes) {
-        return radianes * 180 / M_PI;
-    }
-    float deg2rad(float deg) {
-        return deg *  M_PI / 180 ;
-    }
-
-    float sign(float n)
-    {
-    if(n > 0)
-        return 1.0;
-    else if(n < 0)
-        return -1.0;
-    else
-        return 0.0;
-    }
-
-    float calculate_rpm(float  thrust_newtons) {
-    float a = 2.130295e-11f;
-    float b = 1.032633e-6f;
-    float c = 5.484560e-4f;
-    float discriminante = powf(b, 2.0f) - 4.0f * a * (c - fabsf(thrust_newtons));
-    
-    return (-b + sqrtf(discriminante)) / (2.0f * a) * sign(thrust_newtons)*0.4f;
     }
 
     void iteration(const ros::TimerEvent& e)
@@ -193,13 +141,11 @@ private:
         case TakingOff:
             {
                 tf::StampedTransform transform;
-                std_msgs::Bool msg;
-                msg.data = true; 
-                bool_pub.publish(msg);
                 m_listener.lookupTransform(m_worldFrame, m_frame, ros::Time(0), transform);
-                if (transform.getOrigin().z() > m_startZ + 0.05 || m_thrust > 18000)
+                if (transform.getOrigin().z() > m_startZ + 0.05 || m_thrust > 50000)
                 {
                     pidReset();
+                    m_pidZ.setIntegral(m_thrust / m_pidZ.ki());
                     m_state = Automatic;
                     m_thrust = 0;
                 }
@@ -213,39 +159,23 @@ private:
 
             }
             break;
-
-            case Landing:
+        case Landing:
             {
-                m_thrust = 38000;
-
-                geometry_msgs::Twist msg;
-                msg.linear.z = m_thrust;
-                m_pubNav.publish(msg);
-
+                m_goal.pose.position.z = m_startZ + 0.05;
                 tf::StampedTransform transform;
                 m_listener.lookupTransform(m_worldFrame, m_frame, ros::Time(0), transform);
-                if (transform.getOrigin().z() <= m_startZ + 0.05)
-                {
+                if (transform.getOrigin().z() <= m_startZ + 0.05) {
                     m_state = Idle;
                     geometry_msgs::Twist msg;
                     m_pubNav.publish(msg);
                 }
             }
-            break;
-
-
             // intentional fall-thru
-
-            case Automatic: {
-
+        case Automatic:
+            {
                 tf::StampedTransform transform;
                 m_listener.lookupTransform(m_worldFrame, m_frame, ros::Time(0), transform);
-                if (transform.getOrigin().z() >= 0.1)
-                {
-                    std_msgs::Bool msg;
-                    msg.data = false; 
-                    bool_pub.publish(msg);
-                }
+
                 geometry_msgs::PoseStamped targetWorld;
                 targetWorld.header.stamp = transform.stamp_;
                 targetWorld.header.frame_id = m_worldFrame;
@@ -263,45 +193,20 @@ private:
                         targetDrone.pose.orientation.w
                     )).getRPY(roll, pitch, yaw);
 
-                tfScalar roll_d, pitch_d, yaw_d;
-                tf::Matrix3x3(
-                    tf::Quaternion(
-                        m_goal.pose.orientation.x,
-                        m_goal.pose.orientation.y,
-                        m_goal.pose.orientation.z,
-                        m_goal.pose.orientation.w
-                    )).getRPY(roll_d, pitch_d, yaw_d);
-
-
-                float NUXS = (m_pidNUX.update(0.0, targetDrone.pose.position.x)) + m_goalacc.linear.x;
-                float NUYS = (m_pidNUY.update(0.0, targetDrone.pose.position.y)) + m_goalacc.linear.y;
-                float NUZS = (m_pidNUZ.update(0.0, targetDrone.pose.position.z)) + m_goalacc.linear.z;
-
-                float m = 0.032;
-                float u = sqrt(pow(NUXS, 2) + pow(NUYS, 2) + pow((NUZS + 9.81), 2)) * m;
-                float phi = asin((NUXS * sin(yaw_d) - NUYS * cos(yaw_d))*( m / u )) ;
-                float theta = atan((NUXS * cos(yaw_d) + NUYS * sin(yaw_d)) / (NUZS + 9.81));      
-
-                float u_rpm = std::max(std::min(calculate_rpm(u), 60000.0f), 10000.0f);
-
-                std_msgs::Float32 msg_u;
-                msg_u.data = u*.1;
-                m_pubLu.publish(msg_u);
-
-            
                 geometry_msgs::Twist msg;
-                msg.linear.x = std::max(std::min(rad2deg(theta), 10.0f), -10.0f);
-                msg.linear.y = std::max(std::min(rad2deg(phi), 10.0f), -10.0f);
-                msg.linear.z = u_rpm;
+                msg.linear.x = m_pidX.update(0, targetDrone.pose.position.x);
+                msg.linear.y = m_pidY.update(0.0, targetDrone.pose.position.y);
+                msg.linear.z = m_pidZ.update(0.0, targetDrone.pose.position.z);
                 msg.angular.z = m_pidYaw.update(0.0, yaw);
                 m_pubNav.publish(msg);
+
+
             }
             break;
         case Idle:
             {
                 geometry_msgs::Twist msg;
                 m_pubNav.publish(msg);
-                
             }
             break;
         }
@@ -321,23 +226,17 @@ private:
     std::string m_worldFrame;
     std::string m_frame;
     ros::Publisher m_pubNav;
-    ros::Publisher bool_pub;
-    ros::Publisher m_pubLu;
     tf::TransformListener m_listener;
-    PID m_pidNUX;
-    PID m_pidNUY;
-    PID m_pidNUZ;
+    PID m_pidX;
+    PID m_pidY;
+    PID m_pidZ;
     PID m_pidYaw;
     State m_state;
     geometry_msgs::PoseStamped m_goal;
-    geometry_msgs::PoseStamped m_cameras;
-    geometry_msgs::Twist m_goalacc;
     ros::Subscriber m_subscribeGoal;
-    ros::Subscriber m_subscribeGoalAcc;
     ros::ServiceServer m_serviceTakeoff;
     ros::ServiceServer m_serviceLand;
     float m_thrust;
-    float m_height;
     float m_startZ;
 };
 
@@ -348,11 +247,11 @@ int main(int argc, char **argv)
   // Read parameters
   ros::NodeHandle n("~");
   std::string worldFrame;
-  n.param<std::string>("worldFrame", worldFrame, "world");
+  n.param<std::string>("worldFrame", worldFrame, "/world");
   std::string frame;
   n.getParam("frame", frame);
   double frequency;
-  n.param("frequency", frequency, 25.0);
+  n.param("frequency", frequency, 50.0);
 
   Controller controller(worldFrame, frame, n);
   controller.run(frequency);

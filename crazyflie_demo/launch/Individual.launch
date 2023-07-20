@@ -24,7 +24,7 @@
   11.- PID (Newtons)
     -->
     
-  <arg name="n" default="9" />
+  <arg name="n" default="1" />
 
   <!-- Posiciones iniciales -->
   <arg name="xi" default="0.0" />

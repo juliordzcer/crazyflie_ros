@@ -8,9 +8,9 @@
   <arg name="ip" default="192.168.2.10" /> <!--Adjust this parameter-->
   <arg name="port" default="3883" />
   <!-- Posiciones iniciales -->
-  <arg name="xi" default="0.0" />
+  <arg name="xi" default="-0.2" />
   <arg name="yi" default="0.0" />
-  <arg name="zi" default="0.0" />
+  <arg name="zi" default="0.05" />
 
 
   <!-- 
@@ -33,8 +33,8 @@
 
   
   <!-- Parametros de la trayectoria deseada -->
-  <arg name="r" default="0.2" />
-  <arg name="h" default="0.4" />
+  <arg name="r" default="0.25" />
+  <arg name="h" default="0.5" />
 
   <include file="$(find crazyflie_driver)/launch/crazyflie_server.launch">
   </include>

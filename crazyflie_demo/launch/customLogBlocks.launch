@@ -1,49 +1,41 @@
 <?xml version="1.0"?>
 
 <launch>
-  <!-- <arg name="uri1" default="radio://0/90/2M/E7E7E7E702" />  -->
-  <arg name="uri1" default="radio://0/70/2M/E7E7E7E703" /> 
+  <arg name="uri1" default="radio://0/90/2M/E7E7E7E702" />
+  <arg name="frame1" default="crazyflie1" />
+  <arg name="n" default="1" />
 
-    <arg name="frame1" default="crazyflie1" /> 
+  <!-- 
+  Seleccione el controlador de orientacion:
 
-  <arg name="ip" default="192.168.2.10" /> 
-  <arg name="port" default="3883" />
+  1.- PID (Bitcraze)
+  2.- Mellinger (Bitcraze)
+  3.- INDI (Bitcraze)
+  4.- Brescanccini (Bitcraze)
+  5.- Sliding Mode Control
+  6.- Backstepping
+  7.- Twisting Continuo
+  8.- Super Twisting Algoritm
+  9.- Nonsingular Terminal Sliding Mode Control
+  10.- Singular Terminal Sliding Mode Control
+  11.- PID (Newtons)
+    -->
 
-  <include file="$(find crazyflie_driver)/launch/crazyflie_server.launch">
-  </include>
+    
+  <!-- Iniciar el nodo crazyflie_server -->
+  <node pkg="crazyflie_driver" type="crazyflie_server" name="crazyflie_server" output="screen" />
 
-  <!-- <node name="info" pkg="crazyflie_demo" type="publish_info_leader.py" output="screen" />
-   -->
   <group ns="crazyflie1">
-
+    <!-- Iniciar el nodo crazyflie_add -->
     <node pkg="crazyflie_driver" type="crazyflie_add" name="crazyflie_add" output="screen">
       <param name="uri" value="$(arg uri1)" />
       <param name="tf_prefix" value="crazyflie1" />
     </node>
-    
-    <node name="thrust" pkg="crazyflie_demo" type="thrust.py" output="screen"> 
-    </node>
-
-    <!-- <node name="pose" pkg="crazyflie_demo" type="publish_external_position_vrpn.py" output="screen"> 
-      <param name="topic" value="/crazyflie1/vrpn_client_node/crazyflie1/pose" />
-    </node> -->
-
-    <!-- <node pkg="vrpn_client_ros" type="vrpn_client_node" name="vrpn_client_node" output="screen">
-      <rosparam subst_value="true">
-        server: $(arg ip)
-        port: $(arg port)
-        update_frequency: 100.0
-        frame_id: world
-        child_frame_id: $(arg frame1)
-        use_server_time: false
-        broadcast_tf: true
-        refresh_tracker_frequency: 1.0
-      </rosparam>
-    </node> -->
-
   </group>
 
-
-
+  <!-- Ejecutar el script Python update_params.py -->
+  <node name="update_params_node" pkg="crazyflie_demo" type="update_params.py">
+    <param name="frame" value="$(arg frame1)"/>
+    <param name="n" value="$(arg n)"/>
+  </node>
 </launch>
-

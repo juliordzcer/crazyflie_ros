@@ -15,11 +15,6 @@ int main(int argc, char **argv)
   bool enable_logging;
   bool enable_parameters;
   bool use_ros_time;
-  bool enable_logging_imu;
-  bool enable_logging_temperature;
-  bool enable_logging_magnetic_field;
-  bool enable_logging_pressure;
-  bool enable_logging_battery;
   bool enable_logging_pose;
   bool enable_logging_packets;
 
@@ -30,12 +25,7 @@ int main(int argc, char **argv)
   n.param("enable_logging", enable_logging, true);
   n.param("enable_parameters", enable_parameters, true);
   n.param("use_ros_time", use_ros_time, true);
-  n.param("enable_logging_imu", enable_logging_imu, false); //true
-  n.param("enable_logging_temperature", enable_logging_temperature, false); //true
-  n.param("enable_logging_magnetic_field", enable_logging_magnetic_field, false);//true
-  n.param("enable_logging_pressure", enable_logging_pressure, false);//true
-  n.param("enable_logging_battery", enable_logging_battery, false); //true
-  n.param("enable_logging_pose", enable_logging_pose, true);
+  n.param("enable_logging_pose", enable_logging_pose, false);
   n.param("enable_logging_packets", enable_logging_packets, false);
 
   ROS_INFO("wait_for_service /add_crazyflie");
@@ -50,37 +40,8 @@ int main(int argc, char **argv)
   addCrazyflie.request.enable_logging = enable_logging;
   addCrazyflie.request.enable_parameters = enable_parameters;
   addCrazyflie.request.use_ros_time = use_ros_time;
-  addCrazyflie.request.enable_logging_imu = enable_logging_imu;
-  addCrazyflie.request.enable_logging_temperature = enable_logging_temperature;
-  addCrazyflie.request.enable_logging_magnetic_field = enable_logging_magnetic_field;
-  addCrazyflie.request.enable_logging_pressure = enable_logging_pressure;
-  addCrazyflie.request.enable_logging_battery = enable_logging_battery;
   addCrazyflie.request.enable_logging_pose = enable_logging_pose;
   addCrazyflie.request.enable_logging_packets = enable_logging_packets;
-
-  std::vector<std::string> genericLogTopics;
-  n.param("genericLogTopics", genericLogTopics, std::vector<std::string>());
-  std::vector<int> genericLogTopicFrequencies;
-  n.param("genericLogTopicFrequencies", genericLogTopicFrequencies, std::vector<int>());
-
-  if (genericLogTopics.size() == genericLogTopicFrequencies.size())
-  {
-    size_t i = 0;
-    for (auto& topic : genericLogTopics)
-    {
-      crazyflie_driver::LogBlock logBlock;
-      logBlock.topic_name = topic;
-      logBlock.frequency = genericLogTopicFrequencies[i];
-      n.getParam("genericLogTopic_" + topic + "_Variables", logBlock.variables);
-      addCrazyflie.request.log_blocks.push_back(logBlock);
-      ++i;
-    }
-  }
-  else
-  {
-    ROS_ERROR("Cardinality of genericLogTopics and genericLogTopicFrequencies does not match!");
-  }
-
 
   addCrazyflieService.call(addCrazyflie);
 
