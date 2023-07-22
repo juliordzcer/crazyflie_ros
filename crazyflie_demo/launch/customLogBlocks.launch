@@ -31,11 +31,15 @@
       <param name="uri" value="$(arg uri1)" />
       <param name="tf_prefix" value="crazyflie1" />
     </node>
-  </group>
 
   <!-- Ejecutar el script Python update_params.py -->
   <node name="update_params_node" pkg="crazyflie_demo" type="update_params.py">
     <param name="frame" value="$(arg frame1)"/>
     <param name="n" value="$(arg n)"/>
-  </node>
+</node>
+
+  </group>
+
+
+  
 </launch>

@@ -35,10 +35,6 @@
   <arg name="xi2" default="0.2" />
   <arg name="yi2" default="0.0" />
   <arg name="zi2" default="0.0" />
-<!-- 
-  <arg name="xi3" default="0.0" />
-  <arg name="yi3" default="0.2" />
-  <arg name="zi3" default="0.0" /> -->
   
   <!-- Parametros de la trayectoria deseada -->
   <arg name="r" default="0.15" />
@@ -47,8 +43,6 @@
 
   <arg name="frame1" default="crazyflie1" /> 
   <arg name="frame2" default="crazyflie2" /> 
-  <!-- <arg name="frame3" default="crazyflie3" />  -->
-
 
   <arg name="ip" default="192.168.2.10" /> 
   <arg name="port" default="3883" />

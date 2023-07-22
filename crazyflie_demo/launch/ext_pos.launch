@@ -1,16 +1,17 @@
 <?xml version="1.0"?>
 <launch>
   <arg name="joy_dev" default="/dev/input/js0" />
-  <arg name="uri" default="radio://0/80/2M/E7E7E7E701" /> 
-  <!-- <arg name="uri" default="radio://0/90/2M/E7E7E7E702" />  -->
-  <!-- <arg name="uri" default="radio://0/70/2M/E7E7E7E703" />  -->
-  <arg name="frame" default="crazyflie1" /> <!--For OptiTrack users: frame name should match the Rigid-body name on Motive-->
+  <arg name="uri1" default="radio://1/80/2M/E7E7E7E701" />
+
+  <arg name="frame1" default="crazyflie1" /> <!--For OptiTrack users: frame name should match the Rigid-body name on Motive-->
   <arg name="ip" default="192.168.2.10" /> <!--Adjust this parameter-->
   <arg name="port" default="3883" />
-  <!-- Posiciones iniciales -->
-  <arg name="xi" default="-0.2" />
-  <arg name="yi" default="0.0" />
-  <arg name="zi" default="0.05" />
+
+
+  <!-- Formacion -->
+  <arg name="xi1" default="-0.2" />
+  <arg name="yi1" default="0.0" />
+  <arg name="zi1" default="0.0" />
 
 
   <!-- 
@@ -29,52 +30,56 @@
   11.- PID (Newtons)
     -->
     
-  <arg name="n" default="9" />
+  <arg name="n1" default="11" />
 
   
   <!-- Parametros de la trayectoria deseada -->
-  <arg name="r" default="0.25" />
+  <arg name="r" default="0.2" />
   <arg name="h" default="0.5" />
 
-  <include file="$(find crazyflie_driver)/launch/crazyflie_server.launch">
-  </include>
+  <node pkg="crazyflie_driver" type="crazyflie_server" name="crazyflie_server" output="screen" />
+
+  <node pkg="vrpn_client_ros" type="vrpn_client_node" name="vrpn_client_node" output="screen">
+  <rosparam subst_value="true">
+    server: $(arg ip)
+    port: $(arg port)
+    update_frequency: 100.0
+    frame_id: world
+    child_frame_id: $(arg frame1)
+    use_server_time: false
+    broadcast_tf: true
+    refresh_tracker_frequency: 1.0
+  </rosparam>
+  </node>
+
 
   <group ns="crazyflie1">
+
     <node pkg="crazyflie_driver" type="crazyflie_add" name="crazyflie_add" output="screen">
-      <param name="uri" value="$(arg uri)" />
+      <param name="uri" value="$(arg uri1)" />
       <param name="tf_prefix" value="crazyflie1" />
     </node>
+
+  <node name="update_params_node" pkg="crazyflie_demo" type="update_params.py">
+    <param name="frame" value="$(arg frame1)"/>
+    <param name="n" value="$(arg n1)"/>
+</node>
     <node name="joy" pkg="joy" type="joy_node" output="screen">
       <param name="dev" value="$(arg joy_dev)" />
     </node>
-    <node name="pose" pkg="crazyflie_demo" type="setpoint.py" output="screen">
-        <param name="xi" value="$(arg xi)" />
-        <param name="yi" value="$(arg yi)" />
-        <param name="zi" value="$(arg zi)" />
+    <node name="goal1" pkg="crazyflie_demo" type="setpoint.py" output="screen">
+        <param name="xi" value="$(arg xi1)" />
+        <param name="yi" value="$(arg yi1)" />
+        <param name="zi" value="$(arg zi1)" />
         <param name="h" value="$(arg h)" />
         <param name="r" value="$(arg r)" />
     </node>
-    <node name="joystick_controller" pkg="crazyflie_demo" type="control.py" output="screen">
-      <param name="use_crazyflie_controller" value="True" />
-    </node>
-    <node name="pose1" pkg="crazyflie_demo" type="vrpn.py" output="screen"> 
-      <param name="topic" value="vrpn_client_node/crazyflie1/pose" />
-      <param name="n" value="$(arg n)" />
 
-    </node>
-    
-    <node pkg="vrpn_client_ros" type="vrpn_client_node" name="vrpn_client_node" output="screen">
-    <rosparam subst_value="true">
-      server: $(arg ip)
-      port: $(arg port)
-      update_frequency: 100.0
-      frame_id: world
-      child_frame_id: $(arg frame)
-      use_server_time: false
-      broadcast_tf: true
-      refresh_tracker_frequency: 1.0
-    </rosparam>
+    <node name="pose1" pkg="crazyflie_demo" type="vrpn.py" output="screen"> 
+      <param name="topic" value="/vrpn_client_node/crazyflie1/pose" />
+      <param name="n" value="$(arg n1)" />
     </node>
 
   </group>
+
 </launch>
