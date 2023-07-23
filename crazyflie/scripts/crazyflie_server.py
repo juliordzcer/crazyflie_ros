@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+
 import rospy
 from geometry_msgs.msg import Twist, PoseStamped
 from std_srvs.srv import Empty, EmptyResponse
@@ -8,7 +9,9 @@ from crazyflie.msg import *
 
 import numpy as np
 
-import time
+import time, sys
+import math
+from threading import Thread
 
 # Importando las librerias de python de bitcraze.
 import cflib
@@ -26,12 +29,12 @@ class CrazyflieROS:
     Connecting = 1
     Connected = 2
 
-    def __init__(self, link_uri, tf_prefix, roll_trim, pitch_trim ,enable_logging_pose):
+    def __init__(self, link_uri, tf_prefix, roll_trim, pitch_trim ,enable_logging):
         self.link_uri = link_uri
         self.tf_prefix = tf_prefix
         self.roll_trim = roll_trim
         self.pitch_trim = pitch_trim
-        self.enable_logging_pose = enable_logging_pose
+        self.enable_logging = enable_logging
         self._cf = Crazyflie()
 
         self._cf.connected.add_callback(self._connected)
@@ -40,10 +43,9 @@ class CrazyflieROS:
         self._cf.connection_lost.add_callback(self._connection_lost)
         self._cf.link_quality_updated.add_callback(self._link_quality_updated)
 
-        # Publishers.
-        self._subCmdVel = rospy.Subscriber(tf_prefix + "/cmd_vel", Twist, self._cmdVelChanged)
-        self._pubPose = rospy.Publisher(tf_prefix + "/pose", Twist, queue_size=10)
-        self._pubSignals = rospy.Publisher(tf_prefix + "/signals", Twist, queue_size=10)
+        self._subCmdFull = rospy.Subscriber(tf_prefix + "/cmd_full", Full, self._cmdsetpointChanged)
+        self._subCmdExtPose = rospy.Subscriber(tf_prefix + "/external_pose", PoseStamped, self._poseMeasurementChanged)
+        self._pubSignals = rospy.Publisher(tf_prefix + "/sc", Twist, queue_size=10)
 
         self._state = CrazyflieROS.Disconnected
         # Services
@@ -64,55 +66,19 @@ class CrazyflieROS:
         rospy.loginfo("Connected to %s" % link_uri)
         self._state = CrazyflieROS.Connected
 
-        self._cf.console.receivedChar.add_callback(self._console_callback)
+        if self.enable_logging:
+            self._lg_signals = LogConfig(name="Signals_n", period_in_ms=10)
 
-
-        if self.enable_logging_pose:
-            self._lg_signals = LogConfig(name="Signals", period_in_ms=10)
-
-            # Posicion 
-            self._lg_signals.add_variable("signals.tau_phi", "float")
-            self._lg_signals.add_variable("signals.tau_theta", "float")
-            self._lg_signals.add_variable("signals.tau_psi", "float")
+            self._lg_signals.add_variable("signals_n.tau_phi"  , "float")
+            self._lg_signals.add_variable("signals_n.tau_theta", "float")
+            self._lg_signals.add_variable("signals_n.tau_psi"  , "float")
+            self._lg_signals.add_variable("signals_n.u"        , "float")
             
             try:
                 self._cf.log.add_config(self._lg_signals)
-                # This callback will receive the data
                 self._lg_signals.data_received_cb.add_callback(self._log_data_Signal)
-                # This callback will be called on errors
                 self._lg_signals.error_cb.add_callback(self._log_error)
-                # Start the logging
                 self._lg_signals.start()
-            except KeyError as e:
-                rospy.logwarn('Could not start log configuration,'
-                    '{} not found in TOC'.format(str(e)))
-
-                print()
-            except AttributeError:
-                rospy.logfatal("Could not add logconfig since some variables are not in TOC")
-
-
-        if self.enable_logging_pose:
-            self._lg_pose = LogConfig(name="Pose", period_in_ms=10)
-
-            # Posicion 
-            self._lg_pose.add_variable("stateEstimate.x", "float")
-            self._lg_pose.add_variable("stateEstimate.y", "float")
-            self._lg_pose.add_variable("stateEstimate.z", "float")
-            
-            # Orientacion en quaterniones
-            self._lg_pose.add_variable('stabilizer.roll', 'float')
-            self._lg_pose.add_variable('stabilizer.pitch', 'float')
-            self._lg_pose.add_variable('stabilizer.yaw', 'float')
-            
-            try:
-                self._cf.log.add_config(self._lg_pose)
-                # This callback will receive the data
-                self._lg_pose.data_received_cb.add_callback(self._log_data_Pose)
-                # This callback will be called on errors
-                self._lg_pose.error_cb.add_callback(self._log_error)
-                # Start the logging
-                self._lg_pose.start()
             except KeyError as e:
                 rospy.logwarn('Could not start log configuration,'
                     '{} not found in TOC'.format(str(e)))
@@ -132,14 +98,6 @@ class CrazyflieROS:
                     self._cf.param.set_value(cf_param, rospy.get_param(ros_param))
                 else:
                     self._cf.param.request_param_update(cf_param)
-
-
-    def _console_callback(self, text: str):
-        '''A callback to run when we get console text from Crazyflie'''
-        # We do not add newlines to the text received, we get them from the
-        # Crazyflie at appropriate places.
-        print(text, end='')
-
 
     def _connection_failed(self, link_uri, msg):
         rospy.logfatal("Connection to %s failed: %s" % (link_uri, msg))
@@ -164,24 +122,32 @@ class CrazyflieROS:
 
     def _log_data_Signal(self, timestamp, data, logconf):
         msg = Twist()
-        msg.linear.x = data["signals.tau_phi"]
-        msg.linear.y = data["signals.tau_theta"]
-        msg.linear.z = data["signals.tau_psi"]
+        msg.linear.x = data["signals_n.tau_phi"]
+        msg.linear.y = data["signals_n.tau_theta"]
+        msg.linear.z = data["signals_n.tau_psi"]
+        msg.linear.z = data["signals_n.u"]
 
         self._pubSignals.publish(msg)
 
-    def _log_data_Pose(self, timestamp, data, logconf):
-        msg = Twist()
-        msg.linear.x = data["stateEstimate.x"]
-        msg.linear.y = data["stateEstimate.y"]
-        msg.linear.z = data["stateEstimate.z"]
-        
-        # measured in quaternions
-        msg.angular.x = (data['stabilizer.roll'])
-        msg.angular.y = (data["stabilizer.pitch"])
-        msg.angular.z = (data["stabilizer.yaw"])
+    def _cmdsetpointChanged(self,msg):
+        x = msg.twist1.linear.x
+        y = msg.twist1.linear.y
+        z = msg.twist1.linear.z
+        psi = msg.twist2.angular.x
 
-        self._pubPose.publish(msg)
+        self._cf.commander.send_position_setpoint(x, y, z, psi)
+
+    def _poseMeasurementChanged(self, msg):
+        x = msg.pose.position.x
+        y = msg.pose.position.y
+        z = msg.pose.position.z
+        qx = msg.pose.orientation.x
+        qy = msg.pose.orientation.y
+        qz = msg.pose.orientation.z
+        qw = msg.pose.orientation.w
+
+        self._cf.extpos.send_extpose(x, y, z, qx, qy, qz, qw)
+        
 
     def _param_callback(self, name, value):
         ros_param = "{}/{}".format(self.tf_prefix, name.replace(".", "/"))
@@ -203,12 +169,7 @@ class CrazyflieROS:
         self._cf.loc.send_emergency_stop()
         return EmptyResponse()
 
-    def _cmdVelChanged(self, msg):
-        roll    = msg.linear.y + self.roll_trim
-        pitch   = msg.linear.x + self.pitch_trim
-        yawrate = msg.angular.z
-        thrust  = min(max(0, int(msg.linear.z)), 60000)
-        self._cf.commander.send_setpoint(roll, pitch, yawrate, thrust)
+
 
     def _update(self):
         while not rospy.is_shutdown():
@@ -226,14 +187,13 @@ class CrazyflieROS:
 
 
 def add_crazyflie(req):
-    rospy.loginfo("Adding %s as %s with trim(%f, %f). Logging_pose: %s" % (req.uri, req.tf_prefix, req.roll_trim, req.pitch_trim, str(req.enable_logging_pose)))
-    CrazyflieROS(req.uri, req.tf_prefix, req.roll_trim, req.pitch_trim, req.enable_logging_pose)
+    rospy.loginfo("Adding %s as %s with trim(%f, %f). Logging: %s" % (req.uri, req.tf_prefix, req.roll_trim, req.pitch_trim, str(req.enable_logging)))
+    CrazyflieROS(req.uri, req.tf_prefix, req.roll_trim, req.pitch_trim, req.enable_logging)
     return AddCrazyflieResponse()
 
 if __name__ == '__main__':
     rospy.init_node('crazyflie_server')
 
-    # Initialize the low-level drivers (don't list the debug drivers)
     cflib.crtp.init_drivers()
 
     rospy.Service("add_crazyflie", AddCrazyflie, add_crazyflie)

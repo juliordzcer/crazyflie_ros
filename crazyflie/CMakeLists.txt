@@ -42,19 +42,14 @@ find_package(catkin REQUIRED COMPONENTS message_generation std_msgs tf geometry_
 ## Generate messages in the 'msg' folder
 add_message_files(
   FILES
-  Hover.msg
+  Full.msg
   Position.msg
-  Follower.msg
 )
 ## Generate services in the 'srv' folder
 add_service_files(
   FILES
   AddCrazyflie.srv
   UpdateParams.srv
-  Takeoff.srv
-  Land.srv
-  Stop.srv
-  GoTo.srv
 )
 
 ## Generate actions in the 'action' folder

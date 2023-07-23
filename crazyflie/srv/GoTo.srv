@@ -1,5 +1,0 @@
-geometry_msgs/Point goal
-float32 yaw
-duration duration
-bool relative
----

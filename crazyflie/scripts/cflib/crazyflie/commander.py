@@ -41,8 +41,6 @@ TYPE_VELOCITY_WORLD = 1
 TYPE_ZDISTANCE = 2
 TYPE_HOVER = 5
 TYPE_POSITION = 7
-TYPE_FOLLOWER = 8
-
 
 TYPE_META_COMMAND_NOTIFY_SETPOINT_STOP = 0
 
@@ -171,19 +169,4 @@ class Commander():
         pk.channel = SET_SETPOINT_CHANNEL
         pk.data = struct.pack('<Bffff', TYPE_POSITION,
                               x, y, z, yaw)
-        self._cf.send_packet(pk)
-
-    def send_follower_setpoint(self, x, y, z, yaw, u_l, roll_l, pitch_l, yaw_l):
-        """
-        Control mode where the position is sent as absolute (world) x,y,z coordinate in
-        meter and the yaw is the absolute orientation.
-
-        x, y, z are in m
-        yaw is in degrees
-        """
-        pk = CRTPPacket()
-        pk.port = CRTPPort.COMMANDER_GENERIC
-        pk.channel = SET_SETPOINT_CHANNEL
-        pk.data = struct.pack('<Bffffffff', TYPE_FOLLOWER,
-                              x, y, z, yaw, u_l, roll_l, pitch_l, yaw_l)
         self._cf.send_packet(pk)
