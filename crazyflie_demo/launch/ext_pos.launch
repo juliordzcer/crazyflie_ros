@@ -43,7 +43,7 @@
   <rosparam subst_value="true">
     server: $(arg ip)
     port: $(arg port)
-    update_frequency: 100.0
+    update_frequency: 80.0
     frame_id: world
     child_frame_id: $(arg frame1)
     use_server_time: false

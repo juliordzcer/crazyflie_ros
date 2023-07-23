@@ -12,7 +12,7 @@ import os
 r = 0.0
 h = 0.0
 t = 0.0
-rt = 100
+rt = 10.0
 gr = 0
 
 button_pressed = False
@@ -73,6 +73,7 @@ def trajectory_circle():
             full_msg.header = Header()
             full_msg.header.stamp = rospy.Time.now()
 
+            t = elapsed_time
             w = np.pi / 6
             p = 15
 
@@ -114,9 +115,8 @@ def trajectory_circle():
             data_to_save.append([x - xi, y - yi, z - zi, yaw])
 
             pub.publish(full_msg)
-        rate.sleep()
 
-        t += 0.04
+        # t += 0.01
         rate.sleep()
 
 if __name__ == '__main__':

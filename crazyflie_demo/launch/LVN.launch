@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>
   <arg name="joy_dev" default="/dev/input/js0" />
-  <arg name="uri1" default="radio://1/70/2M/E7E7E7E703" />
+  <arg name="uri1" default="radio://0/80/2M/E7E7E7E701" />
   <arg name="uri2" default="radio://0/90/2M/E7E7E7E702" /> 
 
   <arg name="frame1" default="crazyflie1" /> <!--For OptiTrack users: frame name should match the Rigid-body name on Motive-->
@@ -38,7 +38,7 @@
 
   <!-- Parametros de la trayectoria deseada -->
   <arg name="r" default="0.2" />
-  <arg name="h" default="0.5" />
+  <arg name="h" default="0.6" />
 
   <node pkg="crazyflie_driver" type="crazyflie_server" name="crazyflie_server" output="screen" />
 
