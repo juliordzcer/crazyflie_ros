@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>
   <arg name="joy_dev" default="/dev/input/js0" />
-  <arg name="uri1" default="radio://1/80/2M/E7E7E7E701" />
+  <arg name="uri1" default="radio://0/70/2M/E7E7E7E703" />
 
   <arg name="frame1" default="crazyflie1" /> <!--For OptiTrack users: frame name should match the Rigid-body name on Motive-->
   <arg name="ip" default="192.168.2.10" /> <!--Adjust this parameter-->
@@ -30,7 +30,7 @@
   11.- PID (Newtons)
     -->
     
-  <arg name="n1" default="11" />
+  <arg name="n1" default="1" />
 
   
   <!-- Parametros de la trayectoria deseada -->
@@ -60,10 +60,10 @@
       <param name="tf_prefix" value="crazyflie1" />
     </node>
 
-  <node name="update_params_node" pkg="crazyflie_demo" type="update_params.py">
+  <!-- <node name="update_params_node" pkg="crazyflie_demo" type="update_params.py">
     <param name="frame" value="$(arg frame1)"/>
     <param name="n" value="$(arg n1)"/>
-</node>
+</node> -->
     <node name="joy" pkg="joy" type="joy_node" output="screen">
       <param name="dev" value="$(arg joy_dev)" />
     </node>
