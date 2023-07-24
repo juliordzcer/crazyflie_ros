@@ -112,11 +112,10 @@ def trajectory_circle():
             start_msg.angular.x = 10
             start_pub.publish(start_msg)
             
-            data_to_save.append([x - xi, y - yi, z - zi, yaw])
+            # data_to_save.append([x - xi, y - yi, z - zi, yaw])
 
             pub.publish(full_msg)
 
-        # t += 0.01
         rate.sleep()
 
 if __name__ == '__main__':
@@ -135,12 +134,12 @@ if __name__ == '__main__':
 
     trajectory_circle()
 
-    # Save the data to the Experimentos directory
-    experiments_dir = os.path.expanduser('~/Experimentos')
-    if not os.path.exists(experiments_dir):
-        os.makedirs(experiments_dir)
+    # # Save the data to the Experimentos directory
+    # experiments_dir = os.path.expanduser('~/Experimentos')
+    # if not os.path.exists(experiments_dir):
+    #     os.makedirs(experiments_dir)
 
-    file_path = os.path.join(experiments_dir, 'trajectory_data.mat')
-    io.savemat(file_path, {'data': np.array(data_to_save)})
+    # file_path = os.path.join(experiments_dir, 'trajectory_data.mat')
+    # io.savemat(file_path, {'data': np.array(data_to_save)})
 
     rospy.spin()

@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>
   <arg name="joy_dev" default="/dev/input/js0" />
-  <arg name="uri1" default="radio://0/80/2M/E7E7E7E701" />
+  <arg name="uri1" default="radio://1/70/2M/E7E7E7E703" />
   <arg name="uri2" default="radio://0/90/2M/E7E7E7E702" /> 
 
   <arg name="frame1" default="crazyflie1" /> <!--For OptiTrack users: frame name should match the Rigid-body name on Motive-->
@@ -18,27 +18,9 @@
   <arg name="yi2" default="0.0" />
   <arg name="zi2" default="0.0" />
 
-  <!-- 
-  Seleccione el controlador de orientacion:
-
-  1.- PID (Bitcraze)
-  2.- Mellinger (Bitcraze)
-  3.- INDI (Bitcraze)
-  4.- Brescanccini (Bitcraze)
-  5.- Sliding Mode Control
-  6.- Backstepping
-  7.- Twisting Continuo
-  8.- Super Twisting Algoritm
-  9.- Nonsingular Terminal Sliding Mode Control
-  10.- Singular Terminal Sliding Mode Control
-  11.- PID (Newtons)
-    -->    
-  <arg name="n1" default="8" />
-  <arg name="n2" default="8" />
-
   <!-- Parametros de la trayectoria deseada -->
   <arg name="r" default="0.2" />
-  <arg name="h" default="0.6" />
+  <arg name="h" default="0.4" />
 
   <node pkg="crazyflie_driver" type="crazyflie_server" name="crazyflie_server" output="screen" />
 
@@ -46,7 +28,7 @@
   <rosparam subst_value="true">
     server: $(arg ip)
     port: $(arg port)
-    update_frequency: 100.0
+    update_frequency: 80.0
     frame_id: world
     child_frame_id: $(arg frame1)
     use_server_time: false
@@ -55,10 +37,6 @@
   </rosparam>
   </node>
 
-  <node name="guardar_datos" pkg="crazyflie_demo" type="Graficar.py" output="screen">
-      <param name="n1" value="$(arg n1)" />
-      <param name="n2" value="$(arg n2)" />
-  </node>
 
   <group ns="crazyflie1">
     <node pkg="crazyflie_driver" type="crazyflie_add" name="crazyflie_add" output="screen">
