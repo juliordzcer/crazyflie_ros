@@ -1,82 +1,58 @@
-<?xml version="1.0"?>
 <launch>
   <arg name="joy_dev" default="/dev/input/js0" />
   <arg name="uri1" default="radio://1/80/2M/E7E7E7E701" />
   <arg name="uri2" default="radio://0/90/2M/E7E7E7E702" /> 
 
-  <arg name="frame1" default="crazyflie1" /> <!--For OptiTrack users: frame name should match the Rigid-body name on Motive-->
-  <arg name="frame2" default="crazyflie2" /> <!--For OptiTrack users: frame name should match the Rigid-body name on Motive-->
-  <arg name="ip" default="192.168.2.10" /> <!--Adjust this parameter-->
-  <arg name="port" default="3883" />
-
-  <!-- Formacion -->
-  <arg name="xi1" default="-0.2" />
+  <arg name="xi1" default="-0.25" />
   <arg name="yi1" default="0.0" />
   <arg name="zi1" default="0.0" />
 
-  <arg name="xi2" default="0.2" />
+  <arg name="xi2" default="0.25" />
   <arg name="yi2" default="0.0" />
   <arg name="zi2" default="0.0" />
 
-  <!-- Parametros de la trayectoria deseada -->
   <arg name="r" default="0.2" />
   <arg name="h" default="0.4" />
 
+  <arg name="ip" default="192.168.2.10" />
+  <arg name="port" default="3883" />
+
   <node pkg="crazyflie_driver" type="crazyflie_server" name="crazyflie_server" output="screen" />
 
+  <!-- Include the launch file for the first crazyflie -->
+<include file="$(find crazyflie_demo)/launch/crazyflie.launch">
+    <arg name="name" value="crazyflie1" />
+    <arg name="uri" value="$(arg uri1)" />
+    <arg name="xi" value="$(arg xi1)" />
+    <arg name="yi" value="$(arg yi1)" />
+    <arg name="zi" value="$(arg zi1)" />
+    <arg name="h" value="$(arg h)" />
+    <arg name="r" value="$(arg r)" />
+    <arg name="joy_dev" value="$(arg joy_dev)" />
+  </include>
+
+  <!-- Include the launch file for the second crazyflie -->
+<include file="$(find crazyflie_demo)/launch/crazyflie.launch">
+    <arg name="name" value="crazyflie2" />
+    <arg name="uri" value="$(arg uri2)" />
+    <arg name="xi" value="$(arg xi2)" />
+    <arg name="yi" value="$(arg yi2)" />
+    <arg name="zi" value="$(arg zi2)" />
+    <arg name="h" value="$(arg h)" />
+    <arg name="r" value="$(arg r)" />
+    <arg name="joy_dev" value="$(arg joy_dev)" />
+  </include>
+  
+  <!-- Setup the VRPN client -->
   <node pkg="vrpn_client_ros" type="vrpn_client_node" name="vrpn_client_node" output="screen">
   <rosparam subst_value="true">
     server: $(arg ip)
     port: $(arg port)
-    update_frequency: 80.0
+    update_frequency: 100.0
     frame_id: world
-    child_frame_id: $(arg frame1)
     use_server_time: false
     broadcast_tf: true
     refresh_tracker_frequency: 1.0
   </rosparam>
   </node>
-
-
-  <group ns="crazyflie1">
-    <node pkg="crazyflie_driver" type="crazyflie_add" name="crazyflie_add" output="screen">
-      <param name="uri" value="$(arg uri1)" />
-      <param name="tf_prefix" value="crazyflie1" />
-    </node>
-    <node name="joy" pkg="joy" type="joy_node" output="screen">
-      <param name="dev" value="$(arg joy_dev)" />
-    </node>
-    <node name="goal" pkg="crazyflie_demo" type="setpoint.py" output="screen">
-        <param name="xi" value="$(arg xi1)" />
-        <param name="yi" value="$(arg yi1)" />
-        <param name="zi" value="$(arg zi1)" />
-        <param name="h" value="$(arg h)" />
-        <param name="r" value="$(arg r)" />
-    </node>
-    <node name="pose" pkg="crazyflie_demo" type="vrpn.py" output="screen"> 
-      <param name="topic" value="/vrpn_client_node/crazyflie1/pose" />
-    </node>
-  </group>
-
-    <group ns="crazyflie2">
-    <node pkg="crazyflie_driver" type="crazyflie_add" name="crazyflie_add" output="screen">
-      <param name="uri" value="$(arg uri2)" />
-      <param name="tf_prefix" value="crazyflie2" />
-    </node>
-    <node name="joy" pkg="joy" type="joy_node" output="screen">
-      <param name="dev" value="$(arg joy_dev)" />
-    </node>
-    <node name="goal" pkg="crazyflie_demo" type="setpoint.py" output="screen">
-        <param name="xi" value="$(arg xi2)" />
-        <param name="yi" value="$(arg yi2)" />
-        <param name="zi" value="$(arg zi2)" />
-        <param name="h" value="$(arg h)" />
-        <param name="r" value="$(arg r)" />
-    </node>
-
-    <node name="pose" pkg="crazyflie_demo" type="vrpn.py" output="screen"> 
-      <param name="topic" value="/vrpn_client_node/crazyflie2/pose" />
-    </node>
-  </group>
-
 </launch>

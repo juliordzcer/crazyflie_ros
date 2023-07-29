@@ -1,0 +1,33 @@
+<launch>
+  <arg name="name"/>
+  <arg name="uri"/>
+  <arg name="xi"/>
+  <arg name="yi"/>
+  <arg name="zi"/>
+  <arg name="h"/>
+  <arg name="r"/>
+  <arg name="joy_dev"/>
+
+  <group ns="$(arg name)">
+    <node pkg="crazyflie_driver" type="crazyflie_add" name="crazyflie_add" output="screen">
+      <param name="uri" value="$(arg uri)" />
+      <param name="tf_prefix" value="$(arg name)" />
+    </node>
+
+    <node name="joy" pkg="joy" type="joy_node" output="screen">
+      <param name="dev" value="$(arg joy_dev)" />
+    </node>
+
+    <node name="goal" pkg="crazyflie_demo" type="setpoint.py" output="screen">
+        <param name="xi" value="$(arg xi)" />
+        <param name="yi" value="$(arg yi)" />
+        <param name="zi" value="$(arg zi)" />
+        <param name="h" value="$(arg h)" />
+        <param name="r" value="$(arg r)" />
+    </node>
+
+    <node name="pose" pkg="crazyflie_demo" type="vrpn.py" output="screen"> 
+      <param name="topic" value="/vrpn_client_node/$(arg name)/pose" />
+    </node>
+  </group>
+</launch>

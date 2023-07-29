@@ -350,13 +350,13 @@ void cmdPositionSetpoint(
       float ay = msg->twist2.linear.y;
       float az = msg->twist2.linear.z;
       float psi = msg->twist2.angular.x;
-      m_cf.sendFullSetpoint(
-        x, y, z,
-        vx, vy, vz,
-        ax, ay, az,
-        psi);
+      // m_cf.sendFullSetpoint(
+      //   x, y, z,
+      //   vx, vy, vz,
+      //   ax, ay, az,
+      //   psi);
 
-      // m_cf.sendPositionSetpoint(x, y, z, 0.0);
+      m_cf.sendPositionSetpoint(x, y, z, 0.0);
       
       m_sentSetpoint = true;
     }
