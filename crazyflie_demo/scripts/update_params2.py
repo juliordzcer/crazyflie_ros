@@ -21,5 +21,5 @@ def update_parameters():
         rospy.logerr('Error al actualizar los parámetros: %s', str(e))
 
 if __name__ == '__main__':
-    rospy.sleep(7)
+    rospy.sleep(9)
     update_parameters()

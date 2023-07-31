@@ -41,6 +41,6 @@ class PublishExternalPosition:
         rospy.spin()
 
 if __name__ == '__main__':
-    rospy.sleep(12)
+    rospy.sleep(14)
     external_position = PublishExternalPosition()
     external_position.run()

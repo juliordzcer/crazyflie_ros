@@ -1,19 +1,19 @@
 <?xml version="1.0"?>
 <launch>
+  <!-- Configuración del joystick -->
   <arg name="joy_dev" default="/dev/input/js0" />
+
+  <!-- Configuración del Crazyflie -->
   <arg name="uri1" default="radio://0/80/2M/E7E7E7E701" />
-
-  <arg name="frame1" default="crazyflie1" /> <!--For OptiTrack users: frame name should match the Rigid-body name on Motive-->
-  <arg name="ip" default="192.168.2.10" /> <!--Adjust this parameter-->
-  <arg name="port" default="3883" />
+  <arg name="frame1" default="crazyflie1" />
 
 
-  <!-- Formacion -->
+  <!-- Parámetros de formación -->
   <arg name="xi1" default="-0.2" />
   <arg name="yi1" default="0.0" />
   <arg name="zi1" default="0.0" />
 
-  <!-- 
+    <!-- 
   Seleccione el controlador de orientacion:
 
   1.- PID (Bitcraze)
@@ -28,40 +28,36 @@
   10.- Singular Terminal Sliding Mode Control
   11.- PID (Newtons)
     -->
-    
-  <arg name="n1" default="11" />
 
-  
-  <!-- Parametros de la trayectoria deseada -->
+
+  <arg name="n1" default="1" />
+
+  <!-- Parámetros de la trayectoria deseada -->
   <arg name="r" default="0.2" />
   <arg name="h" default="0.3" />
-
-  <!-- <node pkg="crazyflie" type="crazyflie_server" name="crazyflie_server" output="screen" /> -->
 
   <include file="$(find crazyflie)/launch/crazyflie_server.launch">
   </include>
 
   <node pkg="vrpn_client_ros" type="vrpn_client_node" name="vrpn_client_node" output="screen">
-  <rosparam subst_value="true">
-    server: $(arg ip)
-    port: $(arg port)
-    update_frequency: 500.0
-    frame_id: world
-    use_server_time: false
-    broadcast_tf: true
-    refresh_tracker_frequency: 1.0
-  </rosparam>
+    <rosparam subst_value="true">
+      server: "192.168.2.10" 
+      port: "3883" 
+      update_frequency: 100.0
+      frame_id: world
+      use_server_time: false
+      broadcast_tf: true
+      refresh_tracker_frequency: 1.0
+    </rosparam>
   </node>
 
-
   <group ns="crazyflie1">
-
     <include file="$(find crazyflie)/launch/crazyflie_add.launch">
       <arg name="uri" value="$(arg uri1)" />
       <arg name="tf_prefix" value="crazyflie1" />
     </include>
 
-    <node name="update_params_node" pkg="crazyflie_demo" type="update_params.py">
+    <node name="update_params_node" pkg="crazyflie_demo" type="update_params.py" output="screen">
       <param name="frame" value="$(arg frame1)"/>
       <param name="n" value="$(arg n1)"/>
     </node>
